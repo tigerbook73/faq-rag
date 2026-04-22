@@ -36,9 +36,9 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
                 // render [^n] as clickable superscripts
                 p({ children }) {
                   const nodes = Array.isArray(children) ? children : [children];
-                  const processed = nodes.flatMap((node) =>
+                  const processed = nodes.flatMap((node, nodeIndex) =>
                     typeof node === "string"
-                      ? renderWithCitations(node, citations, onCitationClick)
+                      ? renderWithCitations(node, citations, onCitationClick, nodeIndex)
                       : [node],
                   );
                   return <p>{processed}</p>;
@@ -67,7 +67,7 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
   );
 }
 
-function renderWithCitations(text: string, citations: Citation[] | undefined, onClick?: (c: Citation) => void) {
+function renderWithCitations(text: string, citations: Citation[] | undefined, onClick?: (c: Citation) => void, nodeIndex = 0) {
   if (!citations) return text;
   const parts = text.split(/(\[\^\d+\])/g);
   return parts.map((part, i) => {
@@ -77,7 +77,7 @@ function renderWithCitations(text: string, citations: Citation[] | undefined, on
       const citation = citations.find((c) => c.id === num);
       if (citation) {
         return (
-          <sup key={i}>
+          <sup key={`${nodeIndex}-${i}`}>
             <button className="text-primary underline cursor-pointer" onClick={() => onClick?.(citation)}>
               [{num}]
             </button>
