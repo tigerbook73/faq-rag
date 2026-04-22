@@ -9,14 +9,15 @@ export async function parseFile(filePath: string): Promise<string> {
   }
 
   if (ext === ".pdf") {
-    const { default: pdfParse } = await import("pdf-parse");
+    const { PDFParse } = await import("pdf-parse");
     const buffer = await fs.readFile(filePath);
-    const result = await pdfParse(buffer);
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
     return result.text;
   }
 
   if (ext === ".docx") {
-    const mammoth = await import("mammoth");
+    const { default: mammoth } = await import("mammoth");
     const result = await mammoth.extractRawText({ path: filePath });
     return result.value;
   }
