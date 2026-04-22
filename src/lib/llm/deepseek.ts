@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { LLMProvider } from "./types";
+import { PROVIDER } from "./providers";
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY ?? "",
@@ -7,7 +8,7 @@ const client = new OpenAI({
 });
 
 export const deepseekProvider: LLMProvider = {
-  name: "deepseek",
+  name: PROVIDER.DEEPSEEK,
 
   async *chat({ system, messages }) {
     const stream = await client.chat.completions.create({

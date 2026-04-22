@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
+import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,7 +17,7 @@ interface Message {
 }
 
 export function ChatWindow() {
-  const [provider, setProvider] = useState<"claude" | "deepseek">("deepseek");
+  const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

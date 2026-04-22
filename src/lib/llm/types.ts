@@ -3,7 +3,9 @@ export interface Msg {
   content: string;
 }
 
+import type { Provider } from "./providers";
+
 export interface LLMProvider {
-  name: "claude" | "deepseek";
+  name: Provider;
   chat(params: { system: string; messages: Msg[] }): AsyncGenerator<string>;
 }

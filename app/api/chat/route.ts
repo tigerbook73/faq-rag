@@ -2,10 +2,11 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { retrieve } from "@/src/lib/retrieval/query";
 import { getProvider } from "@/src/lib/llm/router";
+import { PROVIDER } from "@/src/lib/llm/providers";
 
 const bodySchema = z.object({
   question: z.string().min(1),
-  provider: z.enum([/* "claude", */ "deepseek"]).default("deepseek"),
+  provider: z.enum([/* PROVIDER.CLAUDE, */ PROVIDER.DEEPSEEK]).default(PROVIDER.DEEPSEEK),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).default([]),
 });
 

@@ -1,10 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { LLMProvider } from "./types";
+import { PROVIDER } from "./providers";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export const claudeProvider: LLMProvider = {
-  name: "claude",
+  name: PROVIDER.CLAUDE,
 
   async *chat({ system, messages }) {
     const stream = client.messages.stream({

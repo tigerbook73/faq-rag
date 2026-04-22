@@ -1,27 +1,23 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const LABELS: Record<string, string> = {
-  deepseek: "DeepSeek",
-  claude: "Claude",
-};
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { PROVIDER, PROVIDER_LABEL, type Provider } from "@/src/lib/llm/providers";
 
 interface Props {
-  value: "claude" | "deepseek";
-  onChange: (v: "claude" | "deepseek") => void;
+  value: Provider;
+  onChange: (v: Provider) => void;
 }
 
 export function ProviderSelect({ value, onChange }: Props) {
   return (
-    <Select value={value} onValueChange={(v) => onChange(v as "claude" | "deepseek")}>
+    <Select value={value} onValueChange={(v) => onChange(v as Provider)}>
       <SelectTrigger className="w-36">
-        <span>{LABELS[value]}</span>
+        <span>{PROVIDER_LABEL[value]}</span>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="deepseek">DeepSeek</SelectItem>
-        <SelectItem disabled value="claude">
-          Claude
+        <SelectItem value={PROVIDER.DEEPSEEK}>{PROVIDER_LABEL[PROVIDER.DEEPSEEK]}</SelectItem>
+        <SelectItem disabled value={PROVIDER.CLAUDE}>
+          {PROVIDER_LABEL[PROVIDER.CLAUDE]}
         </SelectItem>
       </SelectContent>
     </Select>
