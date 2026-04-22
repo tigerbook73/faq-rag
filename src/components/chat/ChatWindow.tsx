@@ -24,10 +24,15 @@ export function ChatWindow() {
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!loading) textareaRef.current?.focus();
+  }, [loading]);
 
   const handleCitationClick = useCallback((c: Citation) => {
     setSelectedCitation(c);
@@ -157,6 +162,7 @@ export function ChatWindow() {
 
         <div className="px-4 py-3 border-t flex gap-2 items-end">
           <Textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
