@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
 
 interface Props {
   onUploaded: () => void;
@@ -22,9 +22,9 @@ export function UploadZone({ onUploaded }: Props) {
 
       for (const file of files) {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append("file", file);
         try {
-          const res = await fetch('/api/documents', { method: 'POST', body: formData });
+          const res = await fetch("/api/documents", { method: "POST", body: formData });
           if (res.ok) {
             success++;
           } else {
@@ -51,10 +51,10 @@ export function UploadZone({ onUploaded }: Props) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'text/markdown': ['.md'],
-      'text/plain': ['.txt'],
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      "text/markdown": [".md"],
+      "text/plain": [".txt"],
+      "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
     disabled: uploading,
   });
@@ -64,22 +64,14 @@ export function UploadZone({ onUploaded }: Props) {
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-          isDragActive
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/30 hover:border-primary/50'
-        } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
+        } ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <input {...getInputProps()} />
         <p className="text-muted-foreground text-sm">
-          {uploading
-            ? 'Uploading…'
-            : isDragActive
-            ? 'Drop files here'
-            : 'Drag & drop files here, or click to select'}
+          {uploading ? "Uploading…" : isDragActive ? "Drop files here" : "Drag & drop files here, or click to select"}
         </p>
-        <p className="text-xs text-muted-foreground/60 mt-1">
-          Supports .md .txt .pdf .docx
-        </p>
+        <p className="text-xs text-muted-foreground/60 mt-1">Supports .md .txt .pdf .docx</p>
       </div>
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
     </div>

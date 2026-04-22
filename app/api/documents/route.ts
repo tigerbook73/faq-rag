@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { prisma } from '@/src/lib/db/client';
-import { ingestBuffer } from '@/src/lib/ingest/pipeline';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/src/lib/db/client";
+import { ingestBuffer } from "@/src/lib/ingest/pipeline";
 
 const listSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     prisma.document.findMany({
       skip,
       take: pageSize,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: { _count: { select: { chunks: true } } },
     }),
     prisma.document.count(),
@@ -28,19 +28,16 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
-  const file = formData.get('file');
+  const file = formData.get("file");
 
-  if (!file || typeof file === 'string') {
-    return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+  if (!file || typeof file === "string") {
+    return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  const allowedExts = ['.md', '.txt', '.pdf', '.docx'];
-  const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+  const allowedExts = [".md", ".txt", ".pdf", ".docx"];
+  const ext = "." + file.name.split(".").pop()?.toLowerCase();
   if (!allowedExts.includes(ext)) {
-    return NextResponse.json(
-      { error: `Unsupported file type: ${ext}` },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: `Unsupported file type: ${ext}` }, { status: 400 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

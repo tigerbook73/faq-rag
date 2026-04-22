@@ -1,4 +1,4 @@
-import { prisma } from '../db/client';
+import { prisma } from "../db/client";
 
 export interface ChunkRow {
   id: string;
@@ -11,7 +11,7 @@ export interface ChunkRow {
 }
 
 export async function vectorSearch(embedding: number[], topK: number): Promise<ChunkRow[]> {
-  const vec = `[${embedding.join(',')}]`;
+  const vec = `[${embedding.join(",")}]`;
   return prisma.$queryRaw<ChunkRow[]>`
     SELECT
       c.id,

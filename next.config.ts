@@ -1,14 +1,14 @@
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [
-    '@huggingface/transformers',
-    'onnxruntime-node',
-    'pdf-parse',
-    'mammoth',
-    '@prisma/client',
-    'franc-min',
-    '@langchain/textsplitters',
+    "@huggingface/transformers",
+    "onnxruntime-node",
+    "pdf-parse",
+    "mammoth",
+    "@prisma/client",
+    "franc-min",
+    "@langchain/textsplitters",
   ],
 };
 

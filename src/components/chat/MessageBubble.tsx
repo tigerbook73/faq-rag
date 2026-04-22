@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import type { Citation } from './CitationDrawer';
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import type { Citation } from "./CitationDrawer";
 
 interface Props {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   citations?: Citation[];
   onCitationClick?: (c: Citation) => void;
 }
 
 export function MessageBubble({ role, content, citations, onCitationClick }: Props) {
-  const isUser = role === 'user';
+  const isUser = role === "user";
 
   const rendered = content.replace(/\[\^(\d+)\]/g, (_, n) => {
     const num = parseInt(n, 10);
@@ -20,12 +20,10 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
   });
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-          isUser
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-foreground'
+          isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
         }`}
       >
         {isUser ? (
@@ -37,11 +35,7 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
               components={{
                 // render [^n] as clickable superscripts
                 p({ children }) {
-                  return (
-                    <p>
-                      {renderWithCitations(String(children), citations, onCitationClick)}
-                    </p>
-                  );
+                  return <p>{renderWithCitations(String(children), citations, onCitationClick)}</p>;
                 },
               }}
             >
@@ -67,11 +61,7 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
   );
 }
 
-function renderWithCitations(
-  text: string,
-  citations: Citation[] | undefined,
-  onClick?: (c: Citation) => void,
-) {
+function renderWithCitations(text: string, citations: Citation[] | undefined, onClick?: (c: Citation) => void) {
   if (!citations) return text;
   const parts = text.split(/(\[\^\d+\])/g);
   return parts.map((part, i) => {
@@ -82,10 +72,7 @@ function renderWithCitations(
       if (citation) {
         return (
           <sup key={i}>
-            <button
-              className="text-primary underline cursor-pointer"
-              onClick={() => onClick?.(citation)}
-            >
+            <button className="text-primary underline cursor-pointer" onClick={() => onClick?.(citation)}>
               [{num}]
             </button>
           </sup>

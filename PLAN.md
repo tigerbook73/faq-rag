@@ -20,15 +20,15 @@
 
 ## 2. 运行环境
 
-| 项 | 约定 |
-|---|---|
-| 操作系统 | Windows 11 + WSL2 (Ubuntu) |
-| 编辑器 | VSCode (Remote - WSL 扩展) |
-| Node.js | ≥ 20 LTS |
-| Python | 3.11+（仅用于 PDF/DOCX 解析脚本，可选） |
-| 数据库 | PostgreSQL 16，启用 pgvector 扩展 |
-| 容器 | 使用 `docker compose` 启动 Postgres（不容器化 Node 进程，方便本地调试） |
-| 包管理 | pnpm |
+| 项       | 约定                                                                    |
+| -------- | ----------------------------------------------------------------------- |
+| 操作系统 | Windows 11 + WSL2 (Ubuntu)                                              |
+| 编辑器   | VSCode (Remote - WSL 扩展)                                              |
+| Node.js  | ≥ 20 LTS                                                                |
+| Python   | 3.11+（仅用于 PDF/DOCX 解析脚本，可选）                                 |
+| 数据库   | PostgreSQL 16，启用 pgvector 扩展                                       |
+| 容器     | 使用 `docker compose` 启动 Postgres（不容器化 Node 进程，方便本地调试） |
+| 包管理   | pnpm                                                                    |
 
 所有命令都假设在 WSL 终端中执行；项目仓库路径建议放在 WSL 原生文件系统（如 `~/projects/faq-rag`）以避免跨 FS 性能问题。
 
@@ -58,6 +58,7 @@
 
 > **pgvector 与 Prisma 的协作方式**
 > Prisma 目前不原生支持 `vector` 类型，采用以下约定：
+>
 > - `prisma/schema.prisma` 中将 `embedding` 列声明为 `Unsupported("vector(1024)")`
 > - 向量写入（INSERT/UPDATE）通过 `prisma.$executeRaw` + `::vector` 类型转换完成
 > - 向量检索（SELECT + cosine distance）通过 `prisma.$queryRaw` 返回 typed 结果
@@ -137,14 +138,8 @@
 
 ```ts
 // src/lib/retrieval/query.ts 核心逻辑
-const [embZh, embEn] = await Promise.all([
-  getEmbedding(queryZh),
-  getEmbedding(queryEn),
-]);
-const [resZh, resEn] = await Promise.all([
-  vectorSearch(embZh, 8),
-  vectorSearch(embEn, 8),
-]);
+const [embZh, embEn] = await Promise.all([getEmbedding(queryZh), getEmbedding(queryEn)]);
+const [resZh, resEn] = await Promise.all([vectorSearch(embZh, 8), vectorSearch(embEn, 8)]);
 const merged = deduplicateAndSort([...resZh, ...resEn]).slice(0, 6);
 ```
 
@@ -153,7 +148,7 @@ const merged = deduplicateAndSort([...resZh, ...resEn]).slice(0, 6);
 ```ts
 // src/lib/retrieval/vector-search.ts
 export async function vectorSearch(embedding: number[], topK: number) {
-  const vec = `[${embedding.join(',')}]`;
+  const vec = `[${embedding.join(",")}]`;
   return prisma.$queryRaw<ChunkRow[]>`
     SELECT
       id, document_id, ord, content, lang,
@@ -170,12 +165,8 @@ export async function vectorSearch(embedding: number[], topK: number) {
 ```ts
 // src/lib/llm/types.ts
 interface LLMProvider {
-  name: 'claude' | 'deepseek';
-  chat(params: {
-    system: string;
-    messages: Msg[];
-    stream?: boolean;
-  }): AsyncIterable<string>;
+  name: "claude" | "deepseek";
+  chat(params: { system: string; messages: Msg[]; stream?: boolean }): AsyncIterable<string>;
 }
 ```
 
@@ -308,7 +299,7 @@ const chunk = await prisma.chunk.create({
 });
 
 // 2. 再用 $executeRaw 写入 embedding
-const vec = `[${embedding.join(',')}]`;
+const vec = `[${embedding.join(",")}]`;
 await prisma.$executeRaw`
   UPDATE chunks SET embedding = ${vec}::vector WHERE id = ${chunk.id}
 `;
@@ -332,14 +323,14 @@ await prisma.$executeRaw`
 
 所有 API 在 `app/api/*/route.ts`，使用 Zod 校验。
 
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| `POST` | `/api/documents` | 上传并异步索引文档（multipart） |
-| `GET` | `/api/documents` | 分页列出文档（Prisma findMany + count） |
-| `DELETE` | `/api/documents/:id` | 删除文档及 chunks（Cascade 自动处理） |
-| `POST` | `/api/documents/:id/reindex` | 重新切片并向量化 |
-| `POST` | `/api/chat` | 提问，SSE 流式返回 answer + citations |
-| `GET` | `/api/health` | 检查 DB 连通性（`prisma.$queryRaw\`SELECT 1\`` ） |
+| 方法     | 路径                         | 说明                                              |
+| -------- | ---------------------------- | ------------------------------------------------- |
+| `POST`   | `/api/documents`             | 上传并异步索引文档（multipart）                   |
+| `GET`    | `/api/documents`             | 分页列出文档（Prisma findMany + count）           |
+| `DELETE` | `/api/documents/:id`         | 删除文档及 chunks（Cascade 自动处理）             |
+| `POST`   | `/api/documents/:id/reindex` | 重新切片并向量化                                  |
+| `POST`   | `/api/chat`                  | 提问，SSE 流式返回 answer + citations             |
+| `GET`    | `/api/health`                | 检查 DB 连通性（`prisma.$queryRaw\`SELECT 1\`` ） |
 
 ---
 
@@ -421,6 +412,7 @@ faq-rag/
 ```
 
 > **与 Drizzle 版的结构差异**：
+>
 > - 删除 `drizzle.config.ts`、`src/lib/db/schema.ts`
 > - 新增 `prisma/schema.prisma`（统一承载 schema + 迁移）
 > - `src/lib/db/client.ts` 改为 Prisma Client 单例
@@ -431,17 +423,17 @@ faq-rag/
 
 ```ts
 // src/lib/db/client.ts
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error'] : ['error'],
+    log: process.env.NODE_ENV === "development" ? ["query", "error"] : ["error"],
   });
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 ```
@@ -515,11 +507,13 @@ pnpm prisma migrate reset
 ## 14. 实施阶段（建议 Claude Code 按此顺序生成）
 
 ### 阶段 0 — 脚手架
+
 - 初始化 Next.js 15 + TS + Tailwind + shadcn/ui
 - 配置 pnpm / eslint / prettier
 - 启动 `docker compose up -d`，验证 Postgres 可连接
 
 ### 阶段 1 — 数据层
+
 - 编写 `prisma/schema.prisma`（Document + Chunk，含 `Unsupported("vector(1024)")` ）
 - 手动编写初始迁移 SQL：`CREATE EXTENSION IF NOT EXISTS vector`、`CREATE EXTENSION IF NOT EXISTS pg_trgm`、HNSW 索引
 - 运行 `pnpm prisma migrate dev --name init`，验证表结构
@@ -527,43 +521,51 @@ pnpm prisma migrate reset
 - 健康检查接口 `/api/health` 跑通（`prisma.$queryRaw\`SELECT 1\``）
 
 **Smoke test：**
+
 ```bash
 pnpm prisma studio   # 打开浏览器，确认 documents / chunks 表存在
 ```
 
 ### 阶段 2 — Embedding 与摄取
+
 - 实现本地 bge-m3 封装（`@xenova/transformers`）
 - 实现 parse / split / pipeline（含 `$executeRaw` 批量写入向量）
 - CLI `pnpm ingest ./sample-docs` 跑通，数据入库
 
 **Smoke test：**
+
 ```bash
 pnpm ingest ./sample-docs
 pnpm prisma studio   # 确认 chunks 表有数据且 embedding 列非 null
 ```
 
 ### 阶段 3 — 检索
+
 - 实现 `vectorSearch`（`$queryRaw` cosine distance）
 - Query 改写（调用 DeepSeek 翻译）
 - 双路召回 + top-k 合并去重
 - **单元测试**：给中文问题，检索英文源文档，top-k 覆盖预期片段
 
 ### 阶段 4 — LLM 路由 + `/api/chat`
+
 - Claude / DeepSeek provider 实现
 - SSE 流式返回
 - 引用解析（`[^n]` → citations 数组）
 
 ### 阶段 5 — 前端 Chat 页
+
 - ChatWindow + MessageBubble + CitationDrawer
 - Provider 切换
 
 ### 阶段 6 — 知识库管理页
+
 - 上传（multipart → pipeline）
 - 文档列表（`prisma.document.findMany` + count）
 - 删除（`prisma.document.delete`，Cascade 自动清理 chunks）
 - 重索引
 
 ### 阶段 7 — 打磨
+
 - 空态、错误态、loading skeleton
 - README 写清楚完整启动步骤
 

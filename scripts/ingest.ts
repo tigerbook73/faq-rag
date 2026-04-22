@@ -1,11 +1,11 @@
-import path from 'path';
-import fs from 'fs/promises';
-import { ingestFile } from '../src/lib/ingest/pipeline';
+import path from "path";
+import fs from "fs/promises";
+import { ingestFile } from "../src/lib/ingest/pipeline";
 
 async function main() {
   const target = process.argv[2];
   if (!target) {
-    console.error('Usage: pnpm ingest <file-or-directory>');
+    console.error("Usage: pnpm ingest <file-or-directory>");
     process.exit(1);
   }
 
@@ -18,7 +18,7 @@ async function main() {
     const entries = await fs.readdir(resolved);
     for (const entry of entries) {
       const ext = path.extname(entry).toLowerCase();
-      if (['.md', '.txt', '.pdf', '.docx'].includes(ext)) {
+      if ([".md", ".txt", ".pdf", ".docx"].includes(ext)) {
         files.push(path.join(resolved, entry));
       }
     }
@@ -27,7 +27,7 @@ async function main() {
   }
 
   if (files.length === 0) {
-    console.log('No supported files found.');
+    console.log("No supported files found.");
     process.exit(0);
   }
 
@@ -43,7 +43,7 @@ async function main() {
     }
   }
 
-  console.log('Ingestion complete.');
+  console.log("Ingestion complete.");
   process.exit(0);
 }
 

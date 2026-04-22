@@ -1,20 +1,20 @@
-import crypto from 'crypto';
-import fs from 'fs/promises';
-import path from 'path';
-import { prisma } from '../db/client';
-import { parseFile, mimeFromExt } from './parse';
-import { splitText } from './split';
-import { getEmbedding } from '../embeddings/bge';
-import { detectLang } from '../lang/detect';
+import crypto from "crypto";
+import fs from "fs/promises";
+import path from "path";
+import { prisma } from "../db/client";
+import { parseFile, mimeFromExt } from "./parse";
+import { splitText } from "./split";
+import { getEmbedding } from "../embeddings/bge";
+import { detectLang } from "../lang/detect";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './data/uploads';
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
 export async function ingestFile(filePath: string): Promise<string> {
   const fileName = path.basename(filePath);
   const ext = path.extname(filePath).toLowerCase();
   const mime = mimeFromExt(ext);
   const buffer = await fs.readFile(filePath);
-  const contentHash = crypto.createHash('sha256').update(buffer).digest('hex');
+  const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
   const existing = await prisma.document.findUnique({ where: { contentHash } });
@@ -29,7 +29,7 @@ export async function ingestFile(filePath: string): Promise<string> {
       mime,
       contentHash,
       sizeBytes,
-      status: 'pending',
+      status: "pending",
     },
   });
 
@@ -42,7 +42,7 @@ export async function ingestFile(filePath: string): Promise<string> {
       const chunkText = chunks[i];
       const chunkLang = detectLang(chunkText);
       const embedding = await getEmbedding(chunkText);
-      const vec = `[${embedding.join(',')}]`;
+      const vec = `[${embedding.join(",")}]`;
       const chunkId = crypto.randomUUID();
 
       await prisma.$executeRaw`
@@ -61,7 +61,7 @@ export async function ingestFile(filePath: string): Promise<string> {
 
     await prisma.document.update({
       where: { id: doc.id },
-      data: { status: 'indexed', lang },
+      data: { status: "indexed", lang },
     });
 
     console.log(`[ingest] Indexed "${fileName}": ${chunks.length} chunks, lang=${lang}`);
@@ -70,26 +70,23 @@ export async function ingestFile(filePath: string): Promise<string> {
     const errorMsg = err instanceof Error ? err.message : String(err);
     await prisma.document.update({
       where: { id: doc.id },
-      data: { status: 'failed', errorMsg },
+      data: { status: "failed", errorMsg },
     });
     throw err;
   }
 }
 
-export async function ingestBuffer(
-  fileName: string,
-  buffer: Buffer,
-): Promise<string> {
+export async function ingestBuffer(fileName: string, buffer: Buffer): Promise<string> {
   const ext = path.extname(fileName).toLowerCase();
   const mime = mimeFromExt(ext);
-  const contentHash = crypto.createHash('sha256').update(buffer).digest('hex');
+  const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
   const existing = await prisma.document.findUnique({ where: { contentHash } });
   if (existing) return existing.id;
 
   const doc = await prisma.document.create({
-    data: { name: fileName, mime, contentHash, sizeBytes, status: 'pending' },
+    data: { name: fileName, mime, contentHash, sizeBytes, status: "pending" },
   });
 
   const uploadPath = path.join(UPLOAD_DIR, doc.id, fileName);
@@ -117,7 +114,7 @@ export async function processDocument(docId: string, filePath: string): Promise<
       const chunkText = chunks[i];
       const chunkLang = detectLang(chunkText);
       const embedding = await getEmbedding(chunkText);
-      const vec = `[${embedding.join(',')}]`;
+      const vec = `[${embedding.join(",")}]`;
       const chunkId = crypto.randomUUID();
 
       await prisma.$executeRaw`
@@ -136,13 +133,13 @@ export async function processDocument(docId: string, filePath: string): Promise<
 
     await prisma.document.update({
       where: { id: docId },
-      data: { status: 'indexed', lang, errorMsg: null },
+      data: { status: "indexed", lang, errorMsg: null },
     });
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     await prisma.document.update({
       where: { id: docId },
-      data: { status: 'failed', errorMsg },
+      data: { status: "failed", errorMsg },
     });
     throw err;
   }

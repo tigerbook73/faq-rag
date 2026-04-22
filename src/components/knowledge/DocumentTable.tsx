@@ -1,17 +1,10 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Document {
   id: string;
@@ -29,47 +22,47 @@ interface DocumentListResponse {
   total: number;
 }
 
-function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-  if (status === 'indexed') return 'default';
-  if (status === 'pending') return 'secondary';
-  if (status === 'failed') return 'destructive';
-  return 'outline';
+function statusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  if (status === "indexed") return "default";
+  if (status === "pending") return "secondary";
+  if (status === "failed") return "destructive";
+  return "outline";
 }
 
 async function fetchDocuments(): Promise<DocumentListResponse> {
-  const res = await fetch('/api/documents');
-  if (!res.ok) throw new Error('Failed to fetch documents');
+  const res = await fetch("/api/documents");
+  if (!res.ok) throw new Error("Failed to fetch documents");
   return res.json();
 }
 
 async function deleteDocument(id: string): Promise<void> {
-  await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+  await fetch(`/api/documents/${id}`, { method: "DELETE" });
 }
 
 async function reindexDocument(id: string): Promise<void> {
-  await fetch(`/api/documents/${id}/reindex`, { method: 'POST' });
+  await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
 }
 
 export function DocumentTable() {
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['documents'],
+    queryKey: ["documents"],
     queryFn: fetchDocuments,
     refetchInterval: (query) => {
-      const hasPending = query.state.data?.items.some((d) => d.status === 'pending');
+      const hasPending = query.state.data?.items.some((d) => d.status === "pending");
       return hasPending ? 3000 : false;
     },
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteDocument,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['documents'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
   });
 
   const reindexMut = useMutation({
     mutationFn: reindexDocument,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['documents'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
   });
 
   if (isLoading) {
@@ -86,9 +79,7 @@ export function DocumentTable() {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground text-sm">
-        No documents yet. Upload some files above.
-      </div>
+      <div className="text-center py-12 text-muted-foreground text-sm">No documents yet. Upload some files above.</div>
     );
   }
 

@@ -1,4 +1,4 @@
-import type { ChunkRow } from './vector-search';
+import type { ChunkRow } from "./vector-search";
 
 export function deduplicateAndSort(chunks: ChunkRow[]): ChunkRow[] {
   const seen = new Set<string>();

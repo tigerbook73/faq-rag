@@ -1,13 +1,8 @@
-'use client';
+"use client";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 export interface Citation {
   id: number;
@@ -29,9 +24,7 @@ export function CitationDrawer({ open, onClose, citation }: Props) {
     <Drawer open={open} onClose={onClose}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>
-            {citation ? `[^${citation.id}] ${citation.documentName}` : 'Citation'}
-          </DrawerTitle>
+          <DrawerTitle>{citation ? `[^${citation.id}] ${citation.documentName}` : "Citation"}</DrawerTitle>
         </DrawerHeader>
         <ScrollArea className="h-64 px-4 pb-6">
           {citation && (
@@ -40,9 +33,7 @@ export function CitationDrawer({ open, onClose, citation }: Props) {
                 <Badge variant="secondary">score {citation.score.toFixed(3)}</Badge>
                 <Badge variant="outline">{citation.documentName}</Badge>
               </div>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {citation.preview}
-              </p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{citation.preview}</p>
             </div>
           )}
         </ScrollArea>
