@@ -35,7 +35,13 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
               components={{
                 // render [^n] as clickable superscripts
                 p({ children }) {
-                  return <p>{renderWithCitations(String(children), citations, onCitationClick)}</p>;
+                  const nodes = Array.isArray(children) ? children : [children];
+                  const processed = nodes.flatMap((node) =>
+                    typeof node === "string"
+                      ? renderWithCitations(node, citations, onCitationClick)
+                      : [node],
+                  );
+                  return <p>{processed}</p>;
                 },
               }}
             >
