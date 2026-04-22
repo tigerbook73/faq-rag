@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# runtime data (docker volume remnant + user uploads)
+/data/pg/
+/data/uploads/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

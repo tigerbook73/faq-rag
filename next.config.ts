@@ -1,7 +1,15 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: [
+    '@huggingface/transformers',
+    'onnxruntime-node',
+    'pdf-parse',
+    'mammoth',
+    '@prisma/client',
+    'franc-min',
+    '@langchain/textsplitters',
+  ],
 };
 
 export default nextConfig;
