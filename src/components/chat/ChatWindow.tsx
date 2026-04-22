@@ -123,52 +123,54 @@ export function ChatWindow() {
   );
 
   return (
-    <div className="flex flex-col h-screen">
-      <header className="flex items-center justify-between px-4 py-3 border-b">
-        <h1 className="font-semibold text-lg">FAQ RAG</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Provider:</span>
-          <ProviderSelect value={provider} onChange={setProvider} />
-          <Link href="/knowledge" className="text-sm text-primary hover:underline">
-            Knowledge Base
-          </Link>
-        </div>
-      </header>
-
-      <ScrollArea className="flex-1 px-4 py-4">
-        {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-            Ask a question about your knowledge base
+    <div className="flex h-screen justify-center items-center">
+      <div className="flex flex-col h-full w-[80%] max-w-3xl border border-black">
+        <header className="flex items-center justify-between px-4 py-3 border-b">
+          <h1 className="font-semibold text-lg">FAQ RAG</h1>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Provider:</span>
+            <ProviderSelect value={provider} onChange={setProvider} />
+            <Link href="/knowledge" className="text-sm text-primary hover:underline">
+              Knowledge Base
+            </Link>
           </div>
-        )}
-        {messages.map((m, i) => (
-          <MessageBubble
-            key={i}
-            role={m.role}
-            content={m.content}
-            citations={m.citations}
-            onCitationClick={handleCitationClick}
+        </header>
+
+        <ScrollArea className="flex-1 px-4 py-4">
+          {messages.length === 0 && (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              Ask a question about your knowledge base
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <MessageBubble
+              key={i}
+              role={m.role}
+              content={m.content}
+              citations={m.citations}
+              onCitationClick={handleCitationClick}
+            />
+          ))}
+          <div ref={bottomRef} />
+        </ScrollArea>
+
+        <div className="px-4 py-3 border-t flex gap-2 items-end">
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask a question... (Ctrl+Enter to send)"
+            className="flex-1 resize-none min-h-15 max-h-50"
+            rows={2}
+            disabled={loading}
           />
-        ))}
-        <div ref={bottomRef} />
-      </ScrollArea>
+          <Button onClick={send} disabled={loading || !input.trim()} className="h-15 px-6">
+            {loading ? "Thinking…" : "Send"}
+          </Button>
+        </div>
 
-      <div className="px-4 py-3 border-t flex gap-2 items-end">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask a question... (Ctrl+Enter to send)"
-          className="flex-1 resize-none min-h-15 max-h-50"
-          rows={2}
-          disabled={loading}
-        />
-        <Button onClick={send} disabled={loading || !input.trim()} className="h-15 px-6">
-          {loading ? "Thinking…" : "Send"}
-        </Button>
+        <CitationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} citation={selectedCitation} />
       </div>
-
-      <CitationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} citation={selectedCitation} />
     </div>
   );
 }
