@@ -9,6 +9,10 @@
     "lint": "eslint . --ext .ts,.tsx --fix",
     "ingest": "tsx --env-file=.env scripts/ingest.ts",
     "prisma": "prisma",
+    "db:start": "docker compose up -d",
+    "db:stop": "docker compose down",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
     "format": "prettier --write .",
     "test": "jest"
   },

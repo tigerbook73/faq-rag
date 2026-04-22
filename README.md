@@ -1,36 +1,166 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FAQ RAG
 
-## Getting Started
+A local FAQ question-answering system built with Retrieval-Augmented Generation. Upload documents in Chinese or English, ask questions in either language, and get answers with cited sources streamed back in real time.
 
-First, run the development server:
+## Features
+
+- **Streaming chat** — SSE-based streaming with inline citation markers `[^n]`
+- **Cross-language retrieval** — query expansion translates the question into both languages before vector search, so a Chinese question finds English documents and vice versa
+- **Knowledge base management** — upload, list, delete, and re-index documents from the UI
+- **Provider switching** — choose between Claude and DeepSeek at query time
+- **Supported formats** — `.md`, `.txt`, `.pdf`, `.docx`
+- **Idempotent ingestion** — SHA-256 content hash prevents duplicate indexing
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) + React 19 + TypeScript |
+| UI | Tailwind CSS + shadcn/ui |
+| Database | PostgreSQL 16 + pgvector (Docker) |
+| ORM | Prisma |
+| Embedding | `Xenova/bge-m3` via `@huggingface/transformers` (1024-dim, local, multilingual) |
+| LLM — default | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` |
+| LLM — alternate | DeepSeek `deepseek-chat` via `openai` SDK |
+| Text splitting | `@langchain/textsplitters` RecursiveCharacterTextSplitter |
+| Language detect | `franc-min` |
+| Testing | Jest + ts-jest |
+
+## Prerequisites
+
+- Node.js ≥ 20 LTS
+- pnpm
+- Docker (for PostgreSQL)
+
+## Setup
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `.env` and fill in your API keys:
 
-## Learn More
+```env
+DATABASE_URL=postgresql://faq:faq@localhost:5432/faq
 
-To learn more about Next.js, take a look at the following resources:
+ANTHROPIC_API_KEY=sk-ant-xxx
+ANTHROPIC_MODEL=claude-sonnet-4-6
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_MODEL=deepseek-chat
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+EMBEDDING_MODEL=Xenova/bge-m3
+EMBEDDING_DIM=1024
 
-## Deploy on Vercel
+UPLOAD_DIR=./data/uploads
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. Start PostgreSQL
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm db:start
+```
+
+### 4. Run database migrations
+
+```bash
+pnpm db:migrate
+```
+
+### 5. Start the dev server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Usage
+
+### Ingest documents via CLI
+
+```bash
+pnpm ingest ./path/to/docs
+```
+
+Or upload directly from the UI at `/knowledge`.
+
+### Chat
+
+Go to `/` (the root page), select a provider, and ask questions. Citation markers in the answer are clickable and open a drawer showing the source chunk.
+
+## API Routes
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/chat` | Streaming SSE chat with citations |
+| `GET` | `/api/documents` | List documents (paginated) |
+| `POST` | `/api/documents` | Upload and index a document |
+| `GET` | `/api/documents/:id` | Get document details |
+| `DELETE` | `/api/documents/:id` | Delete document and its chunks |
+| `POST` | `/api/documents/:id/reindex` | Re-chunk and re-embed a document |
+| `GET` | `/api/health` | Database connectivity check |
+
+## Scripts
+
+```bash
+pnpm dev          # Start development server
+pnpm build        # Production build
+pnpm start        # Start production server
+pnpm test         # Run Jest tests
+pnpm ingest       # CLI document ingestion
+pnpm lint         # ESLint with auto-fix
+pnpm format       # Prettier
+pnpm db:start     # Start PostgreSQL (Docker)
+pnpm db:stop      # Stop PostgreSQL (Docker)
+pnpm db:migrate   # Run Prisma migrations (dev)
+pnpm db:studio    # Open Prisma Studio
+pnpm prisma       # Prisma CLI passthrough
+```
+
+## Project Structure
+
+```
+app/
+  api/chat/           # Streaming chat endpoint
+  api/documents/      # Document CRUD + reindex
+  api/health/         # Health check
+  knowledge/          # Knowledge base management page
+  page.tsx            # Chat page
+
+src/
+  components/
+    chat/             # ChatWindow, MessageBubble, CitationDrawer, ProviderSelect
+    knowledge/        # UploadZone, DocumentTable
+  lib/
+    db/client.ts      # Prisma singleton
+    embeddings/bge.ts # Local bge-m3 embedding
+    ingest/           # parse, split, pipeline
+    lang/detect.ts    # Language detection (franc-min)
+    llm/              # claude, deepseek, router, types
+    retrieval/        # vector-search, query expansion, rerank
+
+prisma/
+  schema.prisma       # Document + Chunk models (pgvector via Unsupported)
+  migrations/
+
+scripts/
+  ingest.ts           # CLI ingestion entrypoint
+```
+
+## Database Schema
+
+```
+Document  id, name, mime, content_hash (unique), lang, size_bytes, status, error_msg, created_at
+Chunk     id, document_id, ord, content, embedding vector(1024), lang, created_at
+```
+
+Chunks are linked to their document with `onDelete: Cascade`. Vector similarity search uses cosine distance via pgvector's `<=>` operator with an HNSW index.
