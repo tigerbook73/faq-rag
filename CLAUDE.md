@@ -8,20 +8,20 @@ A local FAQ question-answering system. Users upload documents (Chinese or Englis
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router) + React 19 + TypeScript |
-| UI | Tailwind CSS + shadcn/ui (components in `components/ui/`) |
-| Database | PostgreSQL 16 + pgvector via Docker |
-| ORM | Prisma (`prisma/schema.prisma`) |
-| Embedding | `Xenova/bge-m3` via `@huggingface/transformers` — local, multilingual, 1024-dim |
-| LLM default | DeepSeek `deepseek-chat` via `openai` SDK (`baseURL: https://api.deepseek.com`) |
-| LLM alternate | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` (currently disabled — commented out in the provider enum) |
-| Text splitting | `@langchain/textsplitters` RecursiveCharacterTextSplitter |
-| Package manager | pnpm |
-| Language detect | `franc-min` |
-| File parsing | pdf-parse v2 (`PDFParse` class), mammoth (docx), native fs (md/txt) |
-| Testing | Jest + ts-jest |
+| Layer           | Choice                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| Framework       | Next.js 16 (App Router) + React 19 + TypeScript                                                              |
+| UI              | Tailwind CSS + shadcn/ui (components in `components/ui/`)                                                    |
+| Database        | PostgreSQL 16 + pgvector via Docker                                                                          |
+| ORM             | Prisma (`prisma/schema.prisma`)                                                                              |
+| Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` — local, multilingual, 1024-dim                              |
+| LLM default     | DeepSeek `deepseek-chat` via `openai` SDK (`baseURL: https://api.deepseek.com`)                              |
+| LLM alternate   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` (currently disabled — commented out in the provider enum) |
+| Text splitting  | `@langchain/textsplitters` RecursiveCharacterTextSplitter                                                    |
+| Package manager | pnpm                                                                                                         |
+| Language detect | `franc-min`                                                                                                  |
+| File parsing    | pdf-parse v2 (`PDFParse` class), mammoth (docx), native fs (md/txt)                                          |
+| Testing         | Jest + ts-jest                                                                                               |
 
 ---
 
@@ -112,14 +112,14 @@ interface LLMProvider {
 
 ## Important File Locations
 
-| Path | Purpose |
-|---|---|
-| `app/api/chat/route.ts` | Chat endpoint — retrieval + LLM streaming |
-| `src/lib/retrieval/query.ts` | Cross-language retrieval orchestration |
-| `src/lib/ingest/pipeline.ts` | Ingestion pipeline (parse → chunk → embed → store) |
-| `src/lib/ingest/parse.ts` | File parser (md/txt/pdf/docx) |
-| `src/lib/embeddings/bge.ts` | Local bge-m3 embedding (singleton) |
-| `src/lib/llm/router.ts` | LLM provider selection |
-| `src/components/chat/MessageBubble.tsx` | Citation marker rendering |
-| `prisma/schema.prisma` | DB schema |
-| `jest.config.ts` | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`) |
+| Path                                    | Purpose                                                    |
+| --------------------------------------- | ---------------------------------------------------------- |
+| `app/api/chat/route.ts`                 | Chat endpoint — retrieval + LLM streaming                  |
+| `src/lib/retrieval/query.ts`            | Cross-language retrieval orchestration                     |
+| `src/lib/ingest/pipeline.ts`            | Ingestion pipeline (parse → chunk → embed → store)         |
+| `src/lib/ingest/parse.ts`               | File parser (md/txt/pdf/docx)                              |
+| `src/lib/embeddings/bge.ts`             | Local bge-m3 embedding (singleton)                         |
+| `src/lib/llm/router.ts`                 | LLM provider selection                                     |
+| `src/components/chat/MessageBubble.tsx` | Citation marker rendering                                  |
+| `prisma/schema.prisma`                  | DB schema                                                  |
+| `jest.config.ts`                        | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`) |

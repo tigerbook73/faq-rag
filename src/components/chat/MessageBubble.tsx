@@ -67,7 +67,12 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
   );
 }
 
-function renderWithCitations(text: string, citations: Citation[] | undefined, onClick?: (c: Citation) => void, nodeIndex = 0) {
+function renderWithCitations(
+  text: string,
+  citations: Citation[] | undefined,
+  onClick?: (c: Citation) => void,
+  nodeIndex = 0,
+) {
   if (!citations) return text;
   const parts = text.split(/(\[\^\d+\])/g);
   return parts.map((part, i) => {

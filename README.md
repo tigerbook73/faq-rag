@@ -13,18 +13,18 @@ A local FAQ question-answering system built with Retrieval-Augmented Generation.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) + React 19 + TypeScript |
-| UI | Tailwind CSS + shadcn/ui |
-| Database | PostgreSQL 16 + pgvector (Docker) |
-| ORM | Prisma |
-| Embedding | `Xenova/bge-m3` via `@huggingface/transformers` (1024-dim, local, multilingual) |
-| LLM — default | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` |
-| LLM — alternate | DeepSeek `deepseek-chat` via `openai` SDK |
-| Text splitting | `@langchain/textsplitters` RecursiveCharacterTextSplitter |
-| Language detect | `franc-min` |
-| Testing | Jest + ts-jest |
+| Layer           | Technology                                                                      |
+| --------------- | ------------------------------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router) + React 19 + TypeScript                                 |
+| UI              | Tailwind CSS + shadcn/ui                                                        |
+| Database        | PostgreSQL 16 + pgvector (Docker)                                               |
+| ORM             | Prisma                                                                          |
+| Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` (1024-dim, local, multilingual) |
+| LLM — default   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk`                              |
+| LLM — alternate | DeepSeek `deepseek-chat` via `openai` SDK                                       |
+| Text splitting  | `@langchain/textsplitters` RecursiveCharacterTextSplitter                       |
+| Language detect | `franc-min`                                                                     |
+| Testing         | Jest + ts-jest                                                                  |
 
 ## Prerequisites
 
@@ -99,15 +99,15 @@ Go to `/` (the root page), select a provider, and ask questions. Citation marker
 
 ## API Routes
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/chat` | Streaming SSE chat with citations |
-| `GET` | `/api/documents` | List documents (paginated) |
-| `POST` | `/api/documents` | Upload and index a document |
-| `GET` | `/api/documents/:id` | Get document details |
-| `DELETE` | `/api/documents/:id` | Delete document and its chunks |
-| `POST` | `/api/documents/:id/reindex` | Re-chunk and re-embed a document |
-| `GET` | `/api/health` | Database connectivity check |
+| Method   | Path                         | Description                       |
+| -------- | ---------------------------- | --------------------------------- |
+| `POST`   | `/api/chat`                  | Streaming SSE chat with citations |
+| `GET`    | `/api/documents`             | List documents (paginated)        |
+| `POST`   | `/api/documents`             | Upload and index a document       |
+| `GET`    | `/api/documents/:id`         | Get document details              |
+| `DELETE` | `/api/documents/:id`         | Delete document and its chunks    |
+| `POST`   | `/api/documents/:id/reindex` | Re-chunk and re-embed a document  |
+| `GET`    | `/api/health`                | Database connectivity check       |
 
 ## Scripts
 
