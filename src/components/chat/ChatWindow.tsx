@@ -7,6 +7,7 @@ import { CitationDrawer, type Citation } from "./CitationDrawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from "next/link";
 
 interface Message {
   role: "user" | "assistant";
@@ -128,9 +129,9 @@ export function ChatWindow() {
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">Provider:</span>
           <ProviderSelect value={provider} onChange={setProvider} />
-          <a href="/knowledge" className="text-sm text-primary hover:underline">
+          <Link href="/knowledge" className="text-sm text-primary hover:underline">
             Knowledge Base
-          </a>
+          </Link>
         </div>
       </header>
 
