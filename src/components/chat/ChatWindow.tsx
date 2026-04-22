@@ -159,11 +159,11 @@ export function ChatWindow() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask a question... (Ctrl+Enter to send)"
-          className="flex-1 resize-none min-h-[60px] max-h-[200px]"
+          className="flex-1 resize-none min-h-15 max-h-50"
           rows={2}
           disabled={loading}
         />
-        <Button onClick={send} disabled={loading || !input.trim()} className="h-[60px] px-6">
+        <Button onClick={send} disabled={loading || !input.trim()} className="h-15 px-6">
           {loading ? "Thinking…" : "Send"}
         </Button>
       </div>

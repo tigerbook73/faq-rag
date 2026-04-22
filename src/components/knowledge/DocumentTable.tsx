@@ -98,7 +98,7 @@ export function DocumentTable() {
       <TableBody>
         {items.map((doc) => (
           <TableRow key={doc.id}>
-            <TableCell className="font-medium max-w-[200px] truncate">{doc.name}</TableCell>
+            <TableCell className="font-medium max-w-50 truncate">{doc.name}</TableCell>
             <TableCell>{doc.lang}</TableCell>
             <TableCell>{doc._count.chunks}</TableCell>
             <TableCell>
