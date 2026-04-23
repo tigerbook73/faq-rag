@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
 import { getSession, saveSession, setLastChatId, type Message, type ChatSession } from "@/src/lib/chat-storage";
+import { toast } from "sonner";
 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
   const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
-  const [session, setSession] = useState<ChatSession | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [session, setSession] = useState<ChatSession | null>(() => (chatId ? getSession(chatId) : null));
+  const [messages, setMessages] = useState<Message[]>(() => (chatId ? (getSession(chatId)?.messages ?? []) : []));
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
@@ -23,16 +24,10 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load session from localStorage after mount (avoids SSR/hydration mismatch)
   useEffect(() => {
     if (!chatId) return;
     const s = getSession(chatId);
-    if (!s) {
-      router.replace("/chat/new");
-      return;
-    }
-    setSession(s);
-    setMessages(s.messages);
+    if (!s) { router.replace("/chat/new"); return; }
     setLastChatId(s.id);
   }, [chatId, router]);
 
@@ -139,10 +134,10 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
         }
       }
     } catch (err) {
-      const finalMessages: Message[] = [...withUser, { role: "assistant", content: `Error: ${String(err)}` }];
-      setMessages(finalMessages);
+      toast.error(String(err));
+      setMessages(withUser);
       if (!chatId) router.replace(`/chat/${resolvedId}`);
-      persistMessages(finalMessages, sessionAtSend, resolvedId);
+      persistMessages(withUser, sessionAtSend, resolvedId);
     } finally {
       setLoading(false);
     }

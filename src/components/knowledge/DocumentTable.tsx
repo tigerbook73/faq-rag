@@ -1,10 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface Document {
   id: string;
@@ -45,6 +55,7 @@ async function reindexDocument(id: string): Promise<void> {
 
 export function DocumentTable() {
   const qc = useQueryClient();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["documents"],
@@ -84,6 +95,7 @@ export function DocumentTable() {
   }
 
   return (
+    <>
     <Table>
       <TableHeader>
         <TableRow>
@@ -121,8 +133,7 @@ export function DocumentTable() {
               <Button
                 variant="destructive"
                 size="sm"
-                disabled={deleteMut.isPending}
-                onClick={() => deleteMut.mutate(doc.id)}
+                onClick={() => setDeleteTarget(doc.id)}
               >
                 Delete
               </Button>
@@ -131,5 +142,30 @@ export function DocumentTable() {
         ))}
       </TableBody>
     </Table>
+
+    <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Delete document?</DialogTitle>
+          <DialogDescription>
+            This will permanently remove the document and all its indexed chunks.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <Button
+            variant="destructive"
+            disabled={deleteMut.isPending}
+            onClick={() => {
+              if (deleteTarget) deleteMut.mutate(deleteTarget);
+              setDeleteTarget(null);
+            }}
+          >
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

@@ -5,6 +5,15 @@ import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/reac
 import { UploadZone } from "@/src/components/knowledge/UploadZone";
 import { DocumentTable } from "@/src/components/knowledge/DocumentTable";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 
 const qc = new QueryClient();
@@ -12,6 +21,7 @@ const qc = new QueryClient();
 function KnowledgePageInner() {
   const queryClient = useQueryClient();
   const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
   const handleUploaded = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -39,7 +49,7 @@ function KnowledgePageInner() {
           <p className="text-muted-foreground text-sm mt-1">Upload and manage your knowledge documents</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={rebuilding} onClick={handleRebuildAll}>
+          <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
             {rebuilding ? "Rebuilding…" : "Rebuild All"}
           </Button>
           <Link href="/chat/last">
@@ -50,6 +60,30 @@ function KnowledgePageInner() {
 
       <UploadZone onUploaded={handleUploaded} />
       <DocumentTable />
+
+      <Dialog open={rebuildDialogOpen} onOpenChange={setRebuildDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Rebuild all documents?</DialogTitle>
+            <DialogDescription>
+              This will re-embed every document. It may take a while and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="outline"
+              disabled={rebuilding}
+              onClick={() => {
+                setRebuildDialogOpen(false);
+                handleRebuildAll();
+              }}
+            >
+              Rebuild All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
