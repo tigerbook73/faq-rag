@@ -40,7 +40,13 @@ export async function POST(req: NextRequest) {
     score: Number(c.score),
   }));
 
-  const contextBlock = chunks.map((c, i) => `[${i + 1}] (source: ${c.document_name})\n${c.content}`).join("\n\n");
+  function sanitizeChunkContent(content: string): string {
+    return content.replace(/\[\^(\d+)\]/g, "(^$1)").replace(/\[(\d+)\]/g, "($1)");
+  }
+
+  const contextBlock = chunks
+    .map((c, i) => `[${i + 1}] (source: ${c.document_name})\n${sanitizeChunkContent(c.content)}`)
+    .join("\n\n");
 
   const userMessage = `<context>\n${contextBlock}\n</context>\n\nQuestion: ${question}`;
 

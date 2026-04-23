@@ -132,22 +132,21 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
 
           if (payload.type === "citations") {
             citations = payload.citations;
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[assistantIndex] = { ...updated[assistantIndex], citations };
-              return updated;
-            });
           } else if (payload.type === "token") {
             assistantContent += payload.token;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent, citations };
+              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
               return updated;
             });
           } else if (payload.type === "done") {
+            const usedNums = new Set(
+              [...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
+            );
+            const usedCitations = citations.filter((c) => usedNums.has(c.id));
             const finalMessages: Message[] = [
               ...withUser,
-              { role: "assistant", content: assistantContent, citations },
+              { role: "assistant", content: assistantContent, citations: usedCitations },
             ];
             setMessages(finalMessages);
             if (!chatId) router.replace(`/chat/${resolvedId}`);
