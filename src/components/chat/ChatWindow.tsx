@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { ProviderSelect } from "./ProviderSelect";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
@@ -8,22 +9,64 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
+import {
+  getSession,
+  saveSession,
+  setLastChatId,
+  type Message,
+  type ChatSession,
+} from "@/src/lib/chat-storage";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  citations?: Citation[];
-}
-
-export function ChatWindow() {
+export function ChatWindow({ chatId }: { chatId: string | null }) {
+  const router = useRouter();
   const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [session, setSession] = useState<ChatSession | null>(() =>
+    chatId ? getSession(chatId) : null,
+  );
+  const [messages, setMessages] = useState<Message[]>(() =>
+    chatId ? (getSession(chatId)?.messages ?? []) : [],
+  );
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Redirect to new chat if the ID is not found in storage
+  useEffect(() => {
+    if (chatId && !getSession(chatId)) {
+      router.replace("/chat/new");
+    }
+  }, [chatId, router]);
+
+  // Sync last-visited pointer when loading an existing session
+  useEffect(() => {
+    if (session) setLastChatId(session.id);
+  }, [session]);
+
+  const persistMessages = useCallback(
+    (updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
+      const now = Date.now();
+      const s: ChatSession = currentSession ?? {
+        id: idToUse,
+        title: "New Chat",
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      const title =
+        s.title === "New Chat"
+          ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat")
+          : s.title;
+      const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
+      setSession(next);
+      saveSession(next);
+      setLastChatId(idToUse);
+      window.dispatchEvent(new CustomEvent("chat-session-updated"));
+    },
+    [],
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,14 +90,20 @@ export function ChatWindow() {
     setInput("");
     setLoading(true);
 
+    // Resolve or generate the chat ID at send time
+    const resolvedId = chatId ?? crypto.randomUUID();
+
     const history = messages.map((m) => ({ role: m.role, content: m.content }));
-    setMessages((prev) => [...prev, { role: "user", content: question }]);
+    const withUser: Message[] = [...messages, { role: "user", content: question }];
+    setMessages(withUser);
 
     let assistantContent = "";
     let citations: Citation[] = [];
-    const assistantIndex = messages.length + 1;
+    const assistantIndex = withUser.length;
 
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+    const sessionAtSend = session;
 
     try {
       const res = await fetch("/api/chat", {
@@ -85,39 +134,39 @@ export function ChatWindow() {
             citations = payload.citations;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[assistantIndex] = {
-                ...updated[assistantIndex],
-                citations,
-              };
+              updated[assistantIndex] = { ...updated[assistantIndex], citations };
               return updated;
             });
           } else if (payload.type === "token") {
             assistantContent += payload.token;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[assistantIndex] = {
-                ...updated[assistantIndex],
-                content: assistantContent,
-                citations,
-              };
+              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent, citations };
               return updated;
             });
+          } else if (payload.type === "done") {
+            const finalMessages: Message[] = [
+              ...withUser,
+              { role: "assistant", content: assistantContent, citations },
+            ];
+            setMessages(finalMessages);
+            if (!chatId) router.replace(`/chat/${resolvedId}`);
+            persistMessages(finalMessages, sessionAtSend, resolvedId);
           }
         }
       }
     } catch (err) {
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[assistantIndex] = {
-          role: "assistant",
-          content: `Error: ${String(err)}`,
-        };
-        return updated;
-      });
+      const finalMessages: Message[] = [
+        ...withUser,
+        { role: "assistant", content: `Error: ${String(err)}` },
+      ];
+      setMessages(finalMessages);
+      if (!chatId) router.replace(`/chat/${resolvedId}`);
+      persistMessages(finalMessages, sessionAtSend, resolvedId);
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, provider]);
+  }, [input, loading, messages, provider, session, chatId, router, persistMessages]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -130,53 +179,51 @@ export function ChatWindow() {
   );
 
   return (
-    <div className="flex h-screen justify-center">
-      <div className="flex flex-col h-full w-[80%] max-w-3xl border border-black">
-        <header className="flex items-center justify-between px-4 py-3 border-b">
-          <h1 className="font-semibold text-lg">FAQ RAG</h1>
-          <div className="flex items-center gap-3">
-            <span>Provider:</span>
-            <ProviderSelect value={provider} onChange={setProvider} />
-            <Link href="/knowledge">Knowledge Base</Link>
+    <div className="flex flex-col h-full">
+      <header className="flex items-center justify-between px-4 py-3 border-b pl-12">
+        <h1 className="font-semibold text-lg truncate max-w-xs">{session?.title ?? "New Chat"}</h1>
+        <div className="flex items-center gap-3">
+          <span>Provider:</span>
+          <ProviderSelect value={provider} onChange={setProvider} />
+          <Link href="/knowledge">Knowledge Base</Link>
+        </div>
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+            Ask a question about your knowledge base
           </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {messages.length === 0 && (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Ask a question about your knowledge base
-            </div>
-          )}
-          {messages.map((m, i) => (
-            <MessageBubble
-              key={i}
-              role={m.role}
-              content={m.content}
-              citations={m.citations}
-              onCitationClick={handleCitationClick}
-            />
-          ))}
-          <div ref={bottomRef} />
-        </div>
-
-        <div className="px-4 py-3 border-t flex gap-2 items-end">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask a question... (Ctrl+Enter to send)"
-            className="flex-1 resize-none min-h-15 max-h-50"
-            rows={2}
-            disabled={loading}
+        )}
+        {messages.map((m, i) => (
+          <MessageBubble
+            key={i}
+            role={m.role}
+            content={m.content}
+            citations={m.citations}
+            onCitationClick={handleCitationClick}
           />
-          <Button onClick={send} disabled={loading} className="h-15 px-6">
-            {loading ? "Thinking…" : "Send"}
-          </Button>
-        </div>
-
-        <CitationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} citation={selectedCitation} />
+        ))}
+        <div ref={bottomRef} />
       </div>
+
+      <div className="px-4 py-3 border-t flex gap-2 items-end">
+        <Textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask a question... (Ctrl+Enter to send)"
+          className="flex-1 resize-none min-h-15 max-h-50"
+          rows={2}
+          disabled={loading}
+        />
+        <Button onClick={send} disabled={loading} className="h-15 px-6">
+          {loading ? "Thinking…" : "Send"}
+        </Button>
+      </div>
+
+      <CitationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} citation={selectedCitation} />
     </div>
   );
 }

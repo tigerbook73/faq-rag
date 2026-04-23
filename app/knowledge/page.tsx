@@ -42,7 +42,7 @@ function KnowledgePageInner() {
           <Button variant="outline" disabled={rebuilding} onClick={handleRebuildAll}>
             {rebuilding ? "Rebuilding…" : "Rebuild All"}
           </Button>
-          <Link href="/">
+          <Link href="/chat/last">
             <Button variant="secondary">Back to Chat</Button>
           </Link>
         </div>
