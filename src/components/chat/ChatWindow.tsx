@@ -14,8 +14,8 @@ import { getSession, saveSession, setLastChatId, type Message, type ChatSession 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
   const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
-  const [session, setSession] = useState<ChatSession | null>(() => (chatId ? getSession(chatId) : null));
-  const [messages, setMessages] = useState<Message[]>(() => (chatId ? (getSession(chatId)?.messages ?? []) : []));
+  const [session, setSession] = useState<ChatSession | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
@@ -23,17 +23,15 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Redirect to new chat if the ID is not found in storage
+  // Load session from localStorage after mount (avoids SSR/hydration mismatch)
   useEffect(() => {
-    if (chatId && !getSession(chatId)) {
-      router.replace("/chat/new");
-    }
+    if (!chatId) return;
+    const s = getSession(chatId);
+    if (!s) { router.replace("/chat/new"); return; }
+    setSession(s);
+    setMessages(s.messages);
+    setLastChatId(s.id);
   }, [chatId, router]);
-
-  // Sync last-visited pointer when loading an existing session
-  useEffect(() => {
-    if (session) setLastChatId(session.id);
-  }, [session]);
 
   const persistMessages = useCallback((updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
     const now = Date.now();

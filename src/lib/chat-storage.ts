@@ -17,6 +17,10 @@ export interface ChatSession {
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 const LAST_KEY = "chat:last";
 
+function isClient() {
+  return typeof window !== "undefined";
+}
+
 let sessionsCache: ChatSession[] | null = null;
 
 function invalidateCache() {
@@ -28,6 +32,7 @@ function sessionKey(id: string) {
 }
 
 export function pruneOldSessions(): void {
+  if (!isClient()) return;
   const now = Date.now();
   let pruned = false;
   for (let i = 0; i < localStorage.length; i++) {
@@ -59,11 +64,12 @@ export function createSession(id: string): ChatSession {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
-  localStorage.setItem(sessionKey(id), JSON.stringify(session));
+  if (isClient()) localStorage.setItem(sessionKey(id), JSON.stringify(session));
   return session;
 }
 
 export function getSession(id: string): ChatSession | null {
+  if (!isClient()) return null;
   const raw = localStorage.getItem(sessionKey(id));
   if (!raw) return null;
   try {
@@ -74,11 +80,13 @@ export function getSession(id: string): ChatSession | null {
 }
 
 export function saveSession(session: ChatSession): void {
+  if (!isClient()) return;
   localStorage.setItem(sessionKey(session.id), JSON.stringify(session));
   invalidateCache();
 }
 
 export function listSessions(): ChatSession[] {
+  if (!isClient()) return [];
   if (sessionsCache) return sessionsCache;
   const sessions: ChatSession[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -97,15 +105,18 @@ export function listSessions(): ChatSession[] {
 }
 
 export function deleteSession(id: string): void {
+  if (!isClient()) return;
   localStorage.removeItem(sessionKey(id));
   if (getLastChatId() === id) localStorage.removeItem(LAST_KEY);
   invalidateCache();
 }
 
 export function getLastChatId(): string | null {
+  if (!isClient()) return null;
   return localStorage.getItem(LAST_KEY);
 }
 
 export function setLastChatId(id: string): void {
+  if (!isClient()) return;
   localStorage.setItem(LAST_KEY, id);
 }
