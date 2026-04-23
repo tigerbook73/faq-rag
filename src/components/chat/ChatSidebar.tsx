@@ -2,8 +2,26 @@
 
 import { useSyncExternalStore, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { listSessions, deleteSession, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
-import { PanelLeft, PanelLeftClose, SquarePen } from "lucide-react";
+import {
+  listSessions,
+  deleteSession,
+  getLastChatId,
+  type ChatSession,
+} from "@/src/lib/chat-storage";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { SquarePen } from "lucide-react";
 
 function subscribe(callback: () => void) {
   window.addEventListener("chat-session-updated", callback);
@@ -23,16 +41,7 @@ function relativeDate(ts: number): string {
   return `${days}d ago`;
 }
 
-interface ChatSidebarProps {
-  open: boolean;
-  onClose: () => void;
-  onOpen: () => void;
-}
-
-const iconBtn =
-  "p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors";
-
-export function ChatSidebar({ open, onClose, onOpen }: ChatSidebarProps) {
+export function ChatSidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -57,79 +66,75 @@ export function ChatSidebar({ open, onClose, onOpen }: ChatSidebarProps) {
   const showBackToLast = lastChatId && pathname !== `/chat/${lastChatId}`;
 
   return (
-    <aside
-      className={`flex flex-col shrink-0 border-r h-full bg-background overflow-hidden transition-[width] duration-200 ease-in-out ${
-        open ? "w-60" : "w-12"
-      }`}
-    >
-      {!open ? (
-        <div className="flex flex-col items-center gap-1 px-1.5 py-2">
-          <button onClick={onOpen} className={iconBtn} aria-label="Open sidebar">
-            <PanelLeft size={18} />
-          </button>
-          <button onClick={handleNew} className={iconBtn} aria-label="New chat">
-            <SquarePen size={18} />
-          </button>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">
+            FAQ-RAG
+          </span>
+          <SidebarTrigger />
         </div>
-      ) : (
-        <>
-          <div className="flex items-center justify-between px-3 py-3 border-b">
-            <span className="text-sm font-semibold">FAQ-RAG</span>
-            <button onClick={onClose} className={iconBtn} aria-label="Close sidebar">
-              <PanelLeftClose size={18} />
-            </button>
-          </div>
+      </SidebarHeader>
 
-          <nav className="flex-1 overflow-y-auto py-2">
-            <div
-              onClick={handleNew}
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer rounded-md mx-1 hover:bg-accent/50 text-sm text-muted-foreground"
-            >
-              <SquarePen size={14} className="shrink-0" />
-              New Chat
-            </div>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="New Chat" onClick={handleNew}>
+                  <SquarePen />
+                  <span>New Chat</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-            {sessions.length === 0 && (
-              <p className="px-4 text-xs text-muted-foreground mt-4">No chats yet</p>
-            )}
-            {sessions.map((s: ChatSession) => {
-              const active = pathname === `/chat/${s.id}`;
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => router.push(`/chat/${s.id}`)}
-                  className={`group flex items-center justify-between px-3 py-2 cursor-pointer rounded-md mx-1 ${
-                    active ? "bg-accent" : "hover:bg-accent/50"
-                  }`}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm truncate">{s.title}</p>
-                    <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
-                  </div>
-                  <button
-                    onClick={(e) => handleDelete(e, s.id)}
-                    className="ml-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
-                    aria-label="Delete chat"
-                  >
-                    ✕
-                  </button>
-                </div>
-              );
-            })}
-          </nav>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sessions.length === 0 && (
+                <p className="px-2 py-1 text-xs text-muted-foreground">No chats yet</p>
+              )}
+              {sessions.map((s: ChatSession) => {
+                const active = pathname === `/chat/${s.id}`;
+                return (
+                  <SidebarMenuItem key={s.id}>
+                    <SidebarMenuButton
+                      isActive={active}
+                      onClick={() => router.push(`/chat/${s.id}`)}
+                      className="h-auto overflow-visible items-start"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm">{s.title}</p>
+                        <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
+                      </div>
+                    </SidebarMenuButton>
+                    <SidebarMenuAction
+                      showOnHover
+                      onClick={(e) => handleDelete(e, s.id)}
+                      aria-label="Delete chat"
+                    >
+                      ✕
+                    </SidebarMenuAction>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-          {showBackToLast && (
-            <div className="px-3 py-3 border-t">
-              <button
-                onClick={() => router.push("/chat/last")}
-                className="w-full text-sm text-muted-foreground hover:text-foreground text-left transition-colors"
-              >
-                ↩ Back to last chat
-              </button>
-            </div>
-          )}
-        </>
+      {showBackToLast && (
+        <SidebarFooter className="group-data-[collapsible=icon]:hidden">
+          <button
+            onClick={() => router.push("/chat/last")}
+            className="w-full px-2 text-sm text-muted-foreground hover:text-foreground text-left transition-colors"
+          >
+            ↩ Back to last chat
+          </button>
+        </SidebarFooter>
       )}
-    </aside>
+    </Sidebar>
   );
 }

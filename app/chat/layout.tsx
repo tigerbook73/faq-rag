@@ -1,26 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { ChatSidebar } from "@/src/components/chat/ChatSidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { pruneOldSessions } from "@/src/lib/chat-storage";
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   useEffect(() => {
     pruneOldSessions();
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <ChatSidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onOpen={() => setSidebarOpen(true)}
-      />
-      <main className="relative flex-1 overflow-hidden">
-        {children}
-      </main>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={false} className="h-screen overflow-hidden">
+        <ChatSidebar />
+        <SidebarInset className="overflow-hidden">
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }
