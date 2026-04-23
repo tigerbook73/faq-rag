@@ -9,23 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
-import {
-  getSession,
-  saveSession,
-  setLastChatId,
-  type Message,
-  type ChatSession,
-} from "@/src/lib/chat-storage";
+import { getSession, saveSession, setLastChatId, type Message, type ChatSession } from "@/src/lib/chat-storage";
 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
   const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
-  const [session, setSession] = useState<ChatSession | null>(() =>
-    chatId ? getSession(chatId) : null,
-  );
-  const [messages, setMessages] = useState<Message[]>(() =>
-    chatId ? (getSession(chatId)?.messages ?? []) : [],
-  );
+  const [session, setSession] = useState<ChatSession | null>(() => (chatId ? getSession(chatId) : null));
+  const [messages, setMessages] = useState<Message[]>(() => (chatId ? (getSession(chatId)?.messages ?? []) : []));
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
@@ -45,28 +35,23 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
     if (session) setLastChatId(session.id);
   }, [session]);
 
-  const persistMessages = useCallback(
-    (updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
-      const now = Date.now();
-      const s: ChatSession = currentSession ?? {
-        id: idToUse,
-        title: "New Chat",
-        messages: [],
-        createdAt: now,
-        updatedAt: now,
-      };
-      const title =
-        s.title === "New Chat"
-          ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat")
-          : s.title;
-      const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
-      setSession(next);
-      saveSession(next);
-      setLastChatId(idToUse);
-      window.dispatchEvent(new CustomEvent("chat-session-updated"));
-    },
-    [],
-  );
+  const persistMessages = useCallback((updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
+    const now = Date.now();
+    const s: ChatSession = currentSession ?? {
+      id: idToUse,
+      title: "New Chat",
+      messages: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const title =
+      s.title === "New Chat" ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat") : s.title;
+    const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
+    setSession(next);
+    saveSession(next);
+    setLastChatId(idToUse);
+    window.dispatchEvent(new CustomEvent("chat-session-updated"));
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -140,9 +125,7 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
               return updated;
             });
           } else if (payload.type === "done") {
-            const usedNums = new Set(
-              [...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
-            );
+            const usedNums = new Set([...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)));
             const usedCitations = citations.filter((c) => usedNums.has(c.id));
             const finalMessages: Message[] = [
               ...withUser,
@@ -155,10 +138,7 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
         }
       }
     } catch (err) {
-      const finalMessages: Message[] = [
-        ...withUser,
-        { role: "assistant", content: `Error: ${String(err)}` },
-      ];
+      const finalMessages: Message[] = [...withUser, { role: "assistant", content: `Error: ${String(err)}` }];
       setMessages(finalMessages);
       if (!chatId) router.replace(`/chat/${resolvedId}`);
       persistMessages(finalMessages, sessionAtSend, resolvedId);
@@ -188,38 +168,42 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-            Ask a question about your knowledge base
-          </div>
-        )}
-        {messages.map((m, i) => (
-          <MessageBubble
-            key={i}
-            role={m.role}
-            content={m.content}
-            citations={m.citations}
-            onCitationClick={handleCitationClick}
-          />
-        ))}
-        <div ref={bottomRef} />
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto w-[80%] px-4 py-4">
+          {messages.length === 0 && (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              Ask a question about your knowledge base
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <MessageBubble
+              key={i}
+              role={m.role}
+              content={m.content}
+              citations={m.citations}
+              onCitationClick={handleCitationClick}
+            />
+          ))}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
-      <div className="px-4 py-3 border-t flex gap-2 items-end">
-        <Textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask a question... (Ctrl+Enter to send)"
-          className="flex-1 resize-none min-h-15 max-h-50"
-          rows={2}
-          disabled={loading}
-        />
-        <Button onClick={send} disabled={loading} className="h-15 px-6">
-          {loading ? "Thinking…" : "Send"}
-        </Button>
+      <div className="border-t">
+        <div className="max-w-3xl mx-auto w-[80%] px-4 py-3 flex gap-2 items-end">
+          <Textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask a question... (Ctrl+Enter to send)"
+            className="flex-1 resize-none min-h-15 max-h-50"
+            rows={2}
+            disabled={loading}
+          />
+          <Button onClick={send} disabled={loading} className="h-15 px-6">
+            {loading ? "Thinking…" : "Send"}
+          </Button>
+        </div>
       </div>
 
       <CitationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} citation={selectedCitation} />
