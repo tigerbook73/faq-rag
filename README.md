@@ -20,8 +20,8 @@ A local FAQ question-answering system built with Retrieval-Augmented Generation.
 | Database        | PostgreSQL 16 + pgvector (Docker)                                               |
 | ORM             | Prisma                                                                          |
 | Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` (1024-dim, local, multilingual) |
-| LLM — default   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk`                              |
-| LLM — alternate | DeepSeek `deepseek-chat` via `openai` SDK                                       |
+| LLM — default   | DeepSeek `deepseek-chat` via `openai` SDK                                       |
+| LLM — alternate | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk`                              |
 | Text splitting  | `@langchain/textsplitters` RecursiveCharacterTextSplitter                       |
 | Language detect | `franc-min`                                                                     |
 | Testing         | Jest + ts-jest                                                                  |
