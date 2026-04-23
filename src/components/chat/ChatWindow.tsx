@@ -6,7 +6,6 @@ import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
 
@@ -40,6 +39,8 @@ export function ChatWindow() {
   }, []);
 
   const send = useCallback(async () => {
+    textareaRef.current?.focus();
+
     const question = input.trim();
     if (!question || loading) return;
 
@@ -129,20 +130,18 @@ export function ChatWindow() {
   );
 
   return (
-    <div className="flex h-screen justify-center items-center">
+    <div className="flex h-screen justify-center">
       <div className="flex flex-col h-full w-[80%] max-w-3xl border border-black">
         <header className="flex items-center justify-between px-4 py-3 border-b">
           <h1 className="font-semibold text-lg">FAQ RAG</h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Provider:</span>
+            <span>Provider:</span>
             <ProviderSelect value={provider} onChange={setProvider} />
-            <Link href="/knowledge" className="text-sm text-primary hover:underline">
-              Knowledge Base
-            </Link>
+            <Link href="/knowledge">Knowledge Base</Link>
           </div>
         </header>
 
-        <ScrollArea className="flex-1 px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               Ask a question about your knowledge base
@@ -158,7 +157,7 @@ export function ChatWindow() {
             />
           ))}
           <div ref={bottomRef} />
-        </ScrollArea>
+        </div>
 
         <div className="px-4 py-3 border-t flex gap-2 items-end">
           <Textarea
@@ -171,7 +170,7 @@ export function ChatWindow() {
             rows={2}
             disabled={loading}
           />
-          <Button onClick={send} disabled={loading || !input.trim()} className="h-15 px-6">
+          <Button onClick={send} disabled={loading} className="h-15 px-6">
             {loading ? "Thinking…" : "Send"}
           </Button>
         </div>
