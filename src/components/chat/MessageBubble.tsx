@@ -14,10 +14,9 @@ interface Props {
 export function MessageBubble({ role, content, citations, onCitationClick }: Props) {
   const isUser = role === "user";
 
-  const rendered = content.replace(/\[\^(\d+)\]/g, (_, n) => {
-    const num = parseInt(n, 10);
-    return `[^${num}]`;
-  });
+  const rendered = content
+    .replace(/\[\^(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`)
+    .replace(/\[(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`);
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
@@ -55,7 +54,7 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
                     onClick={() => onCitationClick?.(c)}
                     className="block text-xs text-muted-foreground hover:text-foreground text-left"
                   >
-                    [^{c.id}] {c.documentName} — {c.preview.slice(0, 60)}…
+                    [{c.id}] {c.documentName} — {c.preview.slice(0, 60)}…
                   </button>
                 ))}
               </div>
