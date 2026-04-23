@@ -27,7 +27,10 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
   useEffect(() => {
     if (!chatId) return;
     const s = getSession(chatId);
-    if (!s) { router.replace("/chat/new"); return; }
+    if (!s) {
+      router.replace("/chat/new");
+      return;
+    }
     setSession(s);
     setMessages(s.messages);
     setLastChatId(s.id);

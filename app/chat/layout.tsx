@@ -15,9 +15,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     <TooltipProvider>
       <SidebarProvider defaultOpen={false} className="h-screen overflow-hidden">
         <ChatSidebar />
-        <SidebarInset className="overflow-hidden">
-          {children}
-        </SidebarInset>
+        <SidebarInset className="overflow-hidden">{children}</SidebarInset>
       </SidebarProvider>
     </TooltipProvider>
   );

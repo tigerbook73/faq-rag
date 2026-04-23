@@ -2,12 +2,7 @@
 
 import { useSyncExternalStore, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  listSessions,
-  deleteSession,
-  getLastChatId,
-  type ChatSession,
-} from "@/src/lib/chat-storage";
+import { listSessions, deleteSession, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
 import {
   Sidebar,
   SidebarContent,
@@ -69,9 +64,7 @@ export function ChatSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">
-            FAQ-RAG
-          </span>
+          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">FAQ-RAG</span>
           <SidebarTrigger />
         </div>
       </SidebarHeader>
@@ -93,9 +86,7 @@ export function ChatSidebar() {
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupContent>
             <SidebarMenu>
-              {sessions.length === 0 && (
-                <p className="px-2 py-1 text-xs text-muted-foreground">No chats yet</p>
-              )}
+              {sessions.length === 0 && <p className="px-2 py-1 text-xs text-muted-foreground">No chats yet</p>}
               {sessions.map((s: ChatSession) => {
                 const active = pathname === `/chat/${s.id}`;
                 return (
@@ -110,11 +101,7 @@ export function ChatSidebar() {
                         <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
                       </div>
                     </SidebarMenuButton>
-                    <SidebarMenuAction
-                      showOnHover
-                      onClick={(e) => handleDelete(e, s.id)}
-                      aria-label="Delete chat"
-                    >
+                    <SidebarMenuAction showOnHover onClick={(e) => handleDelete(e, s.id)} aria-label="Delete chat">
                       ✕
                     </SidebarMenuAction>
                   </SidebarMenuItem>
