@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -34,4 +35,26 @@ model Chunk {
   document   Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@map("chunks")
+}
+
+model Session {
+  id        String           @id @default(uuid())
+  title     String           @default("New Chat")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  messages  SessionMessage[]
+
+  @@map("sessions")
+}
+
+model SessionMessage {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  role      String
+  content   String
+  citations Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_messages")
 }

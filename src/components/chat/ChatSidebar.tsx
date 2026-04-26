@@ -1,8 +1,8 @@
 "use client";
 
-import { useSyncExternalStore, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { listSessions, deleteSession, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
+import { fetchSessions, apiDeleteSession, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
 import {
   Sidebar,
   SidebarContent,
@@ -18,13 +18,6 @@ import {
 } from "@/components/ui/sidebar";
 import { SquarePen } from "lucide-react";
 
-function subscribe(callback: () => void) {
-  window.addEventListener("chat-session-updated", callback);
-  return () => window.removeEventListener("chat-session-updated", callback);
-}
-
-const EMPTY_SESSIONS: ChatSession[] = [];
-
 function relativeDate(ts: number): string {
   const diff = Date.now() - ts;
   const minutes = Math.floor(diff / 60_000);
@@ -39,19 +32,41 @@ function relativeDate(ts: number): string {
 export function ChatSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [lastChatId, setLastChatId] = useState<string | null>(null);
 
-  const sessions = useSyncExternalStore(subscribe, listSessions, () => EMPTY_SESSIONS);
-  const lastChatId = useSyncExternalStore(subscribe, getLastChatId, () => null);
+  // Initial session load — both setState calls inside .then() to avoid SSR hydration mismatch
+  useEffect(() => {
+    let active = true;
+    const lastId = getLastChatId();
+    fetchSessions().then((data) => {
+      if (active) {
+        setSessions(data);
+        setLastChatId(lastId);
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
+  // Re-fetch when any component dispatches chat-session-updated
+  useEffect(() => {
+    function onUpdate() {
+      setLastChatId(getLastChatId());
+      fetchSessions().then((data) => setSessions(data));
+    }
+    window.addEventListener("chat-session-updated", onUpdate);
+    return () => window.removeEventListener("chat-session-updated", onUpdate);
+  }, []);
 
   const handleNew = useCallback(() => {
     router.push("/chat/new");
   }, [router]);
 
   const handleDelete = useCallback(
-    (e: React.MouseEvent, id: string) => {
+    async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
       e.stopPropagation();
-      deleteSession(id);
+      await apiDeleteSession(id);
       window.dispatchEvent(new CustomEvent("chat-session-updated"));
       if (pathname === `/chat/${id}`) router.replace("/chat/new");
     },

@@ -17,7 +17,7 @@
 | 2-A | Knowledge 页面改用 Server Components + Suspense | ✅   |
 | 2-B | 上传改用 Server Actions + useActionState        | ✅   |
 | 2-C | DocumentTable 乐观更新                          | ✅   |
-| 2-D | 聊天会话迁移到 PostgreSQL                       | 📋   |
+| 2-D | 聊天会话迁移到 PostgreSQL                       | ✅   |
 
 ## 3. 用户体验
 
@@ -74,6 +74,17 @@
 - `app/knowledge/actions.ts`（新建）：`"use server"` Server Action，接收多文件 FormData，逐一调 `ingestBuffer`，最后 `revalidatePath("/knowledge")` 使 RSC 树失效
 - `UploadZone.tsx`：`useActionState(uploadDocuments, null)` 替换手动 `fetch` + `uploading` state；`isPending` 驱动 disabled/opacity；`useEffect` 监听 `state.timestamp` 变化触发 toast；移除 `useRouter` 和 `router.refresh()`
 - `/api/documents` POST 路由保留不动（用户决策）
+
+### 2-D 聊天会话迁移到 PostgreSQL
+
+- `prisma/schema.prisma`：新增 `Session`（id/title/createdAt/updatedAt）和 `SessionMessage`（id/sessionId/role/content/citations Json?/createdAt）两个 model，`migration: add_sessions`
+- `app/api/sessions/route.ts`（新建）：`GET`（list，按 updatedAt desc）、`POST`（create with client-generated UUID）
+- `app/api/sessions/[id]/route.ts`（新建）：`GET`、`PATCH`（事务内全量替换 messages）、`DELETE`
+- `src/lib/chat-storage.ts`：删除全部 localStorage CRUD，保留 `getLastChatId` / `setLastChatId`（localStorage，仅存 ID）；新增 `fetchSessions`、`fetchSession`、`upsertSession`（PATCH 404 时自动 POST + PATCH）、`apiDeleteSession`
+- `ChatWindow.tsx`：接收 `initialSession` prop（Server Component 传入，无客户端 loading 状态）；`persistMessages` 改为 async，`await upsertSession`
+- `ChatSidebar.tsx`：移除 `useSyncExternalStore`，改为 `useState` + `useEffect` 拉取 + 监听 `chat-session-updated` 事件触发重新 fetch
+- `app/chat/[id]/page.tsx`：直接 `prisma.session.findUnique` 查询，传 `initialSession` 给 `ChatWindow`
+- `app/chat/layout.tsx`：移除 `pruneOldSessions`（DB 永久保存，无需过期清理）
 
 ### 2-C DocumentTable 乐观更新
 

@@ -9,17 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
-import { getSession, saveSession, setLastChatId, type Message, type ChatSession } from "@/src/lib/chat-storage";
+import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/src/lib/chat-storage";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 
-export function ChatWindow({ chatId }: { chatId: string | null }) {
+export function ChatWindow({ chatId, initialSession }: { chatId: string | null; initialSession: ChatSession | null }) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
-  const [session, setSession] = useState<ChatSession | null>(() => (chatId ? getSession(chatId) : null));
-  const [messages, setMessages] = useState<Message[]>(() => (chatId ? (getSession(chatId)?.messages ?? []) : []));
+  const [session, setSession] = useState<ChatSession | null>(initialSession);
+  const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
@@ -29,12 +29,11 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
 
   useEffect(() => {
     if (!chatId) return;
-    const s = getSession(chatId);
-    if (!s) { router.replace("/chat/new"); return; }
-    setLastChatId(s.id);
-  }, [chatId, router]);
+    if (!initialSession) { router.replace("/chat/new"); return; }
+    setLastChatId(chatId);
+  }, [chatId, initialSession, router]);
 
-  const persistMessages = useCallback((updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
+  const persistMessages = useCallback(async (updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
     const now = Date.now();
     const s: ChatSession = currentSession ?? {
       id: idToUse,
@@ -47,8 +46,8 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
       s.title === "New Chat" ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat") : s.title;
     const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
     setSession(next);
-    saveSession(next);
     setLastChatId(idToUse);
+    await upsertSession(next);
     window.dispatchEvent(new CustomEvent("chat-session-updated"));
   }, []);
 
@@ -74,7 +73,6 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
     setInput("");
     setLoading(true);
 
-    // Resolve or generate the chat ID at send time
     const resolvedId = chatId ?? crypto.randomUUID();
 
     const history = messages.map((m) => ({ role: m.role, content: m.content }));
@@ -131,16 +129,16 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
               { role: "assistant", content: assistantContent, citations: usedCitations },
             ];
             setMessages(finalMessages);
+            await persistMessages(finalMessages, sessionAtSend, resolvedId);
             if (!chatId) router.replace(`/chat/${resolvedId}`);
-            persistMessages(finalMessages, sessionAtSend, resolvedId);
           }
         }
       }
     } catch (err) {
       toast.error(String(err));
       setMessages(withUser);
+      await persistMessages(withUser, sessionAtSend, resolvedId);
       if (!chatId) router.replace(`/chat/${resolvedId}`);
-      persistMessages(withUser, sessionAtSend, resolvedId);
     } finally {
       setLoading(false);
     }

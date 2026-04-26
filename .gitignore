@@ -46,3 +46,6 @@ next-env.d.ts
 
 # AI planning
 /PLAN.md
+
+# Prisma generated client
+/src/generated/

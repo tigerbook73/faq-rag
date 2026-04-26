@@ -14,101 +14,10 @@ export interface ChatSession {
   updatedAt: number;
 }
 
-const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 const LAST_KEY = "chat:last";
 
 function isClient() {
   return typeof window !== "undefined";
-}
-
-let sessionsCache: ChatSession[] | null = null;
-
-function invalidateCache() {
-  sessionsCache = null;
-}
-
-function sessionKey(id: string) {
-  return `chat:${id}`;
-}
-
-export function pruneOldSessions(): void {
-  if (!isClient()) return;
-  const now = Date.now();
-  let pruned = false;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key?.startsWith("chat:") || key === LAST_KEY) continue;
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const session: ChatSession = JSON.parse(raw);
-      if (now - session.updatedAt > TWO_DAYS_MS) {
-        localStorage.removeItem(key);
-        i--;
-        pruned = true;
-      }
-    } catch {
-      localStorage.removeItem(key);
-      i--;
-      pruned = true;
-    }
-  }
-  if (pruned) invalidateCache();
-}
-
-export function createSession(id: string): ChatSession {
-  const session: ChatSession = {
-    id,
-    title: "New Chat",
-    messages: [],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-  if (isClient()) localStorage.setItem(sessionKey(id), JSON.stringify(session));
-  return session;
-}
-
-export function getSession(id: string): ChatSession | null {
-  if (!isClient()) return null;
-  const raw = localStorage.getItem(sessionKey(id));
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as ChatSession;
-  } catch {
-    return null;
-  }
-}
-
-export function saveSession(session: ChatSession): void {
-  if (!isClient()) return;
-  localStorage.setItem(sessionKey(session.id), JSON.stringify(session));
-  invalidateCache();
-}
-
-export function listSessions(): ChatSession[] {
-  if (!isClient()) return [];
-  if (sessionsCache) return sessionsCache;
-  const sessions: ChatSession[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key?.startsWith("chat:") || key === LAST_KEY) continue;
-    const raw = localStorage.getItem(key);
-    if (!raw) continue;
-    try {
-      sessions.push(JSON.parse(raw) as ChatSession);
-    } catch {
-      // skip corrupted entries
-    }
-  }
-  sessionsCache = sessions.sort((a, b) => b.updatedAt - a.updatedAt);
-  return sessionsCache;
-}
-
-export function deleteSession(id: string): void {
-  if (!isClient()) return;
-  localStorage.removeItem(sessionKey(id));
-  if (getLastChatId() === id) localStorage.removeItem(LAST_KEY);
-  invalidateCache();
 }
 
 export function getLastChatId(): string | null {
@@ -119,4 +28,43 @@ export function getLastChatId(): string | null {
 export function setLastChatId(id: string): void {
   if (!isClient()) return;
   localStorage.setItem(LAST_KEY, id);
+}
+
+function toSession(raw: { id: string; title: string; createdAt: string | Date; updatedAt: string | Date; messages?: Array<{ role: string; content: string; citations: unknown }> }): ChatSession {
+  return {
+    id: raw.id,
+    title: raw.title,
+    createdAt: new Date(raw.createdAt).getTime(),
+    updatedAt: new Date(raw.updatedAt).getTime(),
+    messages: (raw.messages ?? []).map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+      citations: (m.citations as Citation[] | null) ?? undefined,
+    })),
+  };
+}
+
+export async function fetchSessions(): Promise<ChatSession[]> {
+  const res = await fetch("/api/sessions");
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map(toSession);
+}
+
+export async function fetchSession(id: string): Promise<ChatSession | null> {
+  const res = await fetch(`/api/sessions/${id}`);
+  if (!res.ok) return null;
+  return toSession(await res.json());
+}
+
+export async function upsertSession(session: ChatSession): Promise<void> {
+  await fetch(`/api/sessions/${session.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: session.title, messages: session.messages }),
+  });
+}
+
+export async function apiDeleteSession(id: string): Promise<void> {
+  await fetch(`/api/sessions/${id}`, { method: "DELETE" });
 }
