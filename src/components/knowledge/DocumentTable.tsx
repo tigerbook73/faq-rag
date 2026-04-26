@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -19,17 +18,16 @@ import {
 interface Document {
   id: string;
   name: string;
-  lang: string;
+  lang: string | null;
   status: string;
   sizeBytes: number;
   errorMsg: string | null;
-  createdAt: string;
+  createdAt: Date;
   _count: { chunks: number };
 }
 
-interface DocumentListResponse {
-  items: Document[];
-  total: number;
+interface Props {
+  initialDocuments: Document[];
 }
 
 function statusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
@@ -39,133 +37,174 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
   return "outline";
 }
 
-async function fetchDocuments(): Promise<DocumentListResponse> {
-  const res = await fetch("/api/documents");
-  if (!res.ok) throw new Error("Failed to fetch documents");
-  return res.json();
-}
-
-async function deleteDocument(id: string): Promise<void> {
-  await fetch(`/api/documents/${id}`, { method: "DELETE" });
-}
-
-async function reindexDocument(id: string): Promise<void> {
-  await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
-}
-
-export function DocumentTable() {
-  const qc = useQueryClient();
+export function DocumentTable({ initialDocuments }: Props) {
+  const router = useRouter();
+  const [documents, setDocuments] = useState(initialDocuments);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [reindexingId, setReindexingId] = useState<string | null>(null);
+  const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["documents"],
-    queryFn: fetchDocuments,
-    refetchInterval: (query) => {
-      const hasPending = query.state.data?.items.some((d) => d.status === "pending");
-      return hasPending ? 3000 : false;
-    },
-  });
+  // Sync local state when RSC pushes new props (after router.refresh())
+  useEffect(() => { setDocuments(initialDocuments); }, [initialDocuments]);
 
-  const deleteMut = useMutation({
-    mutationFn: deleteDocument,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
-  });
+  // Lightweight polling during indexing — fetch JSON, not a full RSC re-render.
+  // router.refresh() is called only once when indexing finishes to sync RSC state.
+  useEffect(() => {
+    if (!documents.some((d) => d.status === "pending")) return;
+    const id = setInterval(async () => {
+      const res = await fetch("/api/documents");
+      const data = await res.json();
+      setDocuments(data.items);
+      if (!data.items.some((d: Document) => d.status === "pending")) {
+        router.refresh();
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [documents, router]);
 
-  const reindexMut = useMutation({
-    mutationFn: reindexDocument,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
-  });
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
-        ))}
-      </div>
-    );
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    try {
+      await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      router.refresh();
+    } finally {
+      setDeletingId(null);
+      setDeleteTarget(null);
+    }
   }
 
-  const items = data?.items ?? [];
+  async function handleReindex(id: string) {
+    setReindexingId(id);
+    try {
+      await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
+      router.refresh();
+    } finally {
+      setReindexingId(null);
+    }
+  }
 
-  if (items.length === 0) {
+  async function handleRebuildAll() {
+    setRebuilding(true);
+    try {
+      for (const doc of documents) {
+        await fetch(`/api/documents/${doc.id}/reindex`, { method: "POST" });
+      }
+      router.refresh();
+    } finally {
+      setRebuilding(false);
+    }
+  }
+
+  if (documents.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground text-sm">No documents yet. Upload some files above.</div>
+      <div className="text-center py-12 text-muted-foreground text-sm">
+        No documents yet. Upload some files above.
+      </div>
     );
   }
 
   return (
     <>
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Lang</TableHead>
-          <TableHead>Chunks</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Uploaded</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.map((doc) => (
-          <TableRow key={doc.id}>
-            <TableCell className="font-medium max-w-50 truncate">{doc.name}</TableCell>
-            <TableCell>{doc.lang}</TableCell>
-            <TableCell>{doc._count.chunks}</TableCell>
-            <TableCell>
-              <Badge variant={statusVariant(doc.status)} title={doc.errorMsg ?? undefined}>
-                {doc.status}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-muted-foreground text-xs">
-              {new Date(doc.createdAt).toLocaleDateString()}
-            </TableCell>
-            <TableCell className="text-right space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={reindexMut.isPending}
-                onClick={() => reindexMut.mutate(doc.id)}
-              >
-                Reindex
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteTarget(doc.id)}
-              >
-                Delete
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+      <div className="flex justify-end">
+        <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
+          {rebuilding ? "Rebuilding…" : "Rebuild All"}
+        </Button>
+      </div>
 
-    <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Delete document?</DialogTitle>
-          <DialogDescription>
-            This will permanently remove the document and all its indexed chunks.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button
-            variant="destructive"
-            disabled={deleteMut.isPending}
-            onClick={() => {
-              if (deleteTarget) deleteMut.mutate(deleteTarget);
-              setDeleteTarget(null);
-            }}
-          >
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Lang</TableHead>
+            <TableHead>Chunks</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Uploaded</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {documents.map((doc) => (
+            <TableRow key={doc.id}>
+              <TableCell className="font-medium max-w-50 truncate">{doc.name}</TableCell>
+              <TableCell>{doc.lang}</TableCell>
+              <TableCell>{doc._count.chunks}</TableCell>
+              <TableCell>
+                <Badge variant={statusVariant(doc.status)} title={doc.errorMsg ?? undefined}>
+                  {doc.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground text-xs">
+                {new Date(doc.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell className="text-right space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={reindexingId === doc.id}
+                  onClick={() => handleReindex(doc.id)}
+                >
+                  {reindexingId === doc.id ? "Reindexing…" : "Reindex"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={deletingId === doc.id}
+                  onClick={() => setDeleteTarget(doc.id)}
+                >
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Delete document?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the document and all its indexed chunks.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="destructive"
+              disabled={!!deletingId}
+              onClick={() => { if (deleteTarget) handleDelete(deleteTarget); }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rebuildDialogOpen} onOpenChange={setRebuildDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Rebuild all documents?</DialogTitle>
+            <DialogDescription>
+              This will re-embed every document. It may take a while and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="outline"
+              disabled={rebuilding}
+              onClick={() => {
+                setRebuildDialogOpen(false);
+                handleRebuildAll();
+              }}
+            >
+              Rebuild All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

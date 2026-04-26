@@ -1,45 +1,14 @@
-"use client";
-
-import { useCallback, useState } from "react";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { UploadZone } from "@/src/components/knowledge/UploadZone";
+import { prisma } from "@/src/lib/db/client";
 import { DocumentTable } from "@/src/components/knowledge/DocumentTable";
+import { UploadZone } from "@/src/components/knowledge/UploadZone";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import Link from "next/link";
 
-const qc = new QueryClient();
-
-function KnowledgePageInner() {
-  const queryClient = useQueryClient();
-  const [rebuilding, setRebuilding] = useState(false);
-  const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
-
-  const handleUploaded = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["documents"] });
-  }, [queryClient]);
-
-  const handleRebuildAll = useCallback(async () => {
-    setRebuilding(true);
-    try {
-      const res = await fetch("/api/documents");
-      const data = await res.json();
-      for (const doc of data.items) {
-        await fetch(`/api/documents/${doc.id}/reindex`, { method: "POST" });
-      }
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-    } finally {
-      setRebuilding(false);
-    }
-  }, [queryClient]);
+export default async function KnowledgePage() {
+  const documents = await prisma.document.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { chunks: true } } },
+  });
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -48,50 +17,13 @@ function KnowledgePageInner() {
           <h1 className="text-2xl font-bold">Knowledge Base</h1>
           <p className="text-muted-foreground text-sm mt-1">Upload and manage your knowledge documents</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
-            {rebuilding ? "Rebuilding…" : "Rebuild All"}
-          </Button>
-          <Link href="/chat/last">
-            <Button variant="secondary">Back to Chat</Button>
-          </Link>
-        </div>
+        <Link href="/chat/last">
+          <Button variant="secondary">Back to Chat</Button>
+        </Link>
       </div>
 
-      <UploadZone onUploaded={handleUploaded} />
-      <DocumentTable />
-
-      <Dialog open={rebuildDialogOpen} onOpenChange={setRebuildDialogOpen}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Rebuild all documents?</DialogTitle>
-            <DialogDescription>
-              This will re-embed every document. It may take a while and cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button
-              variant="outline"
-              disabled={rebuilding}
-              onClick={() => {
-                setRebuildDialogOpen(false);
-                handleRebuildAll();
-              }}
-            >
-              Rebuild All
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UploadZone />
+      <DocumentTable initialDocuments={documents} />
     </div>
-  );
-}
-
-export default function KnowledgePage() {
-  return (
-    <QueryClientProvider client={qc}>
-      <KnowledgePageInner />
-    </QueryClientProvider>
   );
 }

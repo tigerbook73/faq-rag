@@ -1,14 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
-interface Props {
-  onUploaded: () => void;
-}
-
-export function UploadZone({ onUploaded }: Props) {
+export function UploadZone() {
+  const router = useRouter();
   const [uploading, setUploading] = useState(false);
 
   const onDrop = useCallback(
@@ -42,9 +40,9 @@ export function UploadZone({ onUploaded }: Props) {
         toast.error(`${success} uploaded, ${failed} failed.`);
       }
       setUploading(false);
-      onUploaded();
+      router.refresh();
     },
-    [onUploaded],
+    [router],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
