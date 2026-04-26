@@ -42,7 +42,12 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
 export function DocumentTable({ initialDocuments }: Props) {
   const router = useRouter();
   const [polledDocuments, setPolledDocuments] = useState<Document[] | null>(null);
-  const documents = polledDocuments ?? initialDocuments;
+  const [search, setSearch] = useState("");
+  const allDocuments = polledDocuments ?? initialDocuments;
+  const documents = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? allDocuments.filter((d) => d.name.toLowerCase().includes(q)) : allDocuments;
+  }, [allDocuments, search]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
@@ -106,7 +111,7 @@ export function DocumentTable({ initialDocuments }: Props) {
     }
   }
 
-  if (documents.length === 0) {
+  if (allDocuments.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground text-sm">
         No documents yet. Upload some files above.
@@ -116,10 +121,18 @@ export function DocumentTable({ initialDocuments }: Props) {
 
   return (
     <>
-      <div className="flex justify-end">
-        <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
-          {rebuilding ? "Rebuilding…" : "Rebuild All"}
-        </Button>
+      <div className="flex items-center gap-3">
+        <Input
+          placeholder="Search documents…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
+        />
+        <div className="ml-auto">
+          <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
+            {rebuilding ? "Rebuilding…" : "Rebuild All"}
+          </Button>
+        </div>
       </div>
 
       <Table>
@@ -134,6 +147,13 @@ export function DocumentTable({ initialDocuments }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody>
+          {documents.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
+                No documents match &ldquo;{search}&rdquo;
+              </TableCell>
+            </TableRow>
+          )}
           {documents.map((doc) => (
             <TableRow key={doc.id}>
               <TableCell className="font-medium max-w-50 truncate">{doc.name}</TableCell>
