@@ -12,7 +12,7 @@
 | [RAG 核心质量](#一rag-核心质量)               | 6 项   | 4 ✅ | HyDE 检索                       |
 | [Next.js / React 技能](#二nextjs--react-技能) | 5 项   | 4 ✅ | 多轮对话上下文管理              |
 | [用户体验 / 缺失功能](#三用户体验--缺失功能)  | 8 项   | 6 ✅ | 对话导出、Rebuild All 进度      |
-| [可靠性 / 生产就绪](#四可靠性--生产就绪)      | 7 项   | 2 ✅ | DB 索引、Sessions Zod、速率限制 |
+| [可靠性 / 生产就绪](#四可靠性--生产就绪)      | 9 项   | 2 ✅ | DB 索引、Sessions Zod、断点续传 |
 | [代码质量](#五代码质量)                       | 4 项   | 0 ✅ | DeepSeek 单例、config.ts        |
 | [测试](#六测试)                               | 3 项   | 0 ✅ | 检索管道测试                    |
 
@@ -47,6 +47,8 @@
   §4-D  Sessions PATCH Zod 校验      ← 补齐安全加固
   §4-E  速率限制                     ← 防滥用
   §4-F  SSE 流解析健壮化             ← 消除边界 bug
+  §4-H  Ingestion Worker Thread      ← 嵌入与 HTTP server 进程隔离
+  §4-I  断点续传索引（Resume Indexing）← 开发中断后自动恢复
   §5-A  DeepSeek 客户端单例化        ← 去重实例
   §5-B  魔法数字提取到 config.ts     ← 统一调优参数
   §5-C  文件扩展名改用 path.extname  ← 边界修复
@@ -476,6 +478,84 @@ WITH (m = 16, ef_construction = 64);
 
 ---
 
+### 4-H ✦ Ingestion Worker Thread（持久 worker 隔离）
+
+|              |                                                       |
+| ------------ | ----------------------------------------------------- |
+| **难度**     | ⭐⭐⭐ 中等偏高                                       |
+| **预计工时** | 3–5 小时                                              |
+| **核心技能** | Node.js `worker_threads` 持久消息循环、Next.js bundler 配置 |
+
+**背景**：`processDocument` 在 Next.js 主进程内运行，ONNX 推理（bge-m3 ~570MB）长时间占用 CPU，导致文档索引期间聊天请求响应明显变慢。
+
+**方案**：持久 worker（服务器生命周期内常驻），bge-m3 模型只加载一次，主线程通过消息传递分派任务：
+
+```ts
+// src/lib/ingest/indexing-worker.ts
+import { parentPort } from "worker_threads";
+import { processDocument } from "./pipeline";
+
+// 模型随 worker 启动预热，后续任务直接复用
+parentPort!.on("message", async ({ docId, filePath }) => {
+  try {
+    await processDocument(docId, filePath);
+    parentPort!.postMessage({ ok: true, docId });
+  } catch (err) {
+    parentPort!.postMessage({ ok: false, docId, error: String(err) });
+  }
+});
+
+// src/lib/ingest/indexing-queue.ts（主线程单例）
+import { Worker } from "worker_threads";
+let worker: Worker | null = null;
+
+export function getIndexingWorker() {
+  worker ??= new Worker("./indexing-worker.js");
+  return worker;
+}
+
+export function enqueueIndexing(docId: string, filePath: string) {
+  getIndexingWorker().postMessage({ docId, filePath });
+}
+```
+
+**启动时机**：在 `instrumentation.ts` 的 `register()` 中预启动 worker，bge-m3 提前预热，用户上传后无冷启动延迟。
+
+**串行保证**：worker 天然串行处理消息，多文件上传自动排队，避免多个 bge-m3 实例并发撑爆内存。
+
+**难点**：Next.js bundler 不会自动打包 worker entry，需配置 `next.config` 的 `webpack` 规则将 worker 文件编译为独立产物。Worker 内需独立的 Prisma client（不能跨线程共享）。
+
+---
+
+### 4-I ✦ 断点续传索引（Resume Indexing）
+
+|              |                                             |
+| ------------ | ------------------------------------------- |
+| **难度**     | ⭐⭐ 中等                                   |
+| **预计工时** | 2–3 小时                                    |
+| **核心技能** | 启动钩子、进度追踪、幂等设计                |
+
+**背景**：开发过程中频繁重启 dev server，大文件索引被中断后 `status` 停留在 `"pending"` 或 `"failed"`（已写入部分 chunks），再次启动不会自动恢复，需要手动 Rebuild。
+
+**目标**：应用启动时自动检测并恢复未完成的索引任务。
+
+**实现设计**：
+
+```
+启动时（Next.js instrumentation hook 或首次 API 请求时）
+  → 查询 status = 'pending' 的 Document
+  → 检查 data/uploads/{docId}/{name} 文件是否存在
+  → 对比 content_hash（确保文件未被改动）
+  → 若文件完好：删除已有 chunks（从头重跑），调用 processDocument
+  → 若文件已消失：status 改为 'failed'，errorMsg = '文件缺失，请重新上传'
+```
+
+**进阶（可选）**：在 `Document` 表增加 `indexed_chunks Int @default(0)` 字段，每成功写入一批 chunks 就更新计数，恢复时从 `indexed_chunks` 处续接而非从头重跑——适合超大文档（>500 chunks）。
+
+**启动钩子位置**：Next.js 推荐使用 `instrumentation.ts`（`register()` 函数）在 server 启动时执行一次性逻辑，无需修改任何路由。
+
+---
+
 ## 五、代码质量
 
 ### 5-A ✦ DeepSeek 客户端单例化
@@ -603,11 +683,11 @@ test("双语检索合并去重", async () => {
 
 ```
 学习价值
-   高 │  HyDE   Cross-encoder  ✅Sessions→PG
+   高 │  HyDE   ✅Cross-encoder  ✅Sessions→PG
       │  ✅DeepSeek/Claude Cache  ✅Server Components  ✅Server Actions
       │
    中 │  ✅并行嵌入  ✅乐观更新  ✅Zod校验  SSE健壮化  速率限制
-      │  HNSW索引  DB索引  Playwright  上下文管理
+      │  断点续传  Ingestion Worker  HNSW索引  DB索引  Playwright  上下文管理
       │
    低 │  ✅启用Claude UI  ✅暗色模式  ✅文档搜索  ✅引用长度
       │  ✅会话重命名  单例化  config.ts  path.extname
@@ -615,7 +695,7 @@ test("双语检索合并去重", async () => {
          低改动成本     中改动成本     高改动成本
 ```
 
-**下一步建议**：左上角未完成项 — §1-C Cross-encoder Rerank（最大质量跃升）+ §4-C DB 索引（最快见效）。
+**下一步建议**：§1-D HyDE 检索（RAG 质量，~10 行）+ §4-I 断点续传索引（开发体验，2–3 小时）+ §4-C DB 索引（最快见效，一次 migration）。
 
 ---
 
