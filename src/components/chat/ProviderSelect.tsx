@@ -16,7 +16,7 @@ export function ProviderSelect({ value, onChange }: Props) {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={PROVIDER.DEEPSEEK}>{PROVIDER_LABEL[PROVIDER.DEEPSEEK]}</SelectItem>
-        <SelectItem disabled value={PROVIDER.CLAUDE}>
+        <SelectItem value={PROVIDER.CLAUDE}>
           {PROVIDER_LABEL[PROVIDER.CLAUDE]}
         </SelectItem>
       </SelectContent>

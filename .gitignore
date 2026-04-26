@@ -38,8 +38,7 @@ yarn-error.log*
 .vercel
 
 # runtime data (docker volume remnant + user uploads)
-/data/pg/
-/data/uploads/
+/data/*
 
 # typescript
 *.tsbuildinfo
