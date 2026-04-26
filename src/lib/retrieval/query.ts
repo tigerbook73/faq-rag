@@ -1,10 +1,11 @@
 import { getEmbedding } from "../embeddings/bge";
 import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
+import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
 import OpenAI from "openai";
 
-const TOP_K = 8;
+const TOP_K = 10;
 const TOP_FINAL = 6;
 
 async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<string> {
@@ -47,5 +48,6 @@ export async function retrieve(userQuery: string): Promise<ChunkRow[]> {
 
   const [resZh, resEn] = await Promise.all([vectorSearch(embZh, TOP_K), vectorSearch(embEn, TOP_K)]);
 
-  return deduplicateAndSort([...resZh, ...resEn]).slice(0, TOP_FINAL);
+  const candidates = deduplicateAndSort([...resZh, ...resEn]);
+  return rerankChunks(userQuery, candidates, TOP_FINAL);
 }
