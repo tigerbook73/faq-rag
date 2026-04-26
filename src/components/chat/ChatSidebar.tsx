@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { fetchSessions, apiDeleteSession, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
+import { fetchSessions, apiDeleteSession, updateSessionTitle, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
 import {
   Sidebar,
   SidebarContent,
@@ -34,6 +34,9 @@ export function ChatSidebar() {
   const pathname = usePathname();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [lastChatId, setLastChatId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Initial session load — both setState calls inside .then() to avoid SSR hydration mismatch
   useEffect(() => {
@@ -56,6 +59,28 @@ export function ChatSidebar() {
     }
     window.addEventListener("chat-session-updated", onUpdate);
     return () => window.removeEventListener("chat-session-updated", onUpdate);
+  }, []);
+
+  // Focus input when edit mode activates
+  useEffect(() => {
+    if (editingId) inputRef.current?.select();
+  }, [editingId]);
+
+  const startEdit = useCallback((id: string, title: string) => {
+    setEditingId(id);
+    setEditValue(title);
+  }, []);
+
+  const commitEdit = useCallback(async (id: string) => {
+    const trimmed = editValue.trim();
+    setEditingId(null);
+    if (!trimmed) return;
+    await updateSessionTitle(id, trimmed);
+    window.dispatchEvent(new CustomEvent("chat-session-updated"));
+  }, [editValue]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
   }, []);
 
   const handleNew = useCallback(() => {
@@ -104,15 +129,32 @@ export function ChatSidebar() {
               {sessions.length === 0 && <p className="px-2 py-1 text-xs text-muted-foreground">No chats yet</p>}
               {sessions.map((s: ChatSession) => {
                 const active = pathname === `/chat/${s.id}`;
+                const isEditing = editingId === s.id;
                 return (
                   <SidebarMenuItem key={s.id}>
                     <SidebarMenuButton
                       isActive={active}
-                      onClick={() => router.push(`/chat/${s.id}`)}
+                      onClick={() => !isEditing && router.push(`/chat/${s.id}`)}
+                      onDoubleClick={() => startEdit(s.id, s.title)}
                       className="h-auto overflow-visible items-start"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm">{s.title}</p>
+                        {isEditing ? (
+                          <input
+                            ref={inputRef}
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") { e.preventDefault(); void commitEdit(s.id); }
+                              if (e.key === "Escape") cancelEdit();
+                            }}
+                            onBlur={() => void commitEdit(s.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full text-sm bg-transparent border-b border-primary outline-none"
+                          />
+                        ) : (
+                          <p className="truncate text-sm">{s.title}</p>
+                        )}
                         <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
                       </div>
                     </SidebarMenuButton>

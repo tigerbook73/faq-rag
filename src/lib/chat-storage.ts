@@ -65,6 +65,14 @@ export async function upsertSession(session: ChatSession): Promise<void> {
   });
 }
 
+export async function updateSessionTitle(id: string, title: string): Promise<void> {
+  await fetch(`/api/sessions/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+}
+
 export async function apiDeleteSession(id: string): Promise<void> {
   await fetch(`/api/sessions/${id}`, { method: "DELETE" });
 }
