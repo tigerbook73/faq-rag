@@ -9,6 +9,29 @@ import { detectLang } from "../lang/detect";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
+async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
+  for (let i = 0; i < chunks.length; i++) {
+    await new Promise(r => setImmediate(r));
+    const chunkText = chunks[i];
+    const chunkLang = detectLang(chunkText);
+    const embedding = await getEmbedding(chunkText);
+    const vec = `[${embedding.join(",")}]`;
+    const chunkId = crypto.randomUUID();
+    await prisma.$executeRaw`
+      INSERT INTO chunks (id, document_id, ord, content, lang, embedding, created_at)
+      VALUES (
+        ${chunkId}::uuid,
+        ${docId}::uuid,
+        ${i},
+        ${chunkText},
+        ${chunkLang},
+        ${vec}::vector,
+        NOW()
+      )
+    `;
+  }
+}
+
 export async function ingestFile(filePath: string): Promise<string> {
   const fileName = path.basename(filePath);
   const ext = path.extname(filePath).toLowerCase();
@@ -24,13 +47,7 @@ export async function ingestFile(filePath: string): Promise<string> {
   }
 
   const doc = await prisma.document.create({
-    data: {
-      name: fileName,
-      mime,
-      contentHash,
-      sizeBytes,
-      status: "pending",
-    },
+    data: { name: fileName, mime, contentHash, sizeBytes, status: "pending" },
   });
 
   try {
@@ -38,26 +55,7 @@ export async function ingestFile(filePath: string): Promise<string> {
     const lang = detectLang(text);
     const chunks = await splitText(text);
 
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkText = chunks[i];
-      const chunkLang = detectLang(chunkText);
-      const embedding = await getEmbedding(chunkText);
-      const vec = `[${embedding.join(",")}]`;
-      const chunkId = crypto.randomUUID();
-
-      await prisma.$executeRaw`
-        INSERT INTO chunks (id, document_id, ord, content, lang, embedding, created_at)
-        VALUES (
-          ${chunkId}::uuid,
-          ${doc.id}::uuid,
-          ${i},
-          ${chunkText},
-          ${chunkLang},
-          ${vec}::vector,
-          NOW()
-        )
-      `;
-    }
+    await embedAndStoreChunks(doc.id, chunks);
 
     await prisma.document.update({
       where: { id: doc.id },
@@ -110,26 +108,7 @@ export async function processDocument(docId: string, filePath: string): Promise<
     // remove old chunks if re-indexing
     await prisma.chunk.deleteMany({ where: { documentId: docId } });
 
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkText = chunks[i];
-      const chunkLang = detectLang(chunkText);
-      const embedding = await getEmbedding(chunkText);
-      const vec = `[${embedding.join(",")}]`;
-      const chunkId = crypto.randomUUID();
-
-      await prisma.$executeRaw`
-        INSERT INTO chunks (id, document_id, ord, content, lang, embedding, created_at)
-        VALUES (
-          ${chunkId}::uuid,
-          ${docId}::uuid,
-          ${i},
-          ${chunkText},
-          ${chunkLang},
-          ${vec}::vector,
-          NOW()
-        )
-      `;
-    }
+    await embedAndStoreChunks(docId, chunks);
 
     await prisma.document.update({
       where: { id: docId },

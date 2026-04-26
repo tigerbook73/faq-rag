@@ -28,12 +28,11 @@
 | 3-C | 会话重命名          | 📋   |
 | 3-D | 文档搜索/筛选       | 📋   |
 
-## 4. 测试
+## 4. 可靠性 / 生产就绪
 
-| ID  | 任务                | 状态 |
-| --- | ------------------- | ---- |
-| 4-A | 检索管道单元测试    | 📋   |
-| 4-B | Playwright E2E 测试 | 📋   |
+| ID  | 任务                     | 状态 |
+| --- | ------------------------ | ---- |
+| 4-A | 并行文档块嵌入（层1完成）| ✅   |
 
 ---
 
@@ -62,3 +61,10 @@
 
 - `app/api/chat/route.ts:39`：`c.content.slice(0, 200)` → `c.content`，取消截断
 - `CitationDrawer.tsx:29`：`h-64` → `max-h-[60vh]`，自适应高度容纳完整块内容
+
+### 4-A 并行文档块嵌入（层1 — 批量嵌入）
+
+- `bge.ts`：新增 `getEmbeddings(texts[])` 批量函数，单次 ONNX 调用处理整批文本
+- `pipeline.ts`：两处串行 `for` 循环替换为按 `BATCH_SIZE` 分批调用 `getEmbeddings`；DB INSERT 改为 `Promise.all` 并行写入
+- `EMBED_BATCH=8`（默认），可通过环境变量调整
+- 层2（worker_threads 多核分片）未实施，需额外 bundler 配置
