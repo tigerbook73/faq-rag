@@ -48,9 +48,6 @@ export function DocumentTable({ initialDocuments }: Props) {
   const [rebuilding, setRebuilding] = useState(false);
   const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
-  // Sync local state when RSC pushes new props (after router.refresh())
-  useEffect(() => { setDocuments(initialDocuments); }, [initialDocuments]);
-
   // Lightweight polling during indexing — fetch JSON, not a full RSC re-render.
   // router.refresh() is called only once when indexing finishes to sync RSC state.
   useEffect(() => {
@@ -58,7 +55,7 @@ export function DocumentTable({ initialDocuments }: Props) {
     const id = setInterval(async () => {
       const res = await fetch("/api/documents");
       const data = await res.json();
-      setDocuments(data.items);
+      setPolledDocuments(data.items);
       if (!data.items.some((d: Document) => d.status === "pending")) {
         router.refresh();
       }
@@ -70,6 +67,7 @@ export function DocumentTable({ initialDocuments }: Props) {
     setDeletingId(id);
     try {
       await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      setPolledDocuments(null);
       router.refresh();
     } finally {
       setDeletingId(null);
@@ -81,6 +79,7 @@ export function DocumentTable({ initialDocuments }: Props) {
     setReindexingId(id);
     try {
       await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
+      setPolledDocuments(null);
       router.refresh();
     } finally {
       setReindexingId(null);
@@ -93,6 +92,7 @@ export function DocumentTable({ initialDocuments }: Props) {
       for (const doc of documents) {
         await fetch(`/api/documents/${doc.id}/reindex`, { method: "POST" });
       }
+      setPolledDocuments(null);
       router.refresh();
     } finally {
       setRebuilding(false);
