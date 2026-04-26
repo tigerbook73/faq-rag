@@ -22,6 +22,7 @@ interface Document {
   status: string;
   sizeBytes: number;
   errorMsg: string | null;
+  totalChunks: number | null;
   createdAt: Date;
   _count: { chunks: number };
 }
@@ -39,7 +40,8 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
 
 export function DocumentTable({ initialDocuments }: Props) {
   const router = useRouter();
-  const [documents, setDocuments] = useState(initialDocuments);
+  const [polledDocuments, setPolledDocuments] = useState<Document[] | null>(null);
+  const documents = polledDocuments ?? initialDocuments;
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
@@ -129,7 +131,11 @@ export function DocumentTable({ initialDocuments }: Props) {
             <TableRow key={doc.id}>
               <TableCell className="font-medium max-w-50 truncate">{doc.name}</TableCell>
               <TableCell>{doc.lang}</TableCell>
-              <TableCell>{doc._count.chunks}</TableCell>
+              <TableCell>
+                {doc.status === "pending" && doc.totalChunks
+                  ? `${doc._count.chunks} / ${doc.totalChunks}`
+                  : doc._count.chunks}
+              </TableCell>
               <TableCell>
                 <Badge variant={statusVariant(doc.status)} title={doc.errorMsg ?? undefined}>
                   {doc.status}

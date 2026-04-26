@@ -55,6 +55,11 @@ export async function ingestFile(filePath: string): Promise<string> {
     const lang = detectLang(text);
     const chunks = await splitText(text);
 
+    await prisma.document.update({
+      where: { id: doc.id },
+      data: { totalChunks: chunks.length },
+    });
+
     await embedAndStoreChunks(doc.id, chunks);
 
     await prisma.document.update({
@@ -107,6 +112,11 @@ export async function processDocument(docId: string, filePath: string): Promise<
 
     // remove old chunks if re-indexing
     await prisma.chunk.deleteMany({ where: { documentId: docId } });
+
+    await prisma.document.update({
+      where: { id: docId },
+      data: { totalChunks: chunks.length },
+    });
 
     await embedAndStoreChunks(docId, chunks);
 

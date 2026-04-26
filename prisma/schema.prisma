@@ -16,6 +16,7 @@ model Document {
   sizeBytes   Int      @map("size_bytes")
   status      String   @default("pending") // pending | indexed | failed
   errorMsg    String?  @map("error_msg")
+  totalChunks Int?     @map("total_chunks")
   createdAt   DateTime @default(now()) @map("created_at")
   chunks      Chunk[]
 
