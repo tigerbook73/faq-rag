@@ -11,9 +11,12 @@ import Link from "next/link";
 import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
 import { getSession, saveSession, setLastChatId, type Message, type ChatSession } from "@/src/lib/chat-storage";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
+import { Sun, Moon } from "lucide-react";
 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
   const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
   const [session, setSession] = useState<ChatSession | null>(() => (chatId ? getSession(chatId) : null));
   const [messages, setMessages] = useState<Message[]>(() => (chatId ? (getSession(chatId)?.messages ?? []) : []));
@@ -161,6 +164,14 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
           <span>Provider:</span>
           <ProviderSelect value={provider} onChange={setProvider} />
           <Link href="/knowledge">Knowledge Base</Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          >
+            <Sun className="h-4 w-4 dark:hidden" />
+            <Moon className="hidden h-4 w-4 dark:block" />
+          </Button>
         </div>
       </header>
 
