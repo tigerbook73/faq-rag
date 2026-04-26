@@ -480,31 +480,74 @@ model SessionMessage {
 
 ### 4-A ✦ 并行文档块嵌入
 
-|              |                           |
-| ------------ | ------------------------- |
-| **难度**     | ⭐⭐ 中等                 |
-| **预计工时** | 1–2 小时                  |
-| **核心技能** | Promise 并发控制、p-limit |
+|              |                                                              |
+| ------------ | ------------------------------------------------------------ |
+| **难度**     | ⭐⭐⭐ 中等偏高                                              |
+| **预计工时** | 4–8 小时                                                     |
+| **核心技能** | Node.js `worker_threads`、批量推理、环境变量配置、任务分片   |
 
-**现状**：`pipeline.ts` 中 `processDocument` 串行 `for` 循环嵌入每个 chunk，100 个 chunk 的文档要等所有 chunk 顺序完成。
+**现状**：`pipeline.ts` 中 `processDocument` 串行 `for` 循环嵌入每个 chunk。
+`getEmbedding` 底层是 ONNX Runtime 同步计算，**`Promise.all` 无法并行**——它们仍然排队
+在同一个事件循环里串行执行，`p-limit` 方案对嵌入本身无加速效果。
 
-**目标**：
+**两层并行优化**：
+
+| 层次 | 技术 | 并行发生在哪里 | 适合场景 |
+| ---- | ---- | -------------- | -------- |
+| 层1：批量嵌入 | `ext(texts[])` | ONNX 内部（SIMD / 矩阵运算） | 单 worker 内提升吞吐 |
+| 层2：Worker 分片 | `worker_threads` | OS 线程级（多核 CPU） | 大文档跨核并行 |
+
+**层1 — 批量嵌入**（`src/lib/embeddings/bge.ts`）：
 
 ```ts
-import pLimit from "p-limit";
-const limit = pLimit(5); // 最多 5 个并发嵌入
-
-await Promise.all(
-  chunks.map((chunk, i) =>
-    limit(async () => {
-      const vector = await embed(chunk.content);
-      await prisma.$executeRaw`INSERT INTO chunks ...`;
-    }),
-  ),
-);
+export async function getEmbeddings(texts: string[]): Promise<number[][]> {
+  const ext = await getExtractor();
+  const output = await ext(texts, { pooling: "cls", normalize: true });
+  const dim = 1024;
+  return Array.from({ length: texts.length }, (_, i) =>
+    Array.from((output.data as Float32Array).slice(i * dim, (i + 1) * dim))
+  );
+}
 ```
 
-大文档索引速度预计提升 3–5 倍。
+**层2 — Worker 分片**（`pipeline.ts`）：
+
+```ts
+// chunk 按 worker 数量均匀分片，每个 worker 独立运行 ONNX 实例
+const WORKER_COUNT = parseInt(process.env.EMBED_WORKERS ?? "1");
+const BATCH_SIZE   = parseInt(process.env.EMBED_BATCH  ?? "8");
+
+const shards = Array.from({ length: WORKER_COUNT }, (_, i) =>
+  chunks.filter((_, j) => j % WORKER_COUNT === i)
+);
+
+const results = await Promise.all(shards.map((shard) => embedShard(shard, BATCH_SIZE)));
+const ordered = results.flat().sort((a, b) => a.ord - b.ord);
+// 按原始 ord 写入 DB
+```
+
+**性能预估**（100 chunks，基准 = 当前串行）：
+
+| 配置 | 内存增量 | 预估提升 |
+| ---- | -------- | -------- |
+| 1 worker + batch=8 | 0 | ~3x（SIMD 批量） |
+| 2 worker + batch=8 | +570MB | ~5x |
+| 4 worker + batch=8 | +1.7GB | ~10x（受限于核心数和内存带宽） |
+
+**推荐环境配置**：
+
+```
+# .env.development
+EMBED_WORKERS=1   # 不增加内存，主线程不阻塞
+EMBED_BATCH=8
+
+# .env.production
+EMBED_WORKERS=4
+EMBED_BATCH=16
+```
+
+**实施顺序**：先做层1（批量嵌入，改动小），再做层2（worker 分片，需要
+`worker_threads` 消息通信封装）。
 
 ---
 

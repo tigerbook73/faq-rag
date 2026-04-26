@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     documentId: c.document_id,
     documentName: c.document_name,
     chunkId: c.id,
-    preview: c.content.slice(0, 200),
+    preview: c.content,
     score: Number(c.score),
   }));
 

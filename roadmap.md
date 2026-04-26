@@ -8,6 +8,7 @@
 | 1-B | Claude Prompt Caching       | ✅   |
 | 1-C | 交叉编码器重排序 (Reranker) | 📋   |
 | 1-D | HyDE 检索                   | 📋   |
+| 1-E | 引用片段完整显示            | ✅   |
 
 ## 2. Next.js / React
 
@@ -23,7 +24,7 @@
 | ID  | 任务                | 状态 |
 | --- | ------------------- | ---- |
 | 3-A | 在 UI 中启用 Claude | ✅   |
-| 3-B | 暗色模式切换        | 📋   |
+| 3-B | 暗色模式切换        | ✅   |
 | 3-C | 会话重命名          | 📋   |
 | 3-D | 文档搜索/筛选       | 📋   |
 
@@ -56,3 +57,8 @@
 - **实测发现**：`message_start` 里的 `cache_creation_input_tokens` 首次请求为 0（是 SDK 的时序问题，非缓存未生效），`finalMessage` 路径才是准确来源
 - **与 1-A 相同的根本限制**：history 存的是裸问题，context 每轮重新注入在末尾，prefix 每轮不同，`cache_read` 依然为 0
 - **真正能产生 read 的条件**：多轮对话中 assistant 消息积累到 ≥1024 tokens 后，`lastAssistantIdx` 的 cache_control 才能跨轮被命中
+
+### 1-E 引用片段完整显示
+
+- `app/api/chat/route.ts:39`：`c.content.slice(0, 200)` → `c.content`，取消截断
+- `CitationDrawer.tsx:29`：`h-64` → `max-h-[60vh]`，自适应高度容纳完整块内容

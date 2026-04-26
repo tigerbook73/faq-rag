@@ -22,11 +22,11 @@ interface Props {
 export function CitationDrawer({ open, onClose, citation }: Props) {
   return (
     <Drawer open={open} onClose={onClose}>
-      <DrawerContent>
+      <DrawerContent aria-describedby={undefined}>
         <DrawerHeader>
           <DrawerTitle>{citation ? `[^${citation.id}] ${citation.documentName}` : "Citation"}</DrawerTitle>
         </DrawerHeader>
-        <ScrollArea className="h-64 px-4 pb-6">
+        <ScrollArea className="max-h-[60vh] px-4 pb-6">
           {citation && (
             <div className="space-y-2">
               <div className="flex gap-2">
