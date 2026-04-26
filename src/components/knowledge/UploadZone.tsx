@@ -1,48 +1,35 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState, useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+import { uploadDocuments, type UploadState } from "../../../app/knowledge/actions";
 
 export function UploadZone() {
-  const router = useRouter();
-  const [uploading, setUploading] = useState(false);
+  const [state, dispatch, isPending] = useActionState<UploadState | null, FormData>(
+    uploadDocuments,
+    null,
+  );
+  const prevTimestamp = useRef<number>(0);
+
+  useEffect(() => {
+    if (!state || state.timestamp === prevTimestamp.current) return;
+    prevTimestamp.current = state.timestamp;
+    if (state.failed === 0) {
+      toast.success(`Uploaded ${state.success} file(s). Indexing in background…`);
+    } else {
+      toast.error(`${state.success} uploaded, ${state.failed} failed.`);
+    }
+  }, [state]);
 
   const onDrop = useCallback(
-    async (files: File[]) => {
+    (files: File[]) => {
       if (!files.length) return;
-      setUploading(true);
-
-      let success = 0;
-      let failed = 0;
-
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append("file", file);
-        try {
-          const res = await fetch("/api/documents", { method: "POST", body: formData });
-          if (res.ok) {
-            success++;
-          } else {
-            const err = await res.json();
-            console.error(err);
-            failed++;
-          }
-        } catch {
-          failed++;
-        }
-      }
-
-      if (failed === 0) {
-        toast.success(`Uploaded ${success} file(s). Indexing in background…`);
-      } else {
-        toast.error(`${success} uploaded, ${failed} failed.`);
-      }
-      setUploading(false);
-      router.refresh();
+      const formData = new FormData();
+      for (const file of files) formData.append("file", file);
+      dispatch(formData);
     },
-    [router],
+    [dispatch],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -53,7 +40,7 @@ export function UploadZone() {
       "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
-    disabled: uploading,
+    disabled: isPending,
   });
 
   return (
@@ -61,11 +48,11 @@ export function UploadZone() {
       {...getRootProps()}
       className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
         isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
-      } ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+      } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <input {...getInputProps()} />
       <p className="text-muted-foreground text-sm">
-        {uploading ? "Uploading…" : isDragActive ? "Drop files here" : "Drag & drop files here, or click to select"}
+        {isPending ? "Uploading…" : isDragActive ? "Drop files here" : "Drag & drop files here, or click to select"}
       </p>
       <p className="text-xs text-muted-foreground/60 mt-1">Supports .md .txt .pdf .docx</p>
     </div>
