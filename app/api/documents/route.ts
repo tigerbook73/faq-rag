@@ -26,6 +26,15 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ items, total, page, pageSize });
 }
 
+const ALLOWED_MIME_TYPES = new Set([
+  "application/pdf",
+  "text/markdown",
+  "text/plain",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
+const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
+const MAX_SIZE_BYTES = 50 * 1024 * 1024;
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get("file");
@@ -34,10 +43,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  const allowedExts = [".md", ".txt", ".pdf", ".docx"];
   const ext = "." + file.name.split(".").pop()?.toLowerCase();
-  if (!allowedExts.includes(ext)) {
+  if (!ALLOWED_EXTS.has(ext)) {
     return NextResponse.json({ error: `Unsupported file type: ${ext}` }, { status: 400 });
+  }
+
+  if (file.type && !ALLOWED_MIME_TYPES.has(file.type)) {
+    return NextResponse.json({ error: `Unsupported MIME type: ${file.type}` }, { status: 400 });
+  }
+
+  if (file.size > MAX_SIZE_BYTES) {
+    return NextResponse.json({ error: "File exceeds 50 MB limit" }, { status: 413 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

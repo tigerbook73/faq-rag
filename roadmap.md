@@ -33,6 +33,7 @@
 | ID  | 任务                     | 状态 |
 | --- | ------------------------ | ---- |
 | 4-A | 并行文档块嵌入（层1完成）| ✅   |
+| 4-B | API 文件校验 + Zod 输入验证 | ✅   |
 
 ---
 
@@ -74,6 +75,12 @@
 - `app/knowledge/actions.ts`（新建）：`"use server"` Server Action，接收多文件 FormData，逐一调 `ingestBuffer`，最后 `revalidatePath("/knowledge")` 使 RSC 树失效
 - `UploadZone.tsx`：`useActionState(uploadDocuments, null)` 替换手动 `fetch` + `uploading` state；`isPending` 驱动 disabled/opacity；`useEffect` 监听 `state.timestamp` 变化触发 toast；移除 `useRouter` 和 `router.refresh()`
 - `/api/documents` POST 路由保留不动（用户决策）
+
+### 4-B API 文件校验 + Zod 输入验证
+
+- `app/api/documents/route.ts`：新增 `ALLOWED_MIME_TYPES`（Set）+ `MAX_SIZE_BYTES`（50 MB）；MIME 类型非空时校验，超限返回 413
+- `app/api/chat/route.ts`：`question` 加 `.max(4000)`；`history` 每条 `content` 加 `.max(8000)`，数组整体加 `.max(50)`
+- 两个路由原有 Zod schema 已存在，本次为补全边界检查
 
 ### 2-D 聊天会话迁移到 PostgreSQL
 
