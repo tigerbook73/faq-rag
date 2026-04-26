@@ -15,7 +15,7 @@
 | ID  | 任务                                            | 状态 |
 | --- | ----------------------------------------------- | ---- |
 | 2-A | Knowledge 页面改用 Server Components + Suspense | ✅   |
-| 2-B | 上传改用 Server Actions + useActionState        | 📋   |
+| 2-B | 上传改用 Server Actions + useActionState        | ✅   |
 | 2-C | DocumentTable 乐观更新                          | 📋   |
 | 2-D | 聊天会话迁移到 PostgreSQL                       | 📋   |
 
@@ -68,6 +68,12 @@
 - `pipeline.ts`：两处串行 `for` 循环替换为按 `BATCH_SIZE` 分批调用 `getEmbeddings`；DB INSERT 改为 `Promise.all` 并行写入
 - `EMBED_BATCH=8`（默认），可通过环境变量调整
 - 层2（worker_threads 多核分片）未实施，需额外 bundler 配置
+
+### 2-B 上传改用 Server Actions + useActionState
+
+- `app/knowledge/actions.ts`（新建）：`"use server"` Server Action，接收多文件 FormData，逐一调 `ingestBuffer`，最后 `revalidatePath("/knowledge")` 使 RSC 树失效
+- `UploadZone.tsx`：`useActionState(uploadDocuments, null)` 替换手动 `fetch` + `uploading` state；`isPending` 驱动 disabled/opacity；`useEffect` 监听 `state.timestamp` 变化触发 toast；移除 `useRouter` 和 `router.refresh()`
+- `/api/documents` POST 路由保留不动（用户决策）
 
 ### 2-A 知识库页面改用 Server Components + Suspense
 
