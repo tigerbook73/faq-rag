@@ -16,7 +16,7 @@
 | --- | ----------------------------------------------- | ---- |
 | 2-A | Knowledge 页面改用 Server Components + Suspense | ✅   |
 | 2-B | 上传改用 Server Actions + useActionState        | ✅   |
-| 2-C | DocumentTable 乐观更新                          | 📋   |
+| 2-C | DocumentTable 乐观更新                          | ✅   |
 | 2-D | 聊天会话迁移到 PostgreSQL                       | 📋   |
 
 ## 3. 用户体验
@@ -74,6 +74,12 @@
 - `app/knowledge/actions.ts`（新建）：`"use server"` Server Action，接收多文件 FormData，逐一调 `ingestBuffer`，最后 `revalidatePath("/knowledge")` 使 RSC 树失效
 - `UploadZone.tsx`：`useActionState(uploadDocuments, null)` 替换手动 `fetch` + `uploading` state；`isPending` 驱动 disabled/opacity；`useEffect` 监听 `state.timestamp` 变化触发 toast；移除 `useRouter` 和 `router.refresh()`
 - `/api/documents` POST 路由保留不动（用户决策）
+
+### 2-C DocumentTable 乐观更新
+
+- `handleDelete`：保存 `prev` 快照 → 立即 `filter` 移除条目 → `fetch DELETE` → 成功调 `router.refresh()`，失败还原 `prev`
+- `handleReindex`：保存 `prev` 快照 → 立即将目标文档 `status` 改为 `"pending"` → `fetch POST reindex` → 成功调 `router.refresh()`，失败还原 `prev`
+- 移除 `@tanstack/react-query` 依赖（代码中已零引用）
 
 ### 2-A 知识库页面改用 Server Components + Suspense
 

@@ -316,33 +316,37 @@ const [state, action, isPending] = useActionState(uploadDocument, null);
 
 ### 2-C ✦ DocumentTable 乐观更新
 
-|              |                                                 |
-| ------------ | ----------------------------------------------- |
-| **难度**     | ⭐⭐ 中等                                       |
-| **预计工时** | 2–3 小时                                        |
-| **核心技能** | React Query `onMutate` / `onError` 乐观更新模式 |
+|              |                                              |
+| ------------ | -------------------------------------------- |
+| **难度**     | ⭐⭐ 中等                                    |
+| **预计工时** | 1–2 小时                                     |
+| **核心技能** | 前端乐观更新模式、useState 状态管理、错误回滚 |
 
-**现状**：`deleteMut` 和 `reindexMut` 等服务器确认后才更新 UI，用户感知到明显延迟。
+**现状（已实施）**：`handleDelete` 和 `handleReindex` 先保存快照、立即更新本地 state，`fetch` 失败时回滚到快照，成功时调用 `router.refresh()` 同步 RSC 状态。
 
-**目标**：
+**实现模式**（`src/components/knowledge/DocumentTable.tsx`）：
 
 ```ts
-deleteMut = useMutation({
-  mutationFn: deleteDocument,
-  onMutate: async (id) => {
-    await queryClient.cancelQueries({ queryKey: ["documents"] });
-    const prev = queryClient.getQueryData(["documents"]);
-    queryClient.setQueryData(
-      ["documents"],
-      (old) => old.filter((d) => d.id !== id), // 立即更新 UI
-    );
-    return { prev };
-  },
-  onError: (_, __, ctx) => {
-    queryClient.setQueryData(["documents"], ctx.prev); // 失败回滚
-  },
-});
+async function handleDelete(id: string) {
+  const prev = polledDocuments ?? initialDocuments;
+  setPolledDocuments(prev.filter((d) => d.id !== id)); // 立即更新 UI
+  setDeletingId(id);
+  try {
+    await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    router.refresh(); // 同步 RSC 服务端状态
+  } catch {
+    setPolledDocuments(prev); // 失败回滚
+  } finally {
+    setDeletingId(null);
+    setDeleteTarget(null);
+  }
+}
 ```
+
+**学习要点**：
+- 保存 `prev` 快照 → 乐观更新 → catch 回滚，是框架无关的通用模式
+- `router.refresh()` 只在成功后调用，触发 RSC 重新从数据库获取数据
+- 与 React Query `onMutate` 本质相同，但不依赖外部库
 
 ---
 

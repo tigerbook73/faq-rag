@@ -64,11 +64,14 @@ export function DocumentTable({ initialDocuments }: Props) {
   }, [documents, router]);
 
   async function handleDelete(id: string) {
+    const prev = polledDocuments ?? initialDocuments;
+    setPolledDocuments(prev.filter((d) => d.id !== id));
     setDeletingId(id);
     try {
       await fetch(`/api/documents/${id}`, { method: "DELETE" });
-      setPolledDocuments(null);
       router.refresh();
+    } catch {
+      setPolledDocuments(prev);
     } finally {
       setDeletingId(null);
       setDeleteTarget(null);
@@ -76,11 +79,14 @@ export function DocumentTable({ initialDocuments }: Props) {
   }
 
   async function handleReindex(id: string) {
+    const prev = polledDocuments ?? initialDocuments;
+    setPolledDocuments(prev.map((d) => (d.id === id ? { ...d, status: "pending" } : d)));
     setReindexingId(id);
     try {
       await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
-      setPolledDocuments(null);
       router.refresh();
+    } catch {
+      setPolledDocuments(prev);
     } finally {
       setReindexingId(null);
     }
