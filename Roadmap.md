@@ -9,7 +9,7 @@
 
 | 类别                                          | 项目数 | 建议先做                          |
 | --------------------------------------------- | ------ | --------------------------------- |
-| [RAG 核心质量](#一rag-核心质量)               | 5 项   | DeepSeek Prefix Cache 验证、HyDE  |
+| [RAG 核心质量](#一rag-核心质量)               | 6 项   | DeepSeek Prefix Cache 验证、Claude Prompt Caching |
 | [Next.js / React 技能](#二nextjs--react-技能) | 5 项   | Server Components、Server Actions |
 | [用户体验 / 缺失功能](#三用户体验--缺失功能)  | 6 项   | 启用 Claude UI、暗色模式          |
 | [可靠性 / 生产就绪](#四可靠性--生产就绪)      | 5 项   | 并行嵌入、Zod 校验                |
@@ -21,30 +21,31 @@
 
 ```
 阶段 1（速赢，1–2 天）
-  P1-A  DeepSeek Prefix Cache 验证   ← 无需改代码，加日志确认命中率
-  P1-B  启用 Claude UI                ← 1 行改动，立即可见
-  P1-C  暗色模式切换                  ← next-themes 已装，补入口即可
-  P1-D  引用片段完整显示              ← 改一个截断常量
+  §1-A  DeepSeek Prefix Cache 验证   ← 无需改代码，加日志确认命中率
+  §1-B  Claude Prompt Caching        ← cache_control 标注，验证命中率
+  §3-A  启用 Claude UI               ← 1 行改动，立即可见
+  §3-B  暗色模式切换                 ← next-themes 已装，补入口即可
+  §1-E  引用片段完整显示             ← 改一个截断常量
 
 阶段 2（核心 RAG 提升，3–5 天）
-  P2-A  HyDE 检索                     ← ~10 行，学习 RAG 进阶技巧
-  P2-B  交叉编码器重排序              ← Cohere API 或本地模型，最大质量跃升
-  P2-C  并行文档块嵌入                ← Promise.all + 并发限制
+  §1-C  交叉编码器重排序             ← Cohere API 或本地模型，最大质量跃升
+  §1-D  HyDE 检索                    ← ~10 行，学习 RAG 进阶技巧
+  §4-A  并行文档块嵌入               ← Promise.all + 并发限制
 
 阶段 3（Next.js 深水区，3–5 天）
-  P3-A  知识库页改 Server Components  ← RSC 心智模型
-  P3-B  上传改 Server Actions         ← useActionState / useFormStatus
-  P3-C  乐观更新                      ← React Query onMutate/onError
+  §2-A  知识库页改 Server Components ← RSC 心智模型
+  §2-B  上传改 Server Actions        ← useActionState / useFormStatus
+  §2-C  乐观更新                     ← React Query onMutate/onError
 
 阶段 4（持久化 + 可靠性，4–7 天）
-  P4-A  会话迁移至 PostgreSQL         ← 数据库 schema 迁移实战
-  P4-B  API 文件校验 + Zod            ← 安全加固
-  P4-C  流中断恢复                    ← 错误边界实践
+  §3-F  会话迁移至 PostgreSQL        ← 数据库 schema 迁移实战
+  §4-B  API 文件校验 + Zod           ← 安全加固
+  §4-C  流中断恢复                   ← 错误边界实践
 
 阶段 5（测试 + 高阶 RAG，5–10 天）
-  P5-A  检索管道单元测试              ← ts-jest 异步生成器测试
-  P5-B  Playwright E2E 测试           ← 全链路自动化
-  P5-C  语义分块                      ← 替代固定字符分块
+  §5-A  检索管道单元测试             ← ts-jest 异步生成器测试
+  §5-B  Playwright E2E 测试          ← 全链路自动化
+  §1-F  语义分块                     ← 替代固定字符分块
 ```
 
 ---
@@ -115,32 +116,39 @@ system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" 
 
 ---
 
-### 1-B ✦ HyDE 检索（假设性文档嵌入）
+### 1-B ✦ Claude Prompt Caching
 
-|              |                                |
-| ------------ | ------------------------------ |
-| **难度**     | ⭐⭐ 中等                      |
-| **预计工时** | 2–4 小时                       |
-| **核心技能** | RAG 进阶检索策略、向量空间直觉 |
+|              |                                                             |
+| ------------ | ----------------------------------------------------------- |
+| **难度**     | ⭐⭐ 中等                                                   |
+| **预计工时** | 2–3 小时                                                    |
+| **核心技能** | Anthropic SDK `cache_control`、Token 成本优化、流式事件解析 |
 
-**现状**：`src/lib/retrieval/query.ts` 直接对用户问题做嵌入，在"问题空间"中检索，而知识库存的是"答案空间"的文本，两者向量分布存在天然偏差。
+**与 1-A 的区别**：DeepSeek 自动缓存前缀，无法精确控制；Claude 需要显式用
+`cache_control: { type: "ephemeral" }` 标注要缓存的 token 块，可精确指定缓存边界，
+适合 RAG 场景。
 
-**目标**：先让 LLM 根据问题生成一个"假设性答案"（即使不准确），对这个假设答案做嵌入后再检索，命中率显著提升。
-
-**实施要点**（在 `query.ts` 的 `retrieve()` 函数中）：
+**实施要点**（`src/lib/llm/claude.ts`）：
 
 ```ts
-// 1. 生成假设性答案
-const hypotheticalAnswer = await generateHypotheticalAnswer(query, provider);
+// system prompt 每次请求相同，标注后第二次起命中缓存
+system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }]
 
-// 2. 对假设答案嵌入（替换或追加到原有查询向量）
-const hydeVector = await embed(hypotheticalAnswer);
-
-// 3. 合并原始查询向量 + HyDE 向量参与检索（加权或取并集）
-const results = await mergedVectorSearch([queryVector, hydeVector], topK);
+// 标注最后一条 assistant 消息（稳定历史前缀）和当前 user 消息（含 RAG context）
+const addCache = i === lastAssistantIdx || (i === messages.length - 1 && m.role === "user");
 ```
 
-**注意**：HyDE 会多一次 LLM 调用，需在失败时回退到原始查询，保持优雅降级。
+**验证**：从 `stream.on("message")` 回调读取完整 usage（比 `message_start` 事件更准确）：
+
+```ts
+stream.on("message", (msg) => {
+  // msg.usage.cache_creation_input_tokens — 写入缓存（1.25x 计费）
+  // msg.usage.cache_read_input_tokens    — 命中缓存（0.1x 计费）
+});
+```
+
+**最低缓存阈值**：claude-sonnet 系列 ≥ 1024 tokens，短对话 assistant 消息积累不足时
+`cache_read` 为 0 是正常现象，不代表实现有误。
 
 ---
 
@@ -179,7 +187,36 @@ const reranked = await cohere.rerank({
 
 ---
 
-### 1-D ✦ 引用片段完整显示
+### 1-D ✦ HyDE 检索（假设性文档嵌入）
+
+|              |                                |
+| ------------ | ------------------------------ |
+| **难度**     | ⭐⭐ 中等                      |
+| **预计工时** | 2–4 小时                       |
+| **核心技能** | RAG 进阶检索策略、向量空间直觉 |
+
+**现状**：`src/lib/retrieval/query.ts` 直接对用户问题做嵌入，在"问题空间"中检索，而知识库存的是"答案空间"的文本，两者向量分布存在天然偏差。
+
+**目标**：先让 LLM 根据问题生成一个"假设性答案"（即使不准确），对这个假设答案做嵌入后再检索，命中率显著提升。
+
+**实施要点**（在 `query.ts` 的 `retrieve()` 函数中）：
+
+```ts
+// 1. 生成假设性答案
+const hypotheticalAnswer = await generateHypotheticalAnswer(query, provider);
+
+// 2. 对假设答案嵌入（替换或追加到原有查询向量）
+const hydeVector = await embed(hypotheticalAnswer);
+
+// 3. 合并原始查询向量 + HyDE 向量参与检索（加权或取并集）
+const results = await mergedVectorSearch([queryVector, hydeVector], topK);
+```
+
+**注意**：HyDE 会多一次 LLM 调用，需在失败时回退到原始查询，保持优雅降级。
+
+---
+
+### 1-E ✦ 引用片段完整显示
 
 |              |                          |
 | ------------ | ------------------------ |
@@ -193,7 +230,7 @@ const reranked = await cohere.rerank({
 
 ---
 
-### 1-E ✦ 语义分块（Semantic Chunking）【高级】
+### 1-F ✦ 语义分块（Semantic Chunking）【高级】
 
 |              |                                           |
 | ------------ | ----------------------------------------- |
@@ -623,7 +660,7 @@ test("双语检索合并去重", async () => {
          低改动成本     中改动成本     高改动成本
 ```
 
-**结论**：先做左上角（高价值 + 低成本）：DeepSeek Cache 验证（加日志）、HyDE、启用 Claude UI（解锁双 Provider 对比）、引用片段长度。
+**结论**：先做左上角（高价值 + 低成本）：§1-A DeepSeek Cache 验证、§1-B Claude Prompt Caching、§3-A 启用 Claude UI（解锁双 Provider 对比）、§1-E 引用片段长度。
 
 ---
 
