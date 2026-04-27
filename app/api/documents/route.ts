@@ -3,6 +3,7 @@ import path from "path";
 import { z } from "zod";
 import { prisma } from "@/src/lib/db/client";
 import { ingestBuffer } from "@/src/lib/ingest/pipeline";
+import { enqueueIndexing } from "@/src/lib/ingest/indexing-queue";
 
 const listSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -58,7 +59,8 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const docId = await ingestBuffer(file.name, buffer);
+  const { docId, uploadPath } = await ingestBuffer(file.name, buffer);
+  if (uploadPath) enqueueIndexing(docId, uploadPath);
 
   return NextResponse.json({ id: docId }, { status: 201 });
 }

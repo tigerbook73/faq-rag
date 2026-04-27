@@ -79,14 +79,17 @@ export async function ingestFile(filePath: string): Promise<string> {
   }
 }
 
-export async function ingestBuffer(fileName: string, buffer: Buffer): Promise<string> {
+export async function ingestBuffer(
+  fileName: string,
+  buffer: Buffer,
+): Promise<{ docId: string; uploadPath: string } | { docId: string; uploadPath: null }> {
   const ext = path.extname(fileName).toLowerCase();
   const mime = mimeFromExt(ext);
   const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
   const existing = await prisma.document.findUnique({ where: { contentHash } });
-  if (existing) return existing.id;
+  if (existing) return { docId: existing.id, uploadPath: null };
 
   const doc = await prisma.document.create({
     data: { name: fileName, mime, contentHash, sizeBytes, status: "pending" },
@@ -96,13 +99,10 @@ export async function ingestBuffer(fileName: string, buffer: Buffer): Promise<st
   await fs.mkdir(path.dirname(uploadPath), { recursive: true });
   await fs.writeFile(uploadPath, buffer);
 
-  // kick off async indexing — don't await so the HTTP response returns immediately
-  void processDocument(doc.id, uploadPath).catch((err) => {
-    console.error(`[ingest] Error processing ${fileName}:`, err);
-  });
-
-  return doc.id;
+  return { docId: doc.id, uploadPath };
 }
+
+export { UPLOAD_DIR };
 
 export async function processDocument(docId: string, filePath: string): Promise<void> {
   try {

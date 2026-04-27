@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { prisma } from "@/src/lib/db/client";
-import { processDocument } from "@/src/lib/ingest/pipeline";
 import { checkRateLimit } from "@/src/lib/rate-limit";
+import { enqueueIndexing } from "@/src/lib/ingest/indexing-queue";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
@@ -29,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     data: { status: "pending", errorMsg: null },
   });
 
-  void processDocument(id, filePath).catch(console.error);
+  enqueueIndexing(id, filePath);
 
   return NextResponse.json({ status: "reindexing" });
 }
