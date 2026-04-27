@@ -13,7 +13,8 @@ import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, LogOut } from "lucide-react";
+import { logout } from "@/app/actions/auth";
 
 export function ChatWindow({ chatId, initialSession }: { chatId: string | null; initialSession: ChatSession | null }) {
   const router = useRouter();
@@ -201,6 +202,11 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
             <Sun className="h-4 w-4 dark:hidden" />
             <Moon className="hidden h-4 w-4 dark:block" />
           </Button>
+          <form action={logout}>
+            <Button variant="ghost" size="icon" type="submit" title="Sign out">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </form>
         </div>
       </header>
 
