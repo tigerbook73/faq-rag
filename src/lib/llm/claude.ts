@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
 import { LLM_MAX_TOKENS } from "../config";
+import { logger } from "../logger";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -40,7 +41,7 @@ export const claudeProvider: LLMProvider = {
       const read = u.cache_read_input_tokens ?? 0;
       const total = u.input_tokens + creation + read;
       const ratio = total > 0 ? ((read / total) * 100).toFixed(1) : "n/a";
-      console.log(`[claude] cache read=${read} created=${creation} ratio=${ratio}% | input=${u.input_tokens}`);
+      logger.debug({ cache_read: read, cache_created: creation, ratio, input_tokens: u.input_tokens }, "claude usage");
     });
 
     for await (const event of stream) {

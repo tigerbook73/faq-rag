@@ -2,6 +2,7 @@ import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
 import { deepseekClient as client } from "./clients";
 import { LLM_MAX_TOKENS } from "../config";
+import { logger } from "../logger";
 
 type DeepSeekUsage = {
   prompt_tokens: number;
@@ -35,9 +36,7 @@ export const deepseekProvider: LLMProvider = {
       const miss = usage.prompt_cache_miss_tokens ?? 0;
       const total = hit + miss;
       const ratio = total > 0 ? ((hit / total) * 100).toFixed(1) : "n/a";
-      console.log(
-        `[deepseek] cache hit=${hit} miss=${miss} ratio=${ratio}% | prompt=${usage.prompt_tokens} completion=${usage.completion_tokens}`,
-      );
+      logger.debug({ cache_hit: hit, cache_miss: miss, ratio, prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens }, "deepseek usage");
     }
   },
 };

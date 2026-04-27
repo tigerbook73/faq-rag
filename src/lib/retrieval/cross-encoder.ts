@@ -3,6 +3,7 @@ import {
   AutoModelForSequenceClassification,
 } from "@huggingface/transformers";
 import type { ChunkRow } from "./vector-search";
+import { logger } from "../logger";
 
 const MODEL_NAME = process.env.RERANKER_MODEL ?? "Xenova/bge-reranker-base";
 
@@ -31,10 +32,12 @@ function sigmoid(x: number): number {
 export async function rerankChunks(
   query: string,
   chunks: ChunkRow[],
-  topN: number
+  topN: number,
+  traceId?: string,
 ): Promise<ChunkRow[]> {
   if (chunks.length === 0) return chunks;
 
+  const t0 = Date.now();
   try {
     const { tokenizer, model } = await getReranker();
 
@@ -62,13 +65,21 @@ export async function rerankChunks(
       return expPos / (expPos + expNeg);
     });
 
-    return chunks
+    const ranked = chunks
       .map((chunk, i) => ({ chunk, score: scores[i] }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, topN)
-      .map((s) => s.chunk);
+      .slice(0, topN);
+
+    logger.debug({
+      traceId,
+      rerank_ms: Date.now() - t0,
+      candidates_in: chunks.length,
+      top_score: ranked[0]?.score.toFixed(4),
+    }, "rerank done");
+
+    return ranked.map((s) => s.chunk);
   } catch (err) {
-    console.warn("[cross-encoder] rerank failed, falling back to bi-encoder order:", err);
+    logger.warn({ traceId, err }, "cross-encoder rerank failed, falling back to bi-encoder order");
     return chunks.slice(0, topN);
   }
 }

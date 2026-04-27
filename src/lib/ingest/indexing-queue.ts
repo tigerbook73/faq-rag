@@ -1,5 +1,6 @@
 import { Worker } from "worker_threads";
 import path from "path";
+import { logger } from "../logger";
 
 let worker: Worker | null = null;
 
@@ -11,19 +12,19 @@ function createWorker(): Worker {
 
   w.on("message", ({ ok, docId, error }: { ok: boolean; docId: string; error?: string }) => {
     if (ok) {
-      console.log(`[indexing-queue] indexed ${docId}`);
+      logger.info({ docId }, "indexing-queue: indexed");
     } else {
-      console.error(`[indexing-queue] failed ${docId}:`, error);
+      logger.error({ docId, error }, "indexing-queue: failed");
     }
   });
 
   w.on("error", (err) => {
-    console.error("[indexing-queue] worker error:", err);
+    logger.error({ err }, "indexing-queue: worker error");
     worker = null;
   });
 
   w.on("exit", (code) => {
-    if (code !== 0) console.error(`[indexing-queue] worker exited with code ${code}`);
+    if (code !== 0) logger.error({ code }, "indexing-queue: worker exited with non-zero code");
     worker = null;
   });
 

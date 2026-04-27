@@ -6,6 +6,7 @@ import { parseFile, mimeFromExt } from "./parse";
 import { splitText } from "./split";
 import { getEmbedding } from "../embeddings/bge";
 import { detectLang } from "../lang/detect";
+import { logger } from "../logger";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
@@ -42,7 +43,7 @@ export async function ingestFile(filePath: string): Promise<string> {
 
   const existing = await prisma.document.findUnique({ where: { contentHash } });
   if (existing) {
-    console.log(`[ingest] Skipping duplicate: ${fileName} (hash=${contentHash.slice(0, 8)})`);
+    logger.info({ fileName, hash: contentHash.slice(0, 8) }, "ingest: skipping duplicate");
     return existing.id;
   }
 
@@ -67,7 +68,7 @@ export async function ingestFile(filePath: string): Promise<string> {
       data: { status: "indexed", lang },
     });
 
-    console.log(`[ingest] Indexed "${fileName}": ${chunks.length} chunks, lang=${lang}`);
+    logger.info({ fileName, chunks: chunks.length, lang }, "ingest: indexed");
     return doc.id;
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);

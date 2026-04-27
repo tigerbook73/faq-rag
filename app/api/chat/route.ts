@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { retrieve } from "@/src/lib/retrieval/query";
 import { getProvider } from "@/src/lib/llm/router";
 import { PROVIDER } from "@/src/lib/llm/providers";
 import { checkRateLimit } from "@/src/lib/rate-limit";
 import { truncateHistory } from "@/src/lib/llm/truncate";
+import { logger } from "@/src/lib/logger";
 
 const bodySchema = z.object({
   question: z.string().min(1).max(4000),
@@ -43,7 +45,13 @@ export async function POST(req: NextRequest) {
 
   const { question, provider: providerName, history } = body;
 
-  const chunks = await retrieve(question);
+  const traceId = crypto.randomUUID();
+  const log = logger.child({ traceId, provider: providerName });
+  log.info({ question: question.slice(0, 100) }, "chat request");
+
+  const t0 = Date.now();
+  const chunks = await retrieve(question, traceId);
+  log.info({ retrieval_total_ms: Date.now() - t0, chunks: chunks.length }, "retrieval complete");
 
   const citations = chunks.map((c, i) => ({
     id: i + 1,
@@ -77,16 +85,24 @@ export async function POST(req: NextRequest) {
       const citationsPayload = `data: ${JSON.stringify({ type: "citations", citations, provider: providerName })}\n\n`;
       controller.enqueue(encoder.encode(citationsPayload));
 
+      const tLlm = Date.now();
+      let firstToken = true;
       try {
         for await (const token of provider.chat({ system: SYSTEM_PROMPT, messages })) {
+          if (firstToken) {
+            log.debug({ llm_first_token_ms: Date.now() - tLlm }, "first token");
+            firstToken = false;
+          }
           answer += token;
           const tokenPayload = `data: ${JSON.stringify({ type: "token", token })}\n\n`;
           controller.enqueue(encoder.encode(tokenPayload));
         }
 
+        log.info({ llm_total_ms: Date.now() - tLlm, answer_len: answer.length }, "llm done");
         const donePayload = `data: ${JSON.stringify({ type: "done", answer })}\n\n`;
         controller.enqueue(encoder.encode(donePayload));
       } catch (err) {
+        log.error({ err }, "llm error");
         const errPayload = `data: ${JSON.stringify({ type: "error", message: String(err) })}\n\n`;
         controller.enqueue(encoder.encode(errPayload));
       } finally {
