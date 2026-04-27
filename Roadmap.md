@@ -194,15 +194,15 @@ const results = await mergedVectorSearch([queryVector, hydeVector], topK);
 
 ---
 
-### 2-B ✅ 上传改用 Server Actions 【已完成】
+### 2-B ✅ 上传方案（已迭代）【已完成】
 
 |              |                                                             |
 | ------------ | ----------------------------------------------------------- |
 | **难度**     | ⭐⭐ 中等                                                   |
 | **预计工时** | 3–5 小时                                                    |
-| **核心技能** | Server Actions、`useActionState`、`useFormStatus`、渐进增强 |
+| **核心技能** | XHR 上传进度、`useDropzone`、`router.refresh()`            |
 
-`app/knowledge/actions.ts`（新建）：`"use server"` Server Action，接收多文件 FormData，最后 `revalidatePath("/knowledge")`。`UploadZone.tsx`：`useActionState(uploadDocuments, null)` 替换手动 fetch。
+**迭代历程**：最初改为 Server Action（`useActionState`），后因 Server Action 不支持大文件上传进度回退到 `XMLHttpRequest`。现状：`UploadZone.tsx` 用 XHR 直接调 `POST /api/documents`，通过 `xhr.upload.onprogress` 实时显示进度条（0–100%），上传完成后 `router.refresh()` 触发 Server Component 重新拉取文档列表。`app/knowledge/actions.ts` 保留备用。
 
 ---
 
