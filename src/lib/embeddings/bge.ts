@@ -1,15 +1,12 @@
 import { pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
 
-let extractor: FeatureExtractionPipeline | null = null;
+const MODEL_NAME = process.env.EMBEDDING_MODEL ?? "Xenova/bge-m3";
 
-async function getExtractor(): Promise<FeatureExtractionPipeline> {
-  if (!extractor) {
-    const modelName = process.env.EMBEDDING_MODEL ?? "Xenova/bge-m3";
-    extractor = await pipeline("feature-extraction", modelName, {
-      dtype: "fp32",
-    });
-  }
-  return extractor;
+let initPromise: Promise<FeatureExtractionPipeline> | null = null;
+
+function getExtractor(): Promise<FeatureExtractionPipeline> {
+  initPromise ??= pipeline("feature-extraction", MODEL_NAME, { dtype: "fp32" });
+  return initPromise;
 }
 
 export async function getEmbedding(text: string): Promise<number[]> {

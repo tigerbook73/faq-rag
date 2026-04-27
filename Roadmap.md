@@ -52,7 +52,7 @@
   §5-A  DeepSeek 客户端单例化        ✅
   §5-B  魔法数字提取到 config.ts     ✅
   §5-C  文件扩展名改用 path.extname  ✅
-  §5-D  Embedding 单例并发初始化锁   ← 并发安全
+  §5-D  Embedding 单例并发初始化锁   ✅
 
 阶段 5（UX 补全，2–3 天）
   §3-E  对话导出                     ← Blob API + Markdown 序列化
@@ -602,7 +602,7 @@ const ext = path.extname(file.name).toLowerCase();
 
 ---
 
-### 5-D ✦ Embedding 单例并发初始化锁
+### 5-D ✅ Embedding 单例并发初始化锁 【已完成】
 
 |              |                      |
 | ------------ | -------------------- |
