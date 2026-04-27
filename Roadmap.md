@@ -46,7 +46,7 @@
   §4-C  DB 索引补全                  ✅
   §4-D  Sessions PATCH Zod 校验      ✅
   §4-E  速率限制                     ✅
-  §4-F  SSE 流解析健壮化             ← 消除边界 bug
+  §4-F  SSE 流解析健壮化             ✅
   §4-H  Ingestion Worker Thread      ← 嵌入与 HTTP server 进程隔离
   §4-I  断点续传索引（Resume Indexing）← 开发中断后自动恢复
   §5-A  DeepSeek 客户端单例化        ← 去重实例
@@ -432,7 +432,7 @@ const patchSchema = z.object({
 
 ---
 
-### 4-F ✦ SSE 流解析健壮化
+### 4-F ✅ SSE 流解析健壮化 【已完成】
 
 |              |                              |
 | ------------ | ---------------------------- |
