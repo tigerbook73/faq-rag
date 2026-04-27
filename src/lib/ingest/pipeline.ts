@@ -130,6 +130,8 @@ export async function processDocument(docId: string, filePath: string): Promise<
     await prisma.document.update({
       where: { id: docId },
       data: { status: "failed", errorMsg },
+    }).catch(() => {
+      logger.info({ docId }, "ingest: indexing aborted — document was deleted mid-indexing");
     });
     throw err;
   }
