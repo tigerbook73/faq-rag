@@ -44,7 +44,7 @@
 
 阶段 4（可靠性 + 代码质量，3–5 天）
   §4-C  DB 索引补全                  ✅
-  §4-D  Sessions PATCH Zod 校验      ← 补齐安全加固
+  §4-D  Sessions PATCH Zod 校验      ✅
   §4-E  速率限制                     ← 防滥用
   §4-F  SSE 流解析健壮化             ← 消除边界 bug
   §4-H  Ingestion Worker Thread      ← 嵌入与 HTTP server 进程隔离
@@ -387,7 +387,7 @@ model Chunk {
 
 ---
 
-### 4-D ✦ Sessions PATCH Zod 校验
+### 4-D ✅ Sessions PATCH Zod 校验 【已完成】
 
 |              |                     |
 | ------------ | ------------------- |

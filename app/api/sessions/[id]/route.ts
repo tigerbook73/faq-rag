@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/src/lib/db/client";
+import { Prisma } from "@/src/generated/prisma";
+
+const patchSchema = z.object({
+  title: z.string().min(1).max(100).optional(),
+  messages: z.array(z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string().max(8000),
+    citations: z.array(z.unknown()).optional(),
+  })).optional(),
+});
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,7 +26,12 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const { title, messages } = await req.json();
+
+  const parsed = patchSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const { title, messages } = parsed.data;
 
   const session = await prisma.$transaction(async (tx) => {
     await tx.session.upsert({
@@ -27,11 +43,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       await tx.sessionMessage.deleteMany({ where: { sessionId: id } });
       if (messages.length > 0) {
         await tx.sessionMessage.createMany({
-          data: messages.map((m: { role: string; content: string; citations?: unknown }) => ({
+          data: messages.map((m) => ({
             sessionId: id,
             role: m.role,
             content: m.content,
-            citations: m.citations ?? null,
+            citations: m.citations ? (m.citations as Prisma.InputJsonValue) : Prisma.JsonNull,
           })),
         });
       }
