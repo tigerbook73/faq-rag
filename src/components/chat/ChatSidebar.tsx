@@ -16,7 +16,8 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { SquarePen } from "lucide-react";
+import { SquarePen, Download } from "lucide-react";
+import { fetchSession } from "@/src/lib/chat-storage";
 
 function relativeDate(ts: number): string {
   const diff = Date.now() - ts;
@@ -86,6 +87,39 @@ export function ChatSidebar() {
   const handleNew = useCallback(() => {
     router.push("/chat/new");
   }, [router]);
+
+  const handleExport = useCallback(async (e: React.MouseEvent, id: string, title: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const session = await fetchSession(id);
+    if (!session) return;
+
+    const lines: string[] = [
+      `# ${session.title}`,
+      `> Exported ${new Date(session.updatedAt).toLocaleString()}`,
+      "",
+    ];
+    for (const msg of session.messages) {
+      lines.push(`**${msg.role === "user" ? "User" : "Assistant"}**`);
+      lines.push("");
+      lines.push(msg.content);
+      if (msg.citations?.length) {
+        lines.push("");
+        lines.push("*Sources: " + msg.citations.map((c) => c.documentName).join(", ") + "*");
+      }
+      lines.push("");
+      lines.push("---");
+      lines.push("");
+    }
+
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
 
   const handleDelete = useCallback(
     async (e: React.MouseEvent, id: string) => {
@@ -158,6 +192,9 @@ export function ChatSidebar() {
                         <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
                       </div>
                     </SidebarMenuButton>
+                    <SidebarMenuAction showOnHover onClick={(e) => handleExport(e, s.id, s.title)} aria-label="Export chat" className="right-7">
+                      <Download className="h-3.5 w-3.5" />
+                    </SidebarMenuAction>
                     <SidebarMenuAction showOnHover onClick={(e) => handleDelete(e, s.id)} aria-label="Delete chat">
                       ✕
                     </SidebarMenuAction>
