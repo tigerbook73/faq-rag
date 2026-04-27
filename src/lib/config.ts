@@ -5,6 +5,7 @@ export const QUERY_MAX_TOKENS = 200;     // max tokens for translation / HyDE ge
 
 // LLM
 export const LLM_MAX_TOKENS = 2048;      // max tokens for chat completion responses
+export const HISTORY_TOKEN_BUDGET = 6000; // max estimated tokens kept from conversation history
 
 // Chunking
 export const CHUNK_SIZE = 800;           // characters per chunk

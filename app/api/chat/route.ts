@@ -4,6 +4,7 @@ import { retrieve } from "@/src/lib/retrieval/query";
 import { getProvider } from "@/src/lib/llm/router";
 import { PROVIDER } from "@/src/lib/llm/providers";
 import { checkRateLimit } from "@/src/lib/rate-limit";
+import { truncateHistory } from "@/src/lib/llm/truncate";
 
 const bodySchema = z.object({
   question: z.string().min(1).max(4000),
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
   const userMessage = `<context>\n${contextBlock}\n</context>\n\nQuestion: ${question}`;
 
   const provider = getProvider(providerName);
-  const messages = [...history, { role: "user" as const, content: userMessage }];
+  const messages = [...truncateHistory(history), { role: "user" as const, content: userMessage }];
 
   const encoder = new TextEncoder();
 
