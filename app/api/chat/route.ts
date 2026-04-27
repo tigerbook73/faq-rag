@@ -1,8 +1,9 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { retrieve } from "@/src/lib/retrieval/query";
 import { getProvider } from "@/src/lib/llm/router";
 import { PROVIDER } from "@/src/lib/llm/providers";
+import { checkRateLimit } from "@/src/lib/rate-limit";
 
 const bodySchema = z.object({
   question: z.string().min(1).max(4000),
@@ -20,6 +21,15 @@ const SYSTEM_PROMPT = `You are an FAQ assistant that answers strictly based on t
 - After each key claim, add a citation marker [^n] where n matches the snippet number in context.`;
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+  const { allowed, retryAfterMs } = checkRateLimit(`chat:${ip}`, 10, 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests, please slow down." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
+  }
+
   let body: z.infer<typeof bodySchema>;
   try {
     body = bodySchema.parse(await req.json());
