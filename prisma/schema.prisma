@@ -21,6 +21,7 @@ model Document {
   createdAt   DateTime @default(now()) @map("created_at")
   chunks      Chunk[]
 
+  @@index([status])
   @@map("documents")
 }
 
@@ -34,6 +35,7 @@ model Chunk {
   createdAt  DateTime                     @default(now()) @map("created_at")
   document   Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
+  @@index([documentId])
   @@map("chunks")
 }
 
@@ -44,6 +46,7 @@ model Session {
   updatedAt DateTime         @updatedAt @map("updated_at")
   messages  SessionMessage[]
 
+  @@index([updatedAt])
   @@map("sessions")
 }
 

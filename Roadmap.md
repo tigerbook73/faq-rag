@@ -43,7 +43,7 @@
   §1-D  HyDE 检索                    ✅
 
 阶段 4（可靠性 + 代码质量，3–5 天）
-  §4-C  DB 索引补全                  ← 一次 migration，立竿见影
+  §4-C  DB 索引补全                  ✅
   §4-D  Sessions PATCH Zod 校验      ← 补齐安全加固
   §4-E  速率限制                     ← 防滥用
   §4-F  SSE 流解析健壮化             ← 消除边界 bug
@@ -361,7 +361,7 @@ async function handleDelete(id: string) {
 
 ---
 
-### 4-C ✦ DB 索引补全
+### 4-C ✅ DB 索引补全 【已完成】
 
 |              |                           |
 | ------------ | ------------------------- |
