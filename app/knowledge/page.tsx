@@ -11,7 +11,7 @@ export default async function KnowledgePage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-5xl md:w-[80%] w-full mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Knowledge Base</h1>
