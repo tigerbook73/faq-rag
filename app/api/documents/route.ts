@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import path from "path";
 import { z } from "zod";
 import { prisma } from "@/src/lib/db/client";
 import { ingestBuffer } from "@/src/lib/ingest/pipeline";
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  const ext = "." + file.name.split(".").pop()?.toLowerCase();
+  const ext = path.extname(file.name).toLowerCase();
   if (!ALLOWED_EXTS.has(ext)) {
     return NextResponse.json({ error: `Unsupported file type: ${ext}` }, { status: 400 });
   }
