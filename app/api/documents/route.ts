@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Unsupported file type: ${ext}` }, { status: 400 });
   }
 
-  if (file.type && !ALLOWED_MIME_TYPES.has(file.type)) {
+  if (file.type && file.type !== "application/octet-stream" && !ALLOWED_MIME_TYPES.has(file.type)) {
     return NextResponse.json({ error: `Unsupported MIME type: ${file.type}` }, { status: 400 });
   }
 

@@ -17,7 +17,8 @@ A local FAQ question-answering system. Users upload documents (Chinese or Englis
 | Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` — local, multilingual, 1024-dim         |
 | LLM default     | DeepSeek `deepseek-chat` via `openai` SDK (`baseURL: https://api.deepseek.com`)         |
 | LLM alternate   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` (default when no provider specified) |
-| Text splitting  | `@langchain/textsplitters` RecursiveCharacterTextSplitter                               |
+| Text splitting  | Semantic chunking (embedding cosine boundary detection) + `@langchain/textsplitters` fallback |
+| Reranking       | `Xenova/bge-reranker-base` cross-encoder via `@huggingface/transformers`                |
 | Package manager | pnpm                                                                                    |
 | Language detect | `franc-min`                                                                             |
 | File parsing    | pdf-parse v2 (`PDFParse` class), mammoth (docx), native fs (md/txt)                     |
@@ -37,18 +38,20 @@ Browser
   └── /knowledge         ← upload / list / delete / reindex
 
 Next.js Route Handlers (app/api/)
-  ├── POST /api/chat           ← retrieve → LLM → SSE stream
-  ├── GET/POST /api/documents  ← list, upload + async index
+  ├── POST /api/chat                        ← retrieve → LLM → SSE stream
+  ├── GET/POST /api/documents               ← list, upload + async index
   ├── GET/DELETE /api/documents/[id]
   ├── POST /api/documents/[id]/reindex
+  ├── GET/POST /api/sessions                ← session list CRUD
+  ├── GET/PATCH/DELETE /api/sessions/[id]   ← single session CRUD
   └── GET /api/health
 
 Service Layer (src/lib/)
-  ├── chat-storage.ts  localStorage session persistence (CRUD + prune)
-  ├── ingest/          parse → split → embed → pgvector ($executeRaw)
-  ├── retrieval/       detect lang → translate query → dual embed → vector search → rerank
-  ├── llm/             provider abstraction (claude.ts, deepseek.ts, router.ts, providers.ts)
-  ├── embeddings/      bge.ts — local bge-m3 singleton
+  ├── chat-storage.ts  session CRUD (localStorage for last-chat-id only; full sessions stored in DB)
+  ├── ingest/          parse → semantic split → embed → pgvector ($executeRaw); worker thread isolated
+  ├── retrieval/       detect lang → translate + HyDE → embed → vector search → cross-encoder rerank
+  ├── llm/             provider abstraction (claude.ts, deepseek.ts, router.ts, providers.ts, truncate.ts)
+  ├── embeddings/      bge.ts — local bge-m3 singleton + getEmbeddingsBatch()
   └── lang/            detect.ts — franc-min wrapper
 
 PostgreSQL + pgvector
@@ -60,10 +63,19 @@ PostgreSQL + pgvector
 
 ```
 Document  id (uuid), name, mime, content_hash (unique SHA-256), lang,
-          size_bytes, status (pending|indexed|failed), error_msg, created_at
+          size_bytes, status (pending|indexed|failed), error_msg, total_chunks, created_at
+          @@index([status])
 
 Chunk     id (uuid), document_id → Document (cascade delete), ord,
           content, embedding vector(1024), lang, created_at
+          @@index([documentId])
+          HNSW index on embedding (applied via raw migration, m=16, ef_construction=64)
+
+Session        id (uuid), title, created_at, updated_at
+               @@index([updatedAt])
+
+SessionMessage id (uuid), session_id → Session (cascade delete), role (user|assistant),
+               content, citations (Json?), created_at
 ```
 
 `embedding` is `Unsupported("vector(1024)")` in Prisma. All vector writes use `prisma.$executeRaw` with `::vector` cast. Vector search uses cosine distance (`<=>`).
@@ -72,7 +84,9 @@ Chunk     id (uuid), document_id → Document (cascade delete), ord,
 
 ## Chat Session Persistence
 
-Sessions are stored in **localStorage** (client-side only). Key shape: `chat:<uuid>` per session, `chat:last` for the last-visited session ID.
+Sessions are stored in **PostgreSQL** (`Session` + `SessionMessage` tables). `chat-storage.ts` wraps the session API (`GET/POST/PATCH/DELETE /api/sessions`).
+
+localStorage stores only `chat:last` (the last-visited session ID) to restore state across page loads.
 
 ```ts
 interface ChatSession {
@@ -90,19 +104,22 @@ interface Message {
 }
 ```
 
-- Sessions older than 2 days are pruned on layout mount (`pruneOldSessions`).
-- `ChatSidebar` subscribes to session changes via `useSyncExternalStore` + a `chat-session-updated` custom event dispatched after every write.
+- Sessions older than 2 days are pruned on layout mount (`pruneOldSessions` calls `DELETE /api/sessions/[id]`).
+- `ChatSidebar` fetches session list via `GET /api/sessions` and subscribes to `chat-session-updated` custom events dispatched after writes.
 - On `/chat/new`, `chatId` prop is `null`; a UUID is generated at send-time and the URL is replaced with `/chat/<id>` after the first message.
+- `ChatWindow` receives `initialSession` hydrated server-side via `GET /api/sessions/[id]`.
 
 ---
 
 ## Cross-language Retrieval Flow
 
 1. Detect source language of the user query (`franc-min`)
-2. Translate query to the other language via DeepSeek (fails gracefully)
-3. Embed both queries with bge-m3 → two 1024-dim vectors
-4. Run parallel `vectorSearch` → merge, deduplicate, sort by cosine score → take top-N chunks
-5. Inject chunks as `<context>` into the LLM prompt
+2. Translate query to the other language via DeepSeek (fails gracefully → original query)
+3. Generate a hypothetical answer (HyDE) via DeepSeek (fails gracefully → null)
+4. Embed all three variants in parallel with bge-m3 → up to three 1024-dim vectors
+5. Run parallel `vectorSearch` for each vector → merge, deduplicate, sort by cosine score
+6. Cross-encoder rerank (`bge-reranker-base`) → top-N chunks
+7. Inject chunks as `<context>` into the LLM prompt
 
 ---
 
@@ -112,7 +129,9 @@ interface Message {
 
 `ingestFile` (CLI path) — synchronous end-to-end.
 
-Both: SHA-256 dedup → parse → detect lang → split → embed each chunk → `$executeRaw` INSERT with `::vector` → update `status`.
+Both: SHA-256 dedup → parse → detect lang → semantic split (cosine boundary; falls back to `RecursiveCharacterTextSplitter`) → embed each chunk → `$executeRaw` INSERT with `::vector` → update `status`.
+
+Indexing runs in a persistent **worker thread** (`src/lib/ingest/indexing-worker.ts`) spawned at server startup. Main thread dispatches via `enqueueIndexing()` in `indexing-queue.ts`. Server startup (`instrumentation.ts`) resumes any `pending` documents left over from prior restarts.
 
 ---
 
@@ -135,7 +154,11 @@ export const PROVIDER_LABEL: Record<Provider, string> = { claude: "Claude", deep
 
 `getProvider(name)` in `router.ts` returns `claudeProvider` by default; pass `"deepseek"` for DeepSeek. `/api/chat` uses SSE to stream tokens from `provider.chat(...)`.
 
-**UI note**: `ProviderSelect` currently renders the Claude option as `disabled` — DeepSeek is the only selectable provider in the UI even though the server-side router supports both.
+History is truncated before the LLM call via `truncate.ts` — keeps the most recent turns within a token budget (estimated as `length / 4`), then drops any leading assistant turn.
+
+Both providers respect `process.env.ANTHROPIC_MODEL` / `process.env.DEEPSEEK_MODEL` to override the model name. Defaults are `claude-sonnet-4-6` and `deepseek-chat` respectively.
+
+**UI**: Both Claude and DeepSeek are selectable in `ProviderSelect`.
 
 ---
 
@@ -145,33 +168,49 @@ export const PROVIDER_LABEL: Record<Provider, string> = { claude: "Claude", deep
 - **pdf-parse v2 API**: `new PDFParse({ data: buffer })` then `.getText()` — NOT a default-export function like v1.
 - **mammoth import**: `const { default: mammoth } = await import("mammoth")` — needs `__esModule: true` in Jest mocks.
 - **Dynamic imports in tests**: mock factories must include `__esModule: true` for correct `esModuleInterop` interop.
-- **Ingestion is async**: `POST /api/documents` returns the document ID immediately; indexing runs in the background. Poll `status` field.
+- **Ingestion is async**: `POST /api/documents` returns the document ID immediately; indexing runs in the background in a worker thread. Poll `status` field.
 - **System prompt**: written in English to avoid biasing the LLM toward any specific response language.
-- **localStorage is client-only**: all `chat-storage` functions guard with `isClient()` check; never call them during SSR.
-- **Session sync**: after any localStorage write, dispatch `new CustomEvent("chat-session-updated")` so `ChatSidebar` re-renders.
+- **localStorage is client-only**: `chat-storage.ts` uses localStorage only for `chat:last`. Full session data is in PostgreSQL.
+- **Session sync**: after any session write (API call), dispatch `new CustomEvent("chat-session-updated")` so `ChatSidebar` re-renders.
+- **Batch embedding**: use `getEmbeddingsBatch(texts[])` for multi-text embedding (used in semantic splitter). `getEmbedding(text)` is for single-text cases.
+- **Rate limiting**: `checkRateLimit(key, limit, windowMs)` in `src/lib/rate-limit.ts` — in-memory only, not distributed.
 
 ---
 
 ## Important File Locations
 
-| Path                                     | Purpose                                                     |
-| ---------------------------------------- | ----------------------------------------------------------- |
-| `app/api/chat/route.ts`                  | Chat endpoint — retrieval + LLM streaming                   |
-| `app/chat/layout.tsx`                    | Chat layout — SidebarProvider, ChatSidebar, session pruning |
-| `app/chat/[id]/page.tsx`                 | Renders ChatWindow for a specific session                   |
-| `app/chat/new/page.tsx`                  | Renders ChatWindow with chatId=null                         |
-| `app/chat/last/page.tsx`                 | Client redirect to last active chat                         |
-| `src/lib/chat-storage.ts`                | localStorage session CRUD + prune logic                     |
-| `src/lib/llm/providers.ts`               | PROVIDER const + PROVIDER_LABEL                             |
-| `src/lib/llm/router.ts`                  | LLM provider selection (Claude default)                     |
-| `src/lib/retrieval/query.ts`             | Cross-language retrieval orchestration                      |
-| `src/lib/ingest/pipeline.ts`             | Ingestion pipeline (parse → chunk → embed → store)          |
-| `src/lib/ingest/parse.ts`                | File parser (md/txt/pdf/docx)                               |
-| `src/lib/embeddings/bge.ts`              | Local bge-m3 embedding (singleton)                          |
-| `src/components/chat/ChatWindow.tsx`     | Main chat UI — SSE streaming, session hydration, send logic |
-| `src/components/chat/ChatSidebar.tsx`    | Session list sidebar with create/delete/navigate            |
-| `src/components/chat/CitationDrawer.tsx` | Bottom drawer for citation detail view                      |
-| `src/components/chat/MessageBubble.tsx`  | Message rendering — Markdown, inline citation superscripts  |
-| `src/components/chat/ProviderSelect.tsx` | Provider dropdown (DeepSeek selectable, Claude disabled)    |
-| `prisma/schema.prisma`                   | DB schema                                                   |
-| `jest.config.ts`                         | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)  |
+| Path                                        | Purpose                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `app/api/chat/route.ts`                     | Chat endpoint — retrieval + LLM streaming (SSE)                  |
+| `app/api/sessions/route.ts`                 | Session list — GET (list) / POST (create)                        |
+| `app/api/sessions/[id]/route.ts`            | Single session — GET / PATCH (title + messages) / DELETE         |
+| `app/chat/layout.tsx`                       | Chat layout — SidebarProvider, ChatSidebar, session pruning      |
+| `app/chat/[id]/page.tsx`                    | Renders ChatWindow for a specific session (server-hydrated)      |
+| `app/chat/new/page.tsx`                     | Renders ChatWindow with chatId=null                              |
+| `app/chat/last/page.tsx`                    | Client redirect to last active chat                              |
+| `src/lib/chat-storage.ts`                   | Session API wrappers (upsertSession, deleteSession, pruneOld…)   |
+| `src/lib/config.ts`                         | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)    |
+| `src/lib/rate-limit.ts`                     | In-memory IP-based rate limiting                                 |
+| `src/lib/llm/providers.ts`                  | PROVIDER const + PROVIDER_LABEL                                  |
+| `src/lib/llm/router.ts`                     | LLM provider selection (Claude default)                          |
+| `src/lib/llm/truncate.ts`                   | Token-budget history truncation (keeps recent turns, ≤6000 est.) |
+| `src/lib/llm/clients.ts`                    | Shared LLM client singletons (deepseekClient)                    |
+| `src/lib/retrieval/query.ts`                | Retrieval orchestration: translate + HyDE + embed + rerank       |
+| `src/lib/retrieval/vector-search.ts`        | pgvector cosine search (`<=>`)                                   |
+| `src/lib/retrieval/rerank.ts`               | Deduplicate + sort candidate chunks by score                     |
+| `src/lib/retrieval/cross-encoder.ts`        | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)     |
+| `src/lib/ingest/pipeline.ts`                | Ingestion pipeline (parse → chunk → embed → store)               |
+| `src/lib/ingest/parse.ts`                   | File parser (md/txt/pdf/docx)                                    |
+| `src/lib/ingest/split.ts`                   | Chunking entry point — semantic splitter with fixed fallback     |
+| `src/lib/ingest/semantic-splitter.ts`       | Semantic chunking via embedding cosine boundary detection        |
+| `src/lib/ingest/indexing-worker.ts`         | Worker thread entry — loads models once, processes docs via IPC  |
+| `src/lib/ingest/indexing-queue.ts`          | Main-thread interface: `enqueueIndexing(docId, filePath)`        |
+| `src/lib/embeddings/bge.ts`                 | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`     |
+| `instrumentation.ts` / `instrumentation.node.ts` | Server startup hook — resume pending docs, warm worker thread |
+| `src/components/chat/ChatWindow.tsx`        | Main chat UI — SSE streaming, session hydration, send logic      |
+| `src/components/chat/ChatSidebar.tsx`       | Session list — create/rename/delete/export/navigate              |
+| `src/components/chat/CitationDrawer.tsx`    | Bottom drawer for citation detail view                           |
+| `src/components/chat/MessageBubble.tsx`     | Message rendering — Markdown, inline citation superscripts       |
+| `src/components/chat/ProviderSelect.tsx`    | Provider dropdown (Claude + DeepSeek both selectable)            |
+| `prisma/schema.prisma`                      | DB schema (Document, Chunk, Session, SessionMessage)             |
+| `jest.config.ts`                            | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)       |
