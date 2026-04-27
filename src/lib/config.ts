@@ -10,6 +10,7 @@ export const HISTORY_TOKEN_BUDGET = 6000; // max estimated tokens kept from conv
 // Chunking
 export const CHUNK_SIZE = 800;           // characters per chunk
 export const CHUNK_OVERLAP = 120;        // overlap between adjacent chunks
+export const SEMANTIC_THRESHOLD = 0.75;  // cosine similarity below this value marks a chunk boundary
 
 // UI
 export const POLL_INTERVAL_MS = 3000;    // document status polling interval
