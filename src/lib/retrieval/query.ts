@@ -1,7 +1,7 @@
 import { getEmbedding } from "../embeddings/bge";
 import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
-import { rerankChunks } from "./cross-encoder";
+// import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
 import { deepseekClient } from "../llm/clients";
 import { RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
@@ -25,10 +25,12 @@ async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<s
 async function generateHypotheticalAnswer(query: string): Promise<string> {
   const resp = await deepseekClient.chat.completions.create({
     model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
-    messages: [{
-      role: "user",
-      content: `Write a brief factual answer to the following question. Answer directly, no explanation:\n${query}`,
-    }],
+    messages: [
+      {
+        role: "user",
+        content: `Write a brief factual answer to the following question. Answer directly, no explanation:\n${query}`,
+      },
+    ],
     max_tokens: QUERY_MAX_TOKENS,
   });
 
@@ -66,14 +68,19 @@ export async function retrieve(userQuery: string, traceId?: string): Promise<Chu
 
   const candidates = deduplicateAndSort(searchResults.flat());
 
-  logger.debug({
-    traceId,
-    retrieval_ms: Date.now() - t0,
-    src_lang: srcLang,
-    hyde: !!hydeAnswer,
-    candidates: candidates.length,
-    top_vector_score: candidates[0]?.score != null ? Number(candidates[0].score).toFixed(4) : null,
-  }, "vector search done");
+  logger.debug(
+    {
+      traceId,
+      retrieval_ms: Date.now() - t0,
+      src_lang: srcLang,
+      hyde: !!hydeAnswer,
+      candidates: candidates.length,
+      top_vector_score: candidates[0]?.score != null ? Number(candidates[0].score).toFixed(4) : null,
+    },
+    "vector search done",
+  );
 
-  return rerankChunks(userQuery, candidates, RETRIEVAL_TOP_FINAL, traceId);
+  return candidates.slice(0, RETRIEVAL_TOP_FINAL);
+  // For better relevance, we can rerank the candidates with a cross-encoder, but it adds latency. Uncomment to enable.
+  // return rerankChunks(userQuery, candidates, RETRIEVAL_TOP_FINAL, traceId);
 }
