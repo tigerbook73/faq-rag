@@ -15,9 +15,7 @@ interface Props {
 export function MessageBubble({ role, content, citations, onCitationClick, isLoading }: Props) {
   const isUser = role === "user";
 
-  const rendered = content
-    .replace(/\[\^(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`)
-    .replace(/\[(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`);
+  const rendered = content.replace(/\[(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`);
 
   return (
     <div data-role={role} className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
@@ -29,11 +27,7 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
         {isUser ? (
           <p className="whitespace-pre-wrap">{content}</p>
         ) : isLoading && !content ? (
-          <div className="flex items-center gap-1 py-0.5">
-            <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
-            <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
-            <span className="h-2 w-2 rounded-full bg-current animate-bounce" />
-          </div>
+          <TypingDots />
         ) : (
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown
@@ -73,13 +67,23 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
   );
 }
 
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1 py-0.5">
+      <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
+      <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
+      <span className="h-2 w-2 rounded-full bg-current animate-bounce" />
+    </div>
+  );
+}
+
 function renderWithCitations(
   text: string,
   citations: Citation[] | undefined,
   onClick?: (c: Citation) => void,
   nodeIndex = 0,
 ) {
-  if (!citations) return text;
+  if (!citations) return [text];
   const parts = text.split(/(\[\^\d+\])/g);
   return parts.map((part, i) => {
     const match = part.match(/\[\^(\d+)\]/);
