@@ -53,6 +53,7 @@ export function DocumentTable({ initialDocuments }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildProgress, setRebuildProgress] = useState<{ done: number; total: number } | null>(null);
   const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
   // Lightweight polling during indexing — fetch JSON, not a full RSC re-render.
@@ -101,14 +102,17 @@ export function DocumentTable({ initialDocuments }: Props) {
 
   async function handleRebuildAll() {
     setRebuilding(true);
+    setRebuildProgress({ done: 0, total: documents.length });
     try {
-      for (const doc of documents) {
-        await fetch(`/api/documents/${doc.id}/reindex`, { method: "POST" });
+      for (let i = 0; i < documents.length; i++) {
+        await fetch(`/api/documents/${documents[i].id}/reindex`, { method: "POST" });
+        setRebuildProgress({ done: i + 1, total: documents.length });
       }
       setPolledDocuments(null);
       router.refresh();
     } finally {
       setRebuilding(false);
+      setRebuildProgress(null);
     }
   }
 
@@ -131,7 +135,9 @@ export function DocumentTable({ initialDocuments }: Props) {
         />
         <div className="ml-auto">
           <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
-            {rebuilding ? "Rebuilding…" : "Rebuild All"}
+            {rebuildProgress
+              ? `Rebuilding ${rebuildProgress.done}/${rebuildProgress.total}…`
+              : "Rebuild All"}
           </Button>
         </div>
       </div>
@@ -165,9 +171,12 @@ export function DocumentTable({ initialDocuments }: Props) {
                   : doc._count.chunks}
               </TableCell>
               <TableCell>
-                <Badge variant={statusVariant(doc.status)} title={doc.errorMsg ?? undefined}>
+                <Badge variant={statusVariant(doc.status)}>
                   {doc.status}
                 </Badge>
+                {doc.status === "failed" && doc.errorMsg && (
+                  <p className="mt-1 text-xs text-destructive max-w-48 break-words">{doc.errorMsg}</p>
+                )}
               </TableCell>
               <TableCell className="text-muted-foreground text-xs">
                 {new Date(doc.createdAt).toLocaleDateString()}
