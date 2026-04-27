@@ -100,6 +100,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let streamDone = false;
+      let doneMessages: Message[] | null = null;
 
       const parser = createParser({ onEvent: (event) => {
         const raw = event.data;
@@ -119,13 +120,12 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
           streamDone = true;
           const usedNums = new Set([...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)));
           const usedCitations = citations.filter((c) => usedNums.has(c.id));
-          const finalMessages: Message[] = [
+          doneMessages = [
             ...withUser,
             { role: "assistant", content: assistantContent, citations: usedCitations },
           ];
-          setMessages(finalMessages);
-          persistMessages(finalMessages, sessionAtSend, resolvedId);
-          if (!chatId) router.replace(`/chat/${resolvedId}`);
+          setMessages(doneMessages);
+          // persist + navigate happen after the stream loop so persistMessages is awaited
         }
       }});
 
@@ -137,7 +137,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
         }
       } catch {
         // stream interrupted mid-response — save whatever was generated
-        if (assistantContent) {
+        if (assistantContent && !doneMessages) {
           const interrupted = assistantContent + "\n\n⚠️ _回答被中断_";
           const finalMessages: Message[] = [
             ...withUser,
@@ -150,8 +150,12 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
         }
       }
 
-      // stream ended without "done" event (e.g. server crash) — save partial content
-      if (!streamDone && assistantContent) {
+      // Normal completion via "done" event — persist then navigate
+      if (doneMessages) {
+        await persistMessages(doneMessages, sessionAtSend, resolvedId);
+        if (!chatId) router.replace(`/chat/${resolvedId}`);
+      } else if (!streamDone && assistantContent) {
+        // stream ended without "done" event (e.g. server crash) — save partial content
         const partial = assistantContent + "\n\n⚠️ _回答被中断_";
         const finalMessages: Message[] = [
           ...withUser,

@@ -19,7 +19,7 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
     .replace(/\[(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`);
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
+    <div data-role={role} className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
           isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"

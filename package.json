@@ -14,7 +14,9 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "format": "prettier --write .",
-    "test": "jest"
+    "test": "jest",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
@@ -45,6 +47,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",

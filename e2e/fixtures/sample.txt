@@ -1,0 +1,5 @@
+RAG stands for Retrieval-Augmented Generation. It is a technique that combines information retrieval with large language model generation to produce accurate, grounded answers.
+
+How RAG works: the system first retrieves relevant document chunks from a knowledge base using vector similarity search. These chunks are then provided as context to the LLM, which generates an answer based only on the retrieved information.
+
+Benefits of RAG include reduced hallucination, up-to-date knowledge without retraining, and the ability to cite sources. RAG is widely used in enterprise FAQ systems and customer support applications.
