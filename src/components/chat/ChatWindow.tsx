@@ -222,6 +222,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
               key={i}
               role={m.role}
               content={m.content}
+              isLoading={loading && i === messages.length - 1 && m.role === "assistant"}
               citations={m.citations}
               onCitationClick={handleCitationClick}
             />

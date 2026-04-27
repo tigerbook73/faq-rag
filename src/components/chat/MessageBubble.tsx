@@ -9,9 +9,10 @@ interface Props {
   content: string;
   citations?: Citation[];
   onCitationClick?: (c: Citation) => void;
+  isLoading?: boolean;
 }
 
-export function MessageBubble({ role, content, citations, onCitationClick }: Props) {
+export function MessageBubble({ role, content, citations, onCitationClick, isLoading }: Props) {
   const isUser = role === "user";
 
   const rendered = content
@@ -27,6 +28,12 @@ export function MessageBubble({ role, content, citations, onCitationClick }: Pro
       >
         {isUser ? (
           <p className="whitespace-pre-wrap">{content}</p>
+        ) : isLoading && !content ? (
+          <div className="flex items-center gap-1 py-0.5">
+            <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
+            <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
+            <span className="h-2 w-2 rounded-full bg-current animate-bounce" />
+          </div>
         ) : (
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown
