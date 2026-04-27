@@ -48,7 +48,7 @@
   §4-E  速率限制                     ✅
   §4-F  SSE 流解析健壮化             ✅
   §4-H  Ingestion Worker Thread      ✅
-  §4-I  断点续传索引（Resume Indexing）← 开发中断后自动恢复
+  §4-I  断点续传索引（Resume Indexing）✅
   §5-A  DeepSeek 客户端单例化        ✅
   §5-B  魔法数字提取到 config.ts     ✅
   §5-C  文件扩展名改用 path.extname  ✅
@@ -527,7 +527,7 @@ export function enqueueIndexing(docId: string, filePath: string) {
 
 ---
 
-### 4-I ✦ 断点续传索引（Resume Indexing）
+### 4-I ✅ 断点续传索引（Resume Indexing）【已完成】
 
 |              |                                             |
 | ------------ | ------------------------------------------- |
