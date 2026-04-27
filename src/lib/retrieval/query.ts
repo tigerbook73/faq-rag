@@ -3,17 +3,10 @@ import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
 import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
-import OpenAI from "openai";
+import { deepseekClient } from "../llm/clients";
 
 const TOP_K = 10;
 const TOP_FINAL = 6;
-
-function deepseekClient() {
-  return new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY ?? "",
-    baseURL: "https://api.deepseek.com",
-  });
-}
 
 async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<string> {
   const prompt =
@@ -21,7 +14,7 @@ async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<s
       ? `Translate the following query to Chinese. Return only the translation, no explanation:\n${query}`
       : `将以下查询翻译为英语。只返回翻译结果，不要解释：\n${query}`;
 
-  const resp = await deepseekClient().chat.completions.create({
+  const resp = await deepseekClient.chat.completions.create({
     model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
     messages: [{ role: "user", content: prompt }],
     max_tokens: 200,
@@ -31,7 +24,7 @@ async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<s
 }
 
 async function generateHypotheticalAnswer(query: string): Promise<string> {
-  const resp = await deepseekClient().chat.completions.create({
+  const resp = await deepseekClient.chat.completions.create({
     model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
     messages: [{
       role: "user",

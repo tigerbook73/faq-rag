@@ -1,11 +1,6 @@
-import OpenAI from "openai";
 import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
-
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY ?? "",
-  baseURL: "https://api.deepseek.com",
-});
+import { deepseekClient as client } from "./clients";
 
 type DeepSeekUsage = {
   prompt_tokens: number;
