@@ -50,7 +50,7 @@
   §4-H  Ingestion Worker Thread      ← 嵌入与 HTTP server 进程隔离
   §4-I  断点续传索引（Resume Indexing）← 开发中断后自动恢复
   §5-A  DeepSeek 客户端单例化        ✅
-  §5-B  魔法数字提取到 config.ts     ← 统一调优参数
+  §5-B  魔法数字提取到 config.ts     ✅
   §5-C  文件扩展名改用 path.extname  ← 边界修复
   §5-D  Embedding 单例并发初始化锁   ← 并发安全
 
@@ -570,7 +570,7 @@ export function enqueueIndexing(docId: string, filePath: string) {
 
 ---
 
-### 5-B ✦ 魔法数字提取到 config.ts
+### 5-B ✅ 魔法数字提取到 config.ts 【已完成】
 
 |              |              |
 | ------------ | ------------ |

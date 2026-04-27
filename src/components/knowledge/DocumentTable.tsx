@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { POLL_INTERVAL_MS } from "@/src/lib/config";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +66,7 @@ export function DocumentTable({ initialDocuments }: Props) {
       if (!data.items.some((d: Document) => d.status === "pending")) {
         router.refresh();
       }
-    }, 3000);
+    }, POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, [documents, router]);
 
