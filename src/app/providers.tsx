@@ -16,7 +16,7 @@ export function Providers({ children, isAuthenticated }: { children: React.React
         <ProviderContextProvider>
           <TooltipProvider>
             <SidebarProvider defaultOpen={true} className="h-screen overflow-hidden">
-              <AppSidebar />
+              <AppSidebar isAuthenticated={isAuthenticated} />
               <SidebarInset className="overflow-hidden flex flex-col">
                 <TopBar isAuthenticated={isAuthenticated} />
                 {children}

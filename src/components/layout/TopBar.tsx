@@ -24,10 +24,16 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
   return (
     <header className="h-12 flex items-center justify-between px-4 border-b bg-background shrink-0">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="md:hidden">
+        {isSignIn ? (
           <LibraryBig className="size-6" />
-        </SidebarTrigger>
-        <LibraryBig className="hidden md:block size-6" />
+        ) : (
+          <>
+            <SidebarTrigger className="md:hidden">
+              <LibraryBig className="size-6" />
+            </SidebarTrigger>
+            <LibraryBig className="hidden md:block size-6" />
+          </>
+        )}
         <Link href="/chat/new" className="font-bold text-base">
           FAQ-RAG
         </Link>

@@ -20,6 +20,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { SquarePen, Download, Info, BookOpen } from "lucide-react";
@@ -40,6 +41,7 @@ function relativeDate(ts: number): string {
 export function ChatSidebarContent() {
   const router = useRouter();
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [lastChatId, setLastChatId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,9 +98,14 @@ export function ChatSidebarContent() {
     setEditingId(null);
   }, []);
 
+  const closeOnMobile = useCallback(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [isMobile, setOpenMobile]);
+
   const handleNew = useCallback(() => {
     router.push("/chat/new");
-  }, [router]);
+    closeOnMobile();
+  }, [router, closeOnMobile]);
 
   const handleExport = useCallback(async (e: React.MouseEvent, id: string, title: string) => {
     e.preventDefault();
@@ -175,7 +182,7 @@ export function ChatSidebarContent() {
                   <SidebarMenuItem key={s.id}>
                     <SidebarMenuButton
                       isActive={active}
-                      onClick={() => !isEditing && router.push(`/chat/${s.id}`)}
+                      onClick={() => { if (!isEditing) { router.push(`/chat/${s.id}`); closeOnMobile(); } }}
                       onDoubleClick={() => startEdit(s.id, s.title)}
                       className="h-auto overflow-visible items-start"
                     >
@@ -228,20 +235,20 @@ export function ChatSidebarContent() {
             variant="ghost"
             size="sm"
             className="w-full justify-start text-muted-foreground group-data-[collapsible=icon]:hidden"
-            onClick={() => router.push("/chat/last")}
+            onClick={() => { router.push("/chat/last"); closeOnMobile(); }}
           >
             ↩ Back to last chat
           </Button>
         )}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={pathname === "/knowledge"} tooltip="Knowledge" render={<Link href="/knowledge" />}>
+            <SidebarMenuButton isActive={pathname === "/knowledge"} tooltip="Knowledge" render={<Link href="/knowledge" onClick={closeOnMobile} />}>
               <BookOpen />
               <span>Knowledge</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="About" isActive={pathname === "/about"} render={<Link href="/about" />}>
+            <SidebarMenuButton tooltip="About" isActive={pathname === "/about"} render={<Link href="/about" onClick={closeOnMobile} />}>
               <Info />
               <span>About</span>
             </SidebarMenuButton>
