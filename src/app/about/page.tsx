@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 
 export default function AboutPage() {
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
-      <div className="max-w-3xl md:w-[80%] w-full mx-auto px-4 py-8 space-y-6">
+    <PageShell className="max-w-3xl space-y-6">
         <h1 className="text-2xl font-bold">About FAQ-RAG</h1>
         <p className="text-muted-foreground">
           FAQ-RAG is a local knowledge base Q&amp;A system powered by Retrieval-Augmented Generation. Upload documents
@@ -33,8 +33,7 @@ export default function AboutPage() {
           </ul>
         </div>
 
-        <Button render={<Link href="/chat/new" />}>Start Chatting</Button>
-      </div>
-    </div>
+        <Button nativeButton={false} render={<Link href="/chat/new" />}>Start Chatting</Button>
+    </PageShell>
   );
 }

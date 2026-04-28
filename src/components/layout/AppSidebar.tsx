@@ -27,7 +27,7 @@ export function AppSidebar() {
       ) : (
         <>
           <SidebarHeader>
-            <div className="flex items-center justify-between">
+            <div className="hidden md:flex items-center justify-between">
               <SidebarTrigger />
             </div>
           </SidebarHeader>

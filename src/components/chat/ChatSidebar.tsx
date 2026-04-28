@@ -22,7 +22,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Download, Info } from "lucide-react";
+import { SquarePen, Download, Info, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/chat-storage";
 
@@ -145,7 +145,7 @@ export function ChatSidebarContent() {
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center justify-between">
+        <div className="hidden md:flex items-center justify-between">
           <SidebarTrigger />
         </div>
       </SidebarHeader>
@@ -220,32 +220,34 @@ export function ChatSidebarContent() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="About" isActive={pathname === "/about"} render={<Link href="/about" />}>
-                  <Info />
-                  <span>About</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
-      {showBackToLast && (
-        <SidebarFooter className="group-data-[collapsible=icon]:hidden">
+      <SidebarFooter>
+        {showBackToLast && (
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-muted-foreground"
+            className="w-full justify-start text-muted-foreground group-data-[collapsible=icon]:hidden"
             onClick={() => router.push("/chat/last")}
           >
             ↩ Back to last chat
           </Button>
-        </SidebarFooter>
-      )}
+        )}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton isActive={pathname === "/knowledge"} tooltip="Knowledge" render={<Link href="/knowledge" />}>
+              <BookOpen />
+              <span>Knowledge</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="About" isActive={pathname === "/about"} render={<Link href="/about" />}>
+              <Info />
+              <span>About</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </>
   );
 }
