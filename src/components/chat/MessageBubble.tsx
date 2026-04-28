@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import { Button } from "@/components/ui/button";
 import type { Citation } from "./CitationDrawer";
 
 interface Props {
@@ -50,13 +51,15 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
             {citations && citations.length > 0 && (
               <div className="mt-3 border-t pt-2 space-y-1">
                 {citations.map((c) => (
-                  <button
+                  <Button
                     key={c.id}
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto w-full justify-start text-xs text-muted-foreground font-normal px-2 py-0.5"
                     onClick={() => onCitationClick?.(c)}
-                    className="block text-xs text-muted-foreground hover:text-foreground text-left"
                   >
                     [{c.id}] {c.documentName} — {c.preview.slice(0, 60)}…
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

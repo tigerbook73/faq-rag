@@ -16,6 +16,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { SquarePen, Download } from "lucide-react";
 import { fetchSession } from "@/src/lib/chat-storage";
 
@@ -208,12 +209,14 @@ export function ChatSidebar() {
 
       {showBackToLast && (
         <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground"
             onClick={() => router.push("/chat/last")}
-            className="w-full px-2 text-sm text-muted-foreground hover:text-foreground text-left transition-colors"
           >
             ↩ Back to last chat
-          </button>
+          </Button>
         </SidebarFooter>
       )}
     </Sidebar>
