@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { getSession } from "@/lib/session";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const session = await getSession();
+  const isAuthenticated = !!session;
   return (
     <PageShell className="max-w-3xl space-y-6">
         <h1 className="text-2xl font-bold">About FAQ-RAG</h1>
@@ -33,7 +36,11 @@ export default function AboutPage() {
           </ul>
         </div>
 
-        <Button nativeButton={false} render={<Link href="/chat/new" />}>Start Chatting</Button>
+        {isAuthenticated ? (
+          <Button nativeButton={false} render={<Link href="/chat/last" />}>Start Chatting</Button>
+        ) : (
+          <Button nativeButton={false} render={<Link href="/auth/signin" />}>Sign In to Chat</Button>
+        )}
     </PageShell>
   );
 }

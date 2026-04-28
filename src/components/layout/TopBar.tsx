@@ -53,15 +53,23 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Separator orientation="vertical" className="self-stretch my-2" />
           </>
         )}
-        {!isSignIn && (
+        {isSignIn ? (
+          <nav className="mr-2 hidden md:flex items-center gap-3 text-sm">
+            <Link href="/about" className="text-muted-foreground">About</Link>
+          </nav>
+        ) : (
           <>
             <nav className="mr-2 hidden md:flex items-center gap-3 text-sm">
-              <Link href="/chat/new" className={isChat ? "font-medium" : "text-muted-foreground"}>
-                Chat
-              </Link>
-              <Link href="/knowledge" className={pathname === "/knowledge" ? "font-medium" : "text-muted-foreground"}>
-                Knowledge
-              </Link>
+              {isAuthenticated && (
+                <>
+                  <Link href="/chat/last" className={isChat ? "font-medium" : "text-muted-foreground"}>
+                    Chat
+                  </Link>
+                  <Link href="/knowledge" className={pathname === "/knowledge" ? "font-medium" : "text-muted-foreground"}>
+                    Knowledge
+                  </Link>
+                </>
+              )}
               <Link href="/about" className={pathname === "/about" ? "font-medium" : "text-muted-foreground"}>
                 About
               </Link>

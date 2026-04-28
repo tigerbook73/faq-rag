@@ -46,7 +46,7 @@ export function AppSidebar({ isAuthenticated }: { isAuthenticated: boolean }) {
                     <SidebarMenuButton
                       isActive={pathname.startsWith("/chat")}
                       tooltip="Chat"
-                      render={<Link href="/chat/new" onClick={closeOnMobile} />}
+                      render={<Link href="/chat/last" onClick={closeOnMobile} />}
                     >
                       <MessageSquare />
                       <span>Chat</span>
