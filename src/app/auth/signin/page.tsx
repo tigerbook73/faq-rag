@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { login, type LoginState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Eye, EyeOff } from "lucide-react";
 export default function SignInPage() {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
   const [showPassword, setShowPassword] = useState(false);
+  const from = useSearchParams().get("from") ?? "";
 
   return (
     <div className="h-full flex items-center justify-center bg-background p-4">
@@ -22,6 +24,7 @@ export default function SignInPage() {
         </CardHeader>
         <CardContent>
           <form action={action} className="space-y-4">
+            <input type="hidden" name="from" value={from} />
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input

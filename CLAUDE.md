@@ -180,47 +180,47 @@ Both providers respect `process.env.ANTHROPIC_MODEL` / `process.env.DEEPSEEK_MOD
 
 ## Important File Locations
 
-| Path                                             | Purpose                                                          |
-| ------------------------------------------------ | ---------------------------------------------------------------- |
-| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about)|
-| `src/app/layout.tsx`                             | Root layout — async, reads session, passes isAuthenticated       |
-| `src/app/providers.tsx`                          | Client shell — TopBar + AppSidebar + contexts + TooltipProvider  |
-| `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval + LLM streaming (SSE)                  |
-| `src/app/api/sessions/route.ts`                  | Session list — GET (list) / POST (create)                        |
-| `src/app/api/sessions/[id]/route.ts`             | Single session — GET / PATCH (title + messages) / DELETE         |
-| `src/app/chat/layout.tsx`                        | Chat layout — passthrough `<>{children}</>`                      |
-| `src/app/chat/[id]/page.tsx`                     | Renders ChatWindow for a specific session (server-hydrated)      |
-| `src/app/chat/new/page.tsx`                      | Renders ChatWindow with chatId=null                              |
-| `src/app/chat/last/page.tsx`                     | Client redirect to last active chat                              |
-| `src/app/knowledge/page.tsx`                     | Knowledge base — upload + document list                          |
-| `src/app/about/page.tsx`                         | Public about page — no auth required                             |
-| `src/components/layout/TopBar.tsx`               | Global top bar — brand, nav, provider select, theme, auth        |
-| `src/components/layout/AppSidebar.tsx`           | Global sidebar — chat sessions on /chat/*, About link elsewhere  |
-| `src/context/page-title-context.tsx`             | Chat subtitle context (ChatWindow → TopBar)                      |
-| `src/context/provider-context.tsx`               | LLM provider context (lifted from ChatWindow)                    |
-| `src/lib/chat-storage.ts`                        | Session API wrappers (upsertSession, deleteSession, pruneOld…)   |
-| `src/lib/config.ts`                              | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)    |
-| `src/lib/rate-limit.ts`                          | In-memory IP-based rate limiting                                 |
-| `src/lib/llm/providers.ts`                       | PROVIDER const + PROVIDER_LABEL                                  |
-| `src/lib/llm/router.ts`                          | LLM provider selection (Claude default)                          |
-| `src/lib/llm/truncate.ts`                        | Token-budget history truncation (keeps recent turns, ≤6000 est.) |
-| `src/lib/llm/clients.ts`                         | Shared LLM client singletons (deepseekClient)                    |
-| `src/lib/retrieval/query.ts`                     | Retrieval orchestration: translate + HyDE + embed + rerank       |
-| `src/lib/retrieval/vector-search.ts`             | pgvector cosine search (`<=>`)                                   |
-| `src/lib/retrieval/rerank.ts`                    | Deduplicate + sort candidate chunks by score                     |
-| `src/lib/retrieval/cross-encoder.ts`             | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)     |
-| `src/lib/ingest/pipeline.ts`                     | Ingestion pipeline (parse → chunk → embed → store)               |
-| `src/lib/ingest/parse.ts`                        | File parser (md/txt/pdf/docx)                                    |
-| `src/lib/ingest/split.ts`                        | Chunking entry point — semantic splitter with fixed fallback     |
-| `src/lib/ingest/semantic-splitter.ts`            | Semantic chunking via embedding cosine boundary detection        |
-| `src/lib/ingest/indexing-worker.ts`              | Worker thread entry — loads models once, processes docs via IPC  |
-| `src/lib/ingest/indexing-queue.ts`               | Main-thread interface: `enqueueIndexing(docId, filePath)`        |
-| `src/lib/embeddings/bge.ts`                      | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`     |
-| `instrumentation.ts` / `instrumentation.node.ts` | Server startup hook — resume pending docs, warm worker thread    |
-| `src/components/chat/ChatWindow.tsx`             | Main chat UI — SSE streaming, session hydration, send logic      |
-| `src/components/chat/ChatSidebar.tsx`            | Session list — create/rename/delete/export/navigate              |
-| `src/components/chat/CitationDrawer.tsx`         | Bottom drawer for citation detail view                           |
-| `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, inline citation superscripts       |
-| `src/components/chat/ProviderSelect.tsx`         | Provider dropdown (Claude + DeepSeek both selectable)            |
-| `prisma/schema.prisma`                           | DB schema (Document, Chunk, Session, SessionMessage)             |
-| `jest.config.ts`                                 | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)       |
+| Path                                             | Purpose                                                           |
+| ------------------------------------------------ | ----------------------------------------------------------------- |
+| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about) |
+| `src/app/layout.tsx`                             | Root layout — async, reads session, passes isAuthenticated        |
+| `src/app/providers.tsx`                          | Client shell — TopBar + AppSidebar + contexts + TooltipProvider   |
+| `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval + LLM streaming (SSE)                   |
+| `src/app/api/sessions/route.ts`                  | Session list — GET (list) / POST (create)                         |
+| `src/app/api/sessions/[id]/route.ts`             | Single session — GET / PATCH (title + messages) / DELETE          |
+| `src/app/chat/layout.tsx`                        | Chat layout — passthrough `<>{children}</>`                       |
+| `src/app/chat/[id]/page.tsx`                     | Renders ChatWindow for a specific session (server-hydrated)       |
+| `src/app/chat/new/page.tsx`                      | Renders ChatWindow with chatId=null                               |
+| `src/app/chat/last/page.tsx`                     | Client redirect to last active chat                               |
+| `src/app/knowledge/page.tsx`                     | Knowledge base — upload + document list                           |
+| `src/app/about/page.tsx`                         | Public about page — no auth required                              |
+| `src/components/layout/TopBar.tsx`               | Global top bar — brand, nav, provider select, theme, auth         |
+| `src/components/layout/AppSidebar.tsx`           | Global sidebar — chat sessions on /chat/\*, About link elsewhere  |
+| `src/context/page-title-context.tsx`             | Chat subtitle context (ChatWindow → TopBar)                       |
+| `src/context/provider-context.tsx`               | LLM provider context (lifted from ChatWindow)                     |
+| `src/lib/chat-storage.ts`                        | Session API wrappers (upsertSession, deleteSession, pruneOld…)    |
+| `src/lib/config.ts`                              | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)     |
+| `src/lib/rate-limit.ts`                          | In-memory IP-based rate limiting                                  |
+| `src/lib/llm/providers.ts`                       | PROVIDER const + PROVIDER_LABEL                                   |
+| `src/lib/llm/router.ts`                          | LLM provider selection (Claude default)                           |
+| `src/lib/llm/truncate.ts`                        | Token-budget history truncation (keeps recent turns, ≤6000 est.)  |
+| `src/lib/llm/clients.ts`                         | Shared LLM client singletons (deepseekClient)                     |
+| `src/lib/retrieval/query.ts`                     | Retrieval orchestration: translate + HyDE + embed + rerank        |
+| `src/lib/retrieval/vector-search.ts`             | pgvector cosine search (`<=>`)                                    |
+| `src/lib/retrieval/rerank.ts`                    | Deduplicate + sort candidate chunks by score                      |
+| `src/lib/retrieval/cross-encoder.ts`             | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)      |
+| `src/lib/ingest/pipeline.ts`                     | Ingestion pipeline (parse → chunk → embed → store)                |
+| `src/lib/ingest/parse.ts`                        | File parser (md/txt/pdf/docx)                                     |
+| `src/lib/ingest/split.ts`                        | Chunking entry point — semantic splitter with fixed fallback      |
+| `src/lib/ingest/semantic-splitter.ts`            | Semantic chunking via embedding cosine boundary detection         |
+| `src/lib/ingest/indexing-worker.ts`              | Worker thread entry — loads models once, processes docs via IPC   |
+| `src/lib/ingest/indexing-queue.ts`               | Main-thread interface: `enqueueIndexing(docId, filePath)`         |
+| `src/lib/embeddings/bge.ts`                      | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`      |
+| `instrumentation.ts` / `instrumentation.node.ts` | Server startup hook — resume pending docs, warm worker thread     |
+| `src/components/chat/ChatWindow.tsx`             | Main chat UI — SSE streaming, session hydration, send logic       |
+| `src/components/chat/ChatSidebar.tsx`            | Session list — create/rename/delete/export/navigate               |
+| `src/components/chat/CitationDrawer.tsx`         | Bottom drawer for citation detail view                            |
+| `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, inline citation superscripts        |
+| `src/components/chat/ProviderSelect.tsx`         | Provider dropdown (Claude + DeepSeek both selectable)             |
+| `prisma/schema.prisma`                           | DB schema (Document, Chunk, Session, SessionMessage)              |
+| `jest.config.ts`                                 | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)        |

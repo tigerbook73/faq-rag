@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, LogOut, LogIn } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, LibraryBig } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ProviderSelect } from "@/components/chat/ProviderSelect";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
@@ -23,7 +22,7 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
   return (
     <header className="h-12 flex items-center justify-between px-4 border-b bg-background shrink-0">
       <div className="flex items-center gap-2">
-        <SidebarTrigger />
+        <LibraryBig />
         <Link href="/chat/new" className="font-bold text-base">
           FAQ-RAG
         </Link>

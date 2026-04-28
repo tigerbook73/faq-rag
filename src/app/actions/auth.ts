@@ -20,7 +20,9 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
   }
 
   await createSession(username);
-  redirect("/chat/new");
+  const from = formData.get("from")?.toString();
+  const dest = from && from.startsWith("/") && !from.startsWith("/auth") ? from : "/chat/new";
+  redirect(dest);
 }
 
 export async function logout(): Promise<void> {
