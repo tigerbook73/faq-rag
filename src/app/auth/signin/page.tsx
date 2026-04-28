@@ -31,7 +31,7 @@ export default function SignInPage() {
                 id="username"
                 name="username"
                 type="text"
-                autoComplete="username"
+                autoComplete="off"
                 required
                 disabled={pending}
                 defaultValue="admin"
@@ -44,10 +44,10 @@ export default function SignInPage() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   disabled={pending}
-                  defaultValue="admin"
+                  defaultValue="admin@123"
                 />
                 <InputGroupAddon align="inline-end">
                   <InputGroupButton tabIndex={-1} onClick={() => setShowPassword((v) => !v)}>
