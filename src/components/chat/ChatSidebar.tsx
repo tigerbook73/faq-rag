@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchSessions, apiDeleteSession, updateSessionTitle, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -17,7 +16,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Download } from "lucide-react";
+import { SquarePen, Download, Info } from "lucide-react";
+import Link from "next/link";
 import { fetchSession } from "@/src/lib/chat-storage";
 
 function relativeDate(ts: number): string {
@@ -31,7 +31,7 @@ function relativeDate(ts: number): string {
   return `${days}d ago`;
 }
 
-export function ChatSidebar() {
+export function ChatSidebarContent() {
   const router = useRouter();
   const pathname = usePathname();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -136,10 +136,9 @@ export function ChatSidebar() {
   const showBackToLast = lastChatId && pathname !== `/chat/${lastChatId}`;
 
   return (
-    <Sidebar collapsible="icon">
+    <>
       <SidebarHeader>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">FAQ-RAG</span>
           <SidebarTrigger />
         </div>
       </SidebarHeader>
@@ -205,6 +204,19 @@ export function ChatSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="About" isActive={pathname === "/about"} render={<Link href="/about" />}>
+                  <Info />
+                  <span>About</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       {showBackToLast && (
@@ -219,6 +231,6 @@ export function ChatSidebar() {
           </Button>
         </SidebarFooter>
       )}
-    </Sidebar>
+    </>
   );
 }

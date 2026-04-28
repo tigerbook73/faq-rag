@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
+import { getSession } from "@/src/lib/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,17 +19,17 @@ export const metadata: Metadata = {
   description: "Knowledge base Q&A powered by RAG",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getSession();
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        <Providers>
+        <Providers isAuthenticated={!!session}>
           {children}
-          <Toaster />
         </Providers>
       </body>
     </html>

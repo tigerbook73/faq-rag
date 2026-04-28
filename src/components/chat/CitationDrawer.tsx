@@ -23,20 +23,22 @@ export function CitationDrawer({ open, onClose, citation }: Props) {
   return (
     <Drawer open={open} onClose={onClose}>
       <DrawerContent aria-describedby={undefined}>
-        <DrawerHeader>
-          <DrawerTitle>{citation ? `[^${citation.id}] ${citation.documentName}` : "Citation"}</DrawerTitle>
-        </DrawerHeader>
-        <ScrollArea className="max-h-[60vh] px-4 pb-6">
-          {citation && (
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Badge variant="secondary">score {citation.score.toFixed(3)}</Badge>
-                <Badge variant="outline">{citation.documentName}</Badge>
+        <div className="w-full md:w-[80%] md:mx-auto">
+          <DrawerHeader>
+            <DrawerTitle>{citation ? `[^${citation.id}] ${citation.documentName}` : "Citation"}</DrawerTitle>
+          </DrawerHeader>
+          <ScrollArea className="max-h-[60vh] px-4 pb-6">
+            {citation && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Badge variant="secondary">score {citation.score.toFixed(3)}</Badge>
+                  <Badge variant="outline">{citation.documentName}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{citation.preview}</p>
               </div>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{citation.preview}</p>
-            </div>
-          )}
-        </ScrollArea>
+            )}
+          </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );

@@ -2,24 +2,20 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ProviderSelect } from "./ProviderSelect";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
 import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/src/lib/chat-storage";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
-import { Sun, Moon, LogOut } from "lucide-react";
-import { logout } from "@/app/actions/auth";
+import { usePageTitle } from "@/src/context/page-title-context";
+import { useProvider } from "@/src/context/provider-context";
 
 export function ChatWindow({ chatId, initialSession }: { chatId: string | null; initialSession: ChatSession | null }) {
   const router = useRouter();
-  const { resolvedTheme, setTheme } = useTheme();
-  const [provider, setProvider] = useState<Provider>(PROVIDER.DEEPSEEK);
+  const { provider, setProvider } = useProvider();
+  const { setSubtitle } = usePageTitle();
   const [session, setSession] = useState<ChatSession | null>(initialSession);
   const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
   const [input, setInput] = useState("");
@@ -34,6 +30,11 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     if (!initialSession) { router.replace("/chat/new"); return; }
     setLastChatId(chatId);
   }, [chatId, initialSession, router]);
+
+  useEffect(() => {
+    setSubtitle(session?.title ?? "New Chat");
+    return () => setSubtitle(null);
+  }, [session?.title, setSubtitle]);
 
   const persistMessages = useCallback(async (updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
     const now = Date.now();
@@ -187,29 +188,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between px-4 py-3 border-b pl-12">
-        <h1 className="font-semibold text-lg truncate max-w-xs">{session?.title ?? "New Chat"}</h1>
-        <div className="flex items-center gap-3">
-          <span>Provider:</span>
-          <ProviderSelect value={provider} onChange={setProvider} />
-          <Link href="/knowledge">Knowledge Base</Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          >
-            <Sun className="h-4 w-4 dark:hidden" />
-            <Moon className="hidden h-4 w-4 dark:block" />
-          </Button>
-          <form action={logout}>
-            <Button variant="ghost" size="icon" type="submit" title="Sign out">
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </form>
-        </div>
-      </header>
-
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto w-[80%] px-4 py-4">
           {messages.length === 0 && (
