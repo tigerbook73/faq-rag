@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, LogOut, LogIn } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
-import { SidebarTrigger } from "@/src/components/ui/sidebar";
-import { ProviderSelect } from "@/src/components/chat/ProviderSelect";
-import { usePageTitle } from "@/src/context/page-title-context";
-import { useProvider } from "@/src/context/provider-context";
-import { logout } from "@/src/app/actions/auth";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ProviderSelect } from "@/components/chat/ProviderSelect";
+import { usePageTitle } from "@/context/page-title-context";
+import { useProvider } from "@/context/provider-context";
+import { logout } from "@/app/actions/auth";
 
 export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
   const pathname = usePathname();

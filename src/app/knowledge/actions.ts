@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ingestBuffer } from "@/src/lib/ingest/pipeline";
+import { ingestBuffer } from "@/lib/ingest/pipeline";
 
 export interface UploadState {
   success: number;

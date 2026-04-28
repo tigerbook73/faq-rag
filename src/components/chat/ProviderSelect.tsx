@@ -1,7 +1,7 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/src/components/ui/select";
-import { PROVIDER, PROVIDER_LABEL, type Provider } from "@/src/lib/llm/providers";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { PROVIDER, PROVIDER_LABEL, type Provider } from "@/lib/llm/providers";
 
 interface Props {
   value: Provider;

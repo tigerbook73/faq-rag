@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decrypt } from "@/src/lib/session";
+import { decrypt } from "@/lib/session";
 
 const PUBLIC_PATHS = ["/auth/signin", "/about"];
 

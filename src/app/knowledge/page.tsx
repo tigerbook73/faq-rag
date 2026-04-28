@@ -1,6 +1,6 @@
-import { prisma } from "@/src/lib/db/client";
-import { DocumentTable } from "@/src/components/knowledge/DocumentTable";
-import { UploadZone } from "@/src/components/knowledge/UploadZone";
+import { prisma } from "@/lib/db/client";
+import { DocumentTable } from "@/components/knowledge/DocumentTable";
+import { UploadZone } from "@/components/knowledge/UploadZone";
 
 export default async function KnowledgePage() {
   const documents = await prisma.document.findMany({

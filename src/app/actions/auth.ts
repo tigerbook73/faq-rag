@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { createSession, deleteSession } from "@/src/lib/session";
+import { createSession, deleteSession } from "@/lib/session";
 
 export type LoginState = { error?: string } | undefined;
 

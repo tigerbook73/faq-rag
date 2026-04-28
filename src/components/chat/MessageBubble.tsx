@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import type { Citation } from "./CitationDrawer";
 
 interface Props {

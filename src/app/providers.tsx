@@ -1,13 +1,13 @@
 "use client";
 
 import { ThemeProvider } from "next-themes";
-import { Toaster } from "@/src/components/ui/sonner";
-import { SidebarProvider, SidebarInset } from "@/src/components/ui/sidebar";
-import { TooltipProvider } from "@/src/components/ui/tooltip";
-import { AppSidebar } from "@/src/components/layout/AppSidebar";
-import { TopBar } from "@/src/components/layout/TopBar";
-import { PageTitleProvider } from "@/src/context/page-title-context";
-import { ProviderContextProvider } from "@/src/context/provider-context";
+import { Toaster } from "@/components/ui/sonner";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { TopBar } from "@/components/layout/TopBar";
+import { PageTitleProvider } from "@/context/page-title-context";
+import { ProviderContextProvider } from "@/context/provider-context";
 
 export function Providers({ children, isAuthenticated }: { children: React.ReactNode; isAuthenticated: boolean }) {
   return (

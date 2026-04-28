@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useActionState } from "react";
-import { login, type LoginState } from "@/src/app/actions/auth";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/src/components/ui/input-group";
-import { Label } from "@/src/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { login, type LoginState } from "@/app/actions/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function SignInPage() {

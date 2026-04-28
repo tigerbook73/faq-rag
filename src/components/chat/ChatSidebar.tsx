@@ -8,7 +8,7 @@ import {
   updateSessionTitle,
   getLastChatId,
   type ChatSession,
-} from "@/src/lib/chat-storage";
+} from "@/lib/chat-storage";
 import {
   SidebarContent,
   SidebarFooter,
@@ -20,11 +20,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-} from "@/src/components/ui/sidebar";
-import { Button } from "@/src/components/ui/button";
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { SquarePen, Download, Info } from "lucide-react";
 import Link from "next/link";
-import { fetchSession } from "@/src/lib/chat-storage";
+import { fetchSession } from "@/lib/chat-storage";
 
 function relativeDate(ts: number): string {
   const diff = Date.now() - ts;

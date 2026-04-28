@@ -1,7 +1,7 @@
-import { ChatWindow } from "@/src/components/chat/ChatWindow";
-import { prisma } from "@/src/lib/db/client";
-import type { ChatSession, Message } from "@/src/lib/chat-storage";
-import type { Citation } from "@/src/components/chat/CitationDrawer";
+import { ChatWindow } from "@/components/chat/ChatWindow";
+import { prisma } from "@/lib/db/client";
+import type { ChatSession, Message } from "@/lib/chat-storage";
+import type { Citation } from "@/components/chat/CitationDrawer";
 
 export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

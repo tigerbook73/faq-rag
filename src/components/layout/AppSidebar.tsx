@@ -12,8 +12,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-} from "@/src/components/ui/sidebar";
-import { ChatSidebarContent } from "@/src/components/chat/ChatSidebar";
+} from "@/components/ui/sidebar";
+import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
 import { Info } from "lucide-react";
 
 export function AppSidebar() {

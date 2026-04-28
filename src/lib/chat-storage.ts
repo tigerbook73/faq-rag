@@ -1,4 +1,4 @@
-import type { Citation } from "@/src/components/chat/CitationDrawer";
+import type { Citation } from "@/components/chat/CitationDrawer";
 
 export interface Message {
   role: "user" | "assistant";

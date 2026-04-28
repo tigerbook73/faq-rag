@@ -4,13 +4,13 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Button } from "@/src/components/ui/button";
-import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/src/lib/chat-storage";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/lib/chat-storage";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
-import { usePageTitle } from "@/src/context/page-title-context";
-import { useProvider } from "@/src/context/provider-context";
+import { usePageTitle } from "@/context/page-title-context";
+import { useProvider } from "@/context/provider-context";
 
 export function ChatWindow({ chatId, initialSession }: { chatId: string | null; initialSession: ChatSession | null }) {
   const router = useRouter();

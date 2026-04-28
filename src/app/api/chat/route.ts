@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
-import { retrieve } from "@/src/lib/retrieval/query";
-import { getProvider } from "@/src/lib/llm/router";
-import { PROVIDER } from "@/src/lib/llm/providers";
-import { checkRateLimit } from "@/src/lib/rate-limit";
-import { truncateHistory } from "@/src/lib/llm/truncate";
-import { logger } from "@/src/lib/logger";
+import { retrieve } from "@/lib/retrieval/query";
+import { getProvider } from "@/lib/llm/router";
+import { PROVIDER } from "@/lib/llm/providers";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { truncateHistory } from "@/lib/llm/truncate";
+import { logger } from "@/lib/logger";
 
 const bodySchema = z.object({
   question: z.string().min(1).max(4000),

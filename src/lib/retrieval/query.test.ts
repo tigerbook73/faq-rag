@@ -7,19 +7,19 @@ const mockRerankChunks = jest.fn();
 const mockDetectLang = jest.fn().mockReturnValue("en");
 const mockCreate = jest.fn();
 
-jest.mock("@/src/lib/embeddings/bge", () => ({
+jest.mock("@/lib/embeddings/bge", () => ({
   getEmbedding: (...args: unknown[]) => mockGetEmbedding(...args),
 }));
-jest.mock("@/src/lib/retrieval/vector-search", () => ({
+jest.mock("@/lib/retrieval/vector-search", () => ({
   vectorSearch: (...args: unknown[]) => mockVectorSearch(...args),
 }));
-jest.mock("@/src/lib/retrieval/cross-encoder", () => ({
+jest.mock("@/lib/retrieval/cross-encoder", () => ({
   rerankChunks: (...args: unknown[]) => mockRerankChunks(...args),
 }));
-jest.mock("@/src/lib/lang/detect", () => ({
+jest.mock("@/lib/lang/detect", () => ({
   detectLang: (...args: unknown[]) => mockDetectLang(...args),
 }));
-jest.mock("@/src/lib/llm/clients", () => ({
+jest.mock("@/lib/llm/clients", () => ({
   deepseekClient: {
     chat: { completions: { create: (...args: unknown[]) => mockCreate(...args) } },
   },

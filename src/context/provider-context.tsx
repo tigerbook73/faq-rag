@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
-import { PROVIDER, type Provider } from "@/src/lib/llm/providers";
+import { PROVIDER, type Provider } from "@/lib/llm/providers";
 
 interface ProviderContextValue {
   provider: Provider;

@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import { Progress } from "@/src/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 
 export function UploadZone() {
   const [progress, setProgress] = useState<number | null>(null);

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getLastChatId } from "@/src/lib/chat-storage";
+import { getLastChatId } from "@/lib/chat-storage";
 
 export default function LastChatPage() {
   const router = useRouter();

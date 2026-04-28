@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { z } from "zod";
-import { prisma } from "@/src/lib/db/client";
-import { ingestBuffer } from "@/src/lib/ingest/pipeline";
-import { enqueueIndexing } from "@/src/lib/ingest/indexing-queue";
+import { prisma } from "@/lib/db/client";
+import { ingestBuffer } from "@/lib/ingest/pipeline";
+import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
 
 const listSchema = z.object({
   page: z.coerce.number().min(1).default(1),
