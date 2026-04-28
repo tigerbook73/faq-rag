@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
@@ -24,7 +24,9 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const prevMessageCount = useRef(initialSession?.messages?.length ?? 0);
 
   useEffect(() => {
     if (!chatId) return;
@@ -61,8 +63,32 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     [],
   );
 
+  // Restore saved scroll position before first paint; fall back to bottom
+  useLayoutEffect(() => {
+    const saved = chatId ? sessionStorage.getItem(`chat:scroll:${chatId}`) : null;
+    if (saved && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = parseInt(saved);
+    } else {
+      bottomRef.current?.scrollIntoView();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save scroll position on unmount (only for existing sessions)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    return () => {
+      if (chatId && scrollContainerRef.current) {
+        sessionStorage.setItem(`chat:scroll:${chatId}`, String(scrollContainerRef.current.scrollTop));
+      }
+    };
+  }, [chatId]);
+
+  // Scroll to bottom only when new messages are added (not on initial render)
+  useEffect(() => {
+    if (messages.length > prevMessageCount.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMessageCount.current = messages.length;
   }, [messages]);
 
   useEffect(() => {
@@ -208,7 +234,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto w-full px-4 py-4">
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

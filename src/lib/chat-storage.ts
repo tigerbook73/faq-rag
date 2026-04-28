@@ -22,12 +22,12 @@ function isClient() {
 
 export function getLastChatId(): string | null {
   if (!isClient()) return null;
-  return localStorage.getItem(LAST_KEY);
+  return sessionStorage.getItem(LAST_KEY);
 }
 
 export function setLastChatId(id: string): void {
   if (!isClient()) return;
-  localStorage.setItem(LAST_KEY, id);
+  sessionStorage.setItem(LAST_KEY, id);
 }
 
 function toSession(raw: {

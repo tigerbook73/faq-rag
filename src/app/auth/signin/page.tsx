@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { login, type LoginState } from "@/app/actions/auth";
@@ -14,6 +14,10 @@ export default function SignInPage() {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
   const [showPassword, setShowPassword] = useState(false);
   const from = useSearchParams().get("from") ?? "";
+
+  useEffect(() => {
+    sessionStorage.removeItem("chat:last");
+  }, []);
 
   return (
     <div className="h-full flex items-center justify-center bg-background p-4">
