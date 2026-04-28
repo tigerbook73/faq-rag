@@ -40,7 +40,9 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
         {isChat && subtitle && (
           <>
             <span className="text-muted-foreground hidden sm:inline">/</span>
-            <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-[200px]">{subtitle}</span>
+            <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-30 sm:max-w-50">
+              {subtitle}
+            </span>
           </>
         )}
       </div>
@@ -55,7 +57,9 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
         )}
         {isSignIn ? (
           <nav className="mr-2 hidden md:flex items-center gap-3 text-sm">
-            <Link href="/about" className="text-muted-foreground">About</Link>
+            <Link href="/about" className="text-muted-foreground">
+              About
+            </Link>
           </nav>
         ) : (
           <>
@@ -65,7 +69,10 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
                   <Link href="/chat/last" className={isChat ? "font-medium" : "text-muted-foreground"}>
                     Chat
                   </Link>
-                  <Link href="/knowledge" className={pathname === "/knowledge" ? "font-medium" : "text-muted-foreground"}>
+                  <Link
+                    href="/knowledge"
+                    className={pathname === "/knowledge" ? "font-medium" : "text-muted-foreground"}
+                  >
                     Knowledge
                   </Link>
                 </>
