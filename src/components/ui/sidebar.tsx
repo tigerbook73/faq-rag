@@ -167,13 +167,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground"
-          style={
-            {
-              "--sidebar-width": "100svw",
-              maxWidth: "none",
-            } as React.CSSProperties
-          }
+          className="bg-sidebar p-0 text-sidebar-foreground"
+          style={{ width: "100svw", maxWidth: "none" } as React.CSSProperties}
           side={side}
         >
           <SheetHeader className="sr-only">
