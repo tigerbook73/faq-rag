@@ -48,29 +48,38 @@ export function ChatSidebarContent() {
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initial session load — both setState calls inside .then() to avoid SSR hydration mismatch
+  // Read lastChatId from sessionStorage after mount (client-only, avoids SSR hydration mismatch)
+  useEffect(() => {
+    setLastChatId(getLastChatId());
+  }, []);
+
+  // Initial session fetch
   useEffect(() => {
     let active = true;
-    const lastId = getLastChatId();
     fetchSessions().then((data) => {
-      if (active) {
-        setSessions(data);
-        setLastChatId(lastId);
-      }
+      if (active) setSessions(data);
     });
     return () => {
       active = false;
     };
   }, []);
 
-  // Re-fetch when any component dispatches chat-session-updated
+  // Re-fetch sessions when any component dispatches chat-session-updated
   useEffect(() => {
     function onUpdate() {
-      setLastChatId(getLastChatId());
       fetchSessions().then((data) => setSessions(data));
     }
     window.addEventListener("chat-session-updated", onUpdate);
     return () => window.removeEventListener("chat-session-updated", onUpdate);
+  }, []);
+
+  // Update lastChatId when ChatWindow sets a new active chat
+  useEffect(() => {
+    function onLastChanged() {
+      setLastChatId(getLastChatId());
+    }
+    window.addEventListener("chat-last-changed", onLastChanged);
+    return () => window.removeEventListener("chat-last-changed", onLastChanged);
   }, []);
 
   // Focus input when edit mode activates
@@ -230,16 +239,6 @@ export function ChatSidebarContent() {
       </SidebarContent>
 
       <SidebarFooter>
-        {showBackToLast && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-muted-foreground group-data-[collapsible=icon]:hidden"
-            onClick={() => { router.push("/chat/last"); closeOnMobile(); }}
-          >
-            ↩ Back to last chat
-          </Button>
-        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton isActive={pathname === "/knowledge"} tooltip="Knowledge" render={<Link href="/knowledge" onClick={closeOnMobile} />}>
@@ -254,6 +253,16 @@ export function ChatSidebarContent() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        {showBackToLast && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground group-data-[collapsible=icon]:hidden"
+            onClick={() => { router.push("/chat/last"); closeOnMobile(); }}
+          >
+            ↩ Back to last chat
+          </Button>
+        )}
       </SidebarFooter>
     </>
   );

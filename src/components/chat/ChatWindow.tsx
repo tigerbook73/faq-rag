@@ -35,6 +35,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       return;
     }
     setLastChatId(chatId);
+    window.dispatchEvent(new CustomEvent("chat-last-changed"));
   }, [chatId, initialSession, router]);
 
   useEffect(() => {
