@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   fetchSessions,
@@ -43,15 +43,17 @@ export function ChatSidebarContent() {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [lastChatId, setLastChatId] = useState<string | null>(null);
+  const lastChatId = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener("chat-last-changed", onStoreChange);
+      return () => window.removeEventListener("chat-last-changed", onStoreChange);
+    },
+    () => getLastChatId(),
+    () => null,
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Read lastChatId from sessionStorage after mount (client-only, avoids SSR hydration mismatch)
-  useEffect(() => {
-    setLastChatId(getLastChatId());
-  }, []);
 
   // Initial session fetch
   useEffect(() => {
@@ -71,15 +73,6 @@ export function ChatSidebarContent() {
     }
     window.addEventListener("chat-session-updated", onUpdate);
     return () => window.removeEventListener("chat-session-updated", onUpdate);
-  }, []);
-
-  // Update lastChatId when ChatWindow sets a new active chat
-  useEffect(() => {
-    function onLastChanged() {
-      setLastChatId(getLastChatId());
-    }
-    window.addEventListener("chat-last-changed", onLastChanged);
-    return () => window.removeEventListener("chat-last-changed", onLastChanged);
   }, []);
 
   // Focus input when edit mode activates

@@ -18,9 +18,15 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   const { setSubtitle } = usePageTitle();
   const [session, setSession] = useState<ChatSession | null>(initialSession);
   const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const draftKey = `chat:draft:${chatId ?? "new"}`;
+  const readDraft = (key: string) => (typeof window !== "undefined" ? (localStorage.getItem(key) ?? "") : "");
+  const [input, setInput] = useState(() => readDraft(draftKey));
+  const [prevDraftKey, setPrevDraftKey] = useState(draftKey);
+  if (prevDraftKey !== draftKey) {
+    setPrevDraftKey(draftKey);
+    setInput(readDraft(draftKey));
+  }
+  const [loading, setLoading] = useState(false);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -77,9 +83,10 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
 
   // Save scroll position on unmount (only for existing sessions)
   useEffect(() => {
+    const el = scrollContainerRef.current;
     return () => {
-      if (chatId && scrollContainerRef.current) {
-        sessionStorage.setItem(`chat:scroll:${chatId}`, String(scrollContainerRef.current.scrollTop));
+      if (chatId && el) {
+        sessionStorage.setItem(`chat:scroll:${chatId}`, String(el.scrollTop));
       }
     };
   }, [chatId]);
@@ -95,11 +102,6 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   useEffect(() => {
     if (!loading) textareaRef.current?.focus();
   }, [loading]);
-
-  // Restore draft when session changes (mount or navigation between chats)
-  useEffect(() => {
-    setInput(localStorage.getItem(draftKey) ?? "");
-  }, [draftKey]);
 
   // Persist draft with debounce — clears key when input is empty
   useEffect(() => {
