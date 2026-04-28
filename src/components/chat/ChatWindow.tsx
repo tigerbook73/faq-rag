@@ -20,6 +20,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const draftKey = `chat:draft:${chatId ?? "new"}`;
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -68,6 +69,20 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     if (!loading) textareaRef.current?.focus();
   }, [loading]);
 
+  // Restore draft when session changes (mount or navigation between chats)
+  useEffect(() => {
+    setInput(localStorage.getItem(draftKey) ?? "");
+  }, [draftKey]);
+
+  // Persist draft with debounce — clears key when input is empty
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (input) localStorage.setItem(draftKey, input);
+      else localStorage.removeItem(draftKey);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [input, draftKey]);
+
   const handleCitationClick = useCallback((c: Citation) => {
     setSelectedCitation(c);
     setDrawerOpen(true);
@@ -80,6 +95,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     if (!question || loading) return;
 
     setInput("");
+    localStorage.removeItem(`chat:draft:${chatId ?? "new"}`);
     setLoading(true);
 
     const resolvedId = chatId ?? crypto.randomUUID();
