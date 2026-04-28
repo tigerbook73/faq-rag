@@ -21,7 +21,7 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
   return (
     <div data-role={role} className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       <div
-        className={`max-w-[80%] overflow-hidden rounded-2xl px-4 py-3 text-sm ${
+        className={`max-w-[90%] sm:max-w-[80%] overflow-hidden rounded-2xl px-4 py-3 text-sm ${
           isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
         }`}
       >

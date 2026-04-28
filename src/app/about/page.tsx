@@ -8,7 +8,7 @@ export default function AboutPage() {
         <h1 className="text-2xl font-bold">About FAQ-RAG</h1>
         <p className="text-muted-foreground">
           FAQ-RAG is a local knowledge base Q&amp;A system powered by Retrieval-Augmented Generation. Upload documents
-          in Chinese or English, then ask questions in either language and receive streamed answers with cited source
+          in English or Chinese, then ask questions in either language and receive streamed answers with cited source
           chunks.
         </p>
 

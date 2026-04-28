@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
-import { Info } from "lucide-react";
+import { Info, MessageSquare, BookOpen } from "lucide-react";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -35,6 +35,18 @@ export function AppSidebar() {
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton isActive={pathname.startsWith("/chat")} tooltip="Chat" render={<Link href="/chat/new" />}>
+                      <MessageSquare />
+                      <span>Chat</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton isActive={pathname === "/knowledge"} tooltip="Knowledge" render={<Link href="/knowledge" />}>
+                      <BookOpen />
+                      <span>Knowledge</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton isActive={pathname === "/about"} tooltip="About" render={<Link href="/about" />}>
                       <Info />

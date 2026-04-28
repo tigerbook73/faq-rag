@@ -124,15 +124,15 @@ export function DocumentTable({ initialDocuments }: Props) {
 
   return (
     <>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Input
           placeholder="Search documents…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+          className="sm:max-w-xs"
         />
-        <div className="ml-auto">
-          <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
+        <div className="sm:ml-auto">
+          <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)} className="w-full sm:w-auto">
             {rebuildProgress ? `Rebuilding ${rebuildProgress.done}/${rebuildProgress.total}…` : "Rebuild All"}
           </Button>
         </div>
@@ -142,10 +142,10 @@ export function DocumentTable({ initialDocuments }: Props) {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Lang</TableHead>
-            <TableHead>Chunks</TableHead>
+            <TableHead className="hidden sm:table-cell">Lang</TableHead>
+            <TableHead className="hidden sm:table-cell">Chunks</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Uploaded</TableHead>
+            <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -159,9 +159,9 @@ export function DocumentTable({ initialDocuments }: Props) {
           )}
           {documents.map((doc) => (
             <TableRow key={doc.id}>
-              <TableCell className="font-medium max-w-50 truncate">{doc.name}</TableCell>
-              <TableCell>{doc.lang}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium max-w-32 sm:max-w-50 truncate">{doc.name}</TableCell>
+              <TableCell className="hidden sm:table-cell">{doc.lang}</TableCell>
+              <TableCell className="hidden sm:table-cell">
                 {doc.status === "pending" && doc.totalChunks
                   ? `${doc._count.chunks} / ${doc.totalChunks}`
                   : doc._count.chunks}
@@ -172,7 +172,7 @@ export function DocumentTable({ initialDocuments }: Props) {
                   <p className="mt-1 text-xs text-destructive max-w-48 break-words">{doc.errorMsg}</p>
                 )}
               </TableCell>
-              <TableCell className="text-muted-foreground text-xs">
+              <TableCell className="hidden lg:table-cell text-muted-foreground text-xs">
                 {new Date(doc.createdAt).toLocaleDateString()}
               </TableCell>
               <TableCell className="text-right space-x-2">

@@ -193,7 +193,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto w-[80%] px-4 py-4">
+        <div className="max-w-3xl mx-auto w-full px-4 py-4">
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               Ask a question about your knowledge base
@@ -214,13 +214,13 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       </div>
 
       <div className="border-t">
-        <div className="max-w-3xl mx-auto w-[80%] px-4 py-3 flex gap-2 items-end">
+        <div className="max-w-3xl mx-auto w-full px-4 py-3 flex gap-2 items-end">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question... (Ctrl+Enter to send)"
+            placeholder="Ask a question… (Ctrl+Enter / ⌘+Enter to send)"
             className="flex-1 resize-none min-h-15 max-h-50"
             rows={2}
             disabled={loading}
