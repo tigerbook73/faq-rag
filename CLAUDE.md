@@ -8,21 +8,21 @@ A local FAQ question-answering system. Users upload documents (Chinese or Englis
 
 ## Tech Stack
 
-| Layer           | Choice                                                                                  |
-| --------------- | --------------------------------------------------------------------------------------- |
-| Framework       | Next.js 16 (App Router) + React 19 + TypeScript                                         |
-| UI              | Tailwind CSS + shadcn/ui (components in `components/ui/`)                               |
-| Database        | PostgreSQL 16 + pgvector via Docker                                                     |
-| ORM             | Prisma (`prisma/schema.prisma`)                                                         |
-| Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` — local, multilingual, 1024-dim         |
-| LLM default     | DeepSeek `deepseek-chat` via `openai` SDK (`baseURL: https://api.deepseek.com`)         |
-| LLM alternate   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` (default when no provider specified) |
+| Layer           | Choice                                                                                        |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router) + React 19 + TypeScript                                               |
+| UI              | Tailwind CSS + shadcn/ui (components in `components/ui/`)                                     |
+| Database        | PostgreSQL 16 + pgvector via Docker                                                           |
+| ORM             | Prisma (`prisma/schema.prisma`)                                                               |
+| Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` — local, multilingual, 1024-dim               |
+| LLM default     | DeepSeek `deepseek-chat` via `openai` SDK (`baseURL: https://api.deepseek.com`)               |
+| LLM alternate   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` (default when no provider specified)       |
 | Text splitting  | Semantic chunking (embedding cosine boundary detection) + `@langchain/textsplitters` fallback |
-| Reranking       | `Xenova/bge-reranker-base` cross-encoder via `@huggingface/transformers`                |
-| Package manager | pnpm                                                                                    |
-| Language detect | `franc-min`                                                                             |
-| File parsing    | pdf-parse v2 (`PDFParse` class), mammoth (docx), native fs (md/txt)                     |
-| Testing         | Jest + ts-jest                                                                          |
+| Reranking       | `Xenova/bge-reranker-base` cross-encoder via `@huggingface/transformers`                      |
+| Package manager | pnpm                                                                                          |
+| Language detect | `franc-min`                                                                                   |
+| File parsing    | pdf-parse v2 (`PDFParse` class), mammoth (docx), native fs (md/txt)                           |
+| Testing         | Jest + ts-jest                                                                                |
 
 ---
 
@@ -31,13 +31,14 @@ A local FAQ question-answering system. Users upload documents (Chinese or Englis
 ```
 Browser
   └── / → redirect to /chat/new
-  └── /chat/layout       ← SidebarProvider + ChatSidebar + pruneOldSessions
+  └── /chat/layout       ← passthrough (global layout lives in providers.tsx)
       ├── /chat/new      ← ChatWindow with chatId=null (new ephemeral session)
       ├── /chat/[id]     ← ChatWindow with chatId from URL
       └── /chat/last     ← client redirect to last active chat
   └── /knowledge         ← upload / list / delete / reindex
+  └── /about             ← public info page (no auth required)
 
-Next.js Route Handlers (app/api/)
+Next.js Route Handlers (src/app/api/)
   ├── POST /api/chat                        ← retrieve → LLM → SSE stream
   ├── GET/POST /api/documents               ← list, upload + async index
   ├── GET/DELETE /api/documents/[id]
@@ -179,38 +180,47 @@ Both providers respect `process.env.ANTHROPIC_MODEL` / `process.env.DEEPSEEK_MOD
 
 ## Important File Locations
 
-| Path                                        | Purpose                                                          |
-| ------------------------------------------- | ---------------------------------------------------------------- |
-| `app/api/chat/route.ts`                     | Chat endpoint — retrieval + LLM streaming (SSE)                  |
-| `app/api/sessions/route.ts`                 | Session list — GET (list) / POST (create)                        |
-| `app/api/sessions/[id]/route.ts`            | Single session — GET / PATCH (title + messages) / DELETE         |
-| `app/chat/layout.tsx`                       | Chat layout — SidebarProvider, ChatSidebar, session pruning      |
-| `app/chat/[id]/page.tsx`                    | Renders ChatWindow for a specific session (server-hydrated)      |
-| `app/chat/new/page.tsx`                     | Renders ChatWindow with chatId=null                              |
-| `app/chat/last/page.tsx`                    | Client redirect to last active chat                              |
-| `src/lib/chat-storage.ts`                   | Session API wrappers (upsertSession, deleteSession, pruneOld…)   |
-| `src/lib/config.ts`                         | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)    |
-| `src/lib/rate-limit.ts`                     | In-memory IP-based rate limiting                                 |
-| `src/lib/llm/providers.ts`                  | PROVIDER const + PROVIDER_LABEL                                  |
-| `src/lib/llm/router.ts`                     | LLM provider selection (Claude default)                          |
-| `src/lib/llm/truncate.ts`                   | Token-budget history truncation (keeps recent turns, ≤6000 est.) |
-| `src/lib/llm/clients.ts`                    | Shared LLM client singletons (deepseekClient)                    |
-| `src/lib/retrieval/query.ts`                | Retrieval orchestration: translate + HyDE + embed + rerank       |
-| `src/lib/retrieval/vector-search.ts`        | pgvector cosine search (`<=>`)                                   |
-| `src/lib/retrieval/rerank.ts`               | Deduplicate + sort candidate chunks by score                     |
-| `src/lib/retrieval/cross-encoder.ts`        | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)     |
-| `src/lib/ingest/pipeline.ts`                | Ingestion pipeline (parse → chunk → embed → store)               |
-| `src/lib/ingest/parse.ts`                   | File parser (md/txt/pdf/docx)                                    |
-| `src/lib/ingest/split.ts`                   | Chunking entry point — semantic splitter with fixed fallback     |
-| `src/lib/ingest/semantic-splitter.ts`       | Semantic chunking via embedding cosine boundary detection        |
-| `src/lib/ingest/indexing-worker.ts`         | Worker thread entry — loads models once, processes docs via IPC  |
-| `src/lib/ingest/indexing-queue.ts`          | Main-thread interface: `enqueueIndexing(docId, filePath)`        |
-| `src/lib/embeddings/bge.ts`                 | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`     |
-| `instrumentation.ts` / `instrumentation.node.ts` | Server startup hook — resume pending docs, warm worker thread |
-| `src/components/chat/ChatWindow.tsx`        | Main chat UI — SSE streaming, session hydration, send logic      |
-| `src/components/chat/ChatSidebar.tsx`       | Session list — create/rename/delete/export/navigate              |
-| `src/components/chat/CitationDrawer.tsx`    | Bottom drawer for citation detail view                           |
-| `src/components/chat/MessageBubble.tsx`     | Message rendering — Markdown, inline citation superscripts       |
-| `src/components/chat/ProviderSelect.tsx`    | Provider dropdown (Claude + DeepSeek both selectable)            |
-| `prisma/schema.prisma`                      | DB schema (Document, Chunk, Session, SessionMessage)             |
-| `jest.config.ts`                            | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)       |
+| Path                                             | Purpose                                                          |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
+| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about)|
+| `src/app/layout.tsx`                             | Root layout — async, reads session, passes isAuthenticated       |
+| `src/app/providers.tsx`                          | Client shell — TopBar + AppSidebar + contexts + TooltipProvider  |
+| `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval + LLM streaming (SSE)                  |
+| `src/app/api/sessions/route.ts`                  | Session list — GET (list) / POST (create)                        |
+| `src/app/api/sessions/[id]/route.ts`             | Single session — GET / PATCH (title + messages) / DELETE         |
+| `src/app/chat/layout.tsx`                        | Chat layout — passthrough `<>{children}</>`                      |
+| `src/app/chat/[id]/page.tsx`                     | Renders ChatWindow for a specific session (server-hydrated)      |
+| `src/app/chat/new/page.tsx`                      | Renders ChatWindow with chatId=null                              |
+| `src/app/chat/last/page.tsx`                     | Client redirect to last active chat                              |
+| `src/app/knowledge/page.tsx`                     | Knowledge base — upload + document list                          |
+| `src/app/about/page.tsx`                         | Public about page — no auth required                             |
+| `src/components/layout/TopBar.tsx`               | Global top bar — brand, nav, provider select, theme, auth        |
+| `src/components/layout/AppSidebar.tsx`           | Global sidebar — chat sessions on /chat/*, About link elsewhere  |
+| `src/context/page-title-context.tsx`             | Chat subtitle context (ChatWindow → TopBar)                      |
+| `src/context/provider-context.tsx`               | LLM provider context (lifted from ChatWindow)                    |
+| `src/lib/chat-storage.ts`                        | Session API wrappers (upsertSession, deleteSession, pruneOld…)   |
+| `src/lib/config.ts`                              | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)    |
+| `src/lib/rate-limit.ts`                          | In-memory IP-based rate limiting                                 |
+| `src/lib/llm/providers.ts`                       | PROVIDER const + PROVIDER_LABEL                                  |
+| `src/lib/llm/router.ts`                          | LLM provider selection (Claude default)                          |
+| `src/lib/llm/truncate.ts`                        | Token-budget history truncation (keeps recent turns, ≤6000 est.) |
+| `src/lib/llm/clients.ts`                         | Shared LLM client singletons (deepseekClient)                    |
+| `src/lib/retrieval/query.ts`                     | Retrieval orchestration: translate + HyDE + embed + rerank       |
+| `src/lib/retrieval/vector-search.ts`             | pgvector cosine search (`<=>`)                                   |
+| `src/lib/retrieval/rerank.ts`                    | Deduplicate + sort candidate chunks by score                     |
+| `src/lib/retrieval/cross-encoder.ts`             | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)     |
+| `src/lib/ingest/pipeline.ts`                     | Ingestion pipeline (parse → chunk → embed → store)               |
+| `src/lib/ingest/parse.ts`                        | File parser (md/txt/pdf/docx)                                    |
+| `src/lib/ingest/split.ts`                        | Chunking entry point — semantic splitter with fixed fallback     |
+| `src/lib/ingest/semantic-splitter.ts`            | Semantic chunking via embedding cosine boundary detection        |
+| `src/lib/ingest/indexing-worker.ts`              | Worker thread entry — loads models once, processes docs via IPC  |
+| `src/lib/ingest/indexing-queue.ts`               | Main-thread interface: `enqueueIndexing(docId, filePath)`        |
+| `src/lib/embeddings/bge.ts`                      | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`     |
+| `instrumentation.ts` / `instrumentation.node.ts` | Server startup hook — resume pending docs, warm worker thread    |
+| `src/components/chat/ChatWindow.tsx`             | Main chat UI — SSE streaming, session hydration, send logic      |
+| `src/components/chat/ChatSidebar.tsx`            | Session list — create/rename/delete/export/navigate              |
+| `src/components/chat/CitationDrawer.tsx`         | Bottom drawer for citation detail view                           |
+| `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, inline citation superscripts       |
+| `src/components/chat/ProviderSelect.tsx`         | Provider dropdown (Claude + DeepSeek both selectable)            |
+| `prisma/schema.prisma`                           | DB schema (Document, Chunk, Session, SessionMessage)             |
+| `jest.config.ts`                                 | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)       |

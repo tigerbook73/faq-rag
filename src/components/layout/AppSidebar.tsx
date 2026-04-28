@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/src/components/ui/sidebar";
 import { ChatSidebarContent } from "@/src/components/chat/ChatSidebar";
 import { Info } from "lucide-react";
 

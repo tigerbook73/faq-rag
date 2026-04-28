@@ -28,7 +28,9 @@ test.describe("Chat flow", () => {
 
     // After the stream's "done" event, ChatWindow awaits persistMessages then calls
     // router.replace('/chat/<uuid>'). Wait for that navigation — excludes /chat/new.
-    await page.waitForURL((url) => url.pathname.startsWith("/chat/") && url.pathname !== "/chat/new", { timeout: 30_000 });
+    await page.waitForURL((url) => url.pathname.startsWith("/chat/") && url.pathname !== "/chat/new", {
+      timeout: 30_000,
+    });
 
     // Wait for stream to fully complete: Send button re-appears (was "Thinking…" while loading)
     await expect(page.getByRole("button", { name: "Send" })).toBeEnabled({ timeout: 30_000 });

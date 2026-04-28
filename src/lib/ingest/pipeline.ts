@@ -12,7 +12,7 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
 async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
   for (let i = 0; i < chunks.length; i++) {
-    await new Promise(r => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
     const chunkText = chunks[i];
     const chunkLang = detectLang(chunkText);
     const embedding = await getEmbedding(chunkText);
@@ -127,12 +127,14 @@ export async function processDocument(docId: string, filePath: string): Promise<
     });
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    await prisma.document.update({
-      where: { id: docId },
-      data: { status: "failed", errorMsg },
-    }).catch(() => {
-      logger.info({ docId }, "ingest: indexing aborted — document was deleted mid-indexing");
-    });
+    await prisma.document
+      .update({
+        where: { id: docId },
+        data: { status: "failed", errorMsg },
+      })
+      .catch(() => {
+        logger.info({ docId }, "ingest: indexing aborted — document was deleted mid-indexing");
+      });
     throw err;
   }
 }

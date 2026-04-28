@@ -1,7 +1,4 @@
-import {
-  AutoTokenizer,
-  AutoModelForSequenceClassification,
-} from "@huggingface/transformers";
+import { AutoTokenizer, AutoModelForSequenceClassification } from "@huggingface/transformers";
 import type { ChunkRow } from "./vector-search";
 import { logger } from "../logger";
 
@@ -70,12 +67,15 @@ export async function rerankChunks(
       .sort((a, b) => b.score - a.score)
       .slice(0, topN);
 
-    logger.debug({
-      traceId,
-      rerank_ms: Date.now() - t0,
-      candidates_in: chunks.length,
-      top_score: ranked[0]?.score.toFixed(4),
-    }, "rerank done");
+    logger.debug(
+      {
+        traceId,
+        rerank_ms: Date.now() - t0,
+        candidates_in: chunks.length,
+        top_score: ranked[0]?.score.toFixed(4),
+      },
+      "rerank done",
+    );
 
     return ranked.map((s) => s.chunk);
   } catch (err) {

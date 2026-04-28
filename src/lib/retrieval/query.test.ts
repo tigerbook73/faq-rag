@@ -43,7 +43,7 @@ describe("retrieve()", () => {
     mockDetectLang.mockReturnValue("en");
     mockVectorSearch.mockResolvedValue([makeChunk("c1")]);
     mockRerankChunks.mockImplementation((_q: string, chunks: ChunkRow[], n: number) =>
-      Promise.resolve(chunks.slice(0, n))
+      Promise.resolve(chunks.slice(0, n)),
     );
     mockLLMResponse("translated text");
   });
@@ -61,7 +61,7 @@ describe("retrieve()", () => {
 
   it("falls back to original query when translation fails", async () => {
     mockCreate
-      .mockRejectedValueOnce(new Error("API error"))  // translation fails
+      .mockRejectedValueOnce(new Error("API error")) // translation fails
       .mockResolvedValueOnce({ choices: [{ message: { content: "hypothetical answer" } }] }); // HyDE succeeds
     await retrieve("What is RAG?");
     // Should still complete without throwing
@@ -83,7 +83,7 @@ describe("retrieve()", () => {
     mockVectorSearch.mockResolvedValue([duplicate]);
     // 3 searches all return the same chunk → dedup → 1 unique chunk passed to reranker
     mockRerankChunks.mockImplementation((_q: string, chunks: ChunkRow[], n: number) =>
-      Promise.resolve(chunks.slice(0, n))
+      Promise.resolve(chunks.slice(0, n)),
     );
     await retrieve("test query");
     const [, candidates] = mockRerankChunks.mock.calls[0] as [string, ChunkRow[], number];

@@ -1,8 +1,8 @@
 "use client";
 
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/src/components/ui/drawer";
+import { ScrollArea } from "@/src/components/ui/scroll-area";
+import { Badge } from "@/src/components/ui/badge";
 
 export interface Citation {
   id: number;

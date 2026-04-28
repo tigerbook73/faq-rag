@@ -3,10 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { POLL_INTERVAL_MS } from "@/src/lib/config";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "@/src/components/ui/dialog";
 
 interface Document {
   id: string;
@@ -118,9 +118,7 @@ export function DocumentTable({ initialDocuments }: Props) {
 
   if (allDocuments.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground text-sm">
-        No documents yet. Upload some files above.
-      </div>
+      <div className="text-center py-12 text-muted-foreground text-sm">No documents yet. Upload some files above.</div>
     );
   }
 
@@ -135,9 +133,7 @@ export function DocumentTable({ initialDocuments }: Props) {
         />
         <div className="ml-auto">
           <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
-            {rebuildProgress
-              ? `Rebuilding ${rebuildProgress.done}/${rebuildProgress.total}…`
-              : "Rebuild All"}
+            {rebuildProgress ? `Rebuilding ${rebuildProgress.done}/${rebuildProgress.total}…` : "Rebuild All"}
           </Button>
         </div>
       </div>
@@ -171,9 +167,7 @@ export function DocumentTable({ initialDocuments }: Props) {
                   : doc._count.chunks}
               </TableCell>
               <TableCell>
-                <Badge variant={statusVariant(doc.status)}>
-                  {doc.status}
-                </Badge>
+                <Badge variant={statusVariant(doc.status)}>{doc.status}</Badge>
                 {doc.status === "failed" && doc.errorMsg && (
                   <p className="mt-1 text-xs text-destructive max-w-48 break-words">{doc.errorMsg}</p>
                 )}
@@ -204,20 +198,25 @@ export function DocumentTable({ initialDocuments }: Props) {
         </TableBody>
       </Table>
 
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Delete document?</DialogTitle>
-            <DialogDescription>
-              This will permanently remove the document and all its indexed chunks.
-            </DialogDescription>
+            <DialogDescription>This will permanently remove the document and all its indexed chunks.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
             <Button
               variant="destructive"
               disabled={!!deletingId}
-              onClick={() => { if (deleteTarget) handleDelete(deleteTarget); }}
+              onClick={() => {
+                if (deleteTarget) handleDelete(deleteTarget);
+              }}
             >
               Delete
             </Button>

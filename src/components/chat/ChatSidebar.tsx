@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { fetchSessions, apiDeleteSession, updateSessionTitle, getLastChatId, type ChatSession } from "@/src/lib/chat-storage";
+import {
+  fetchSessions,
+  apiDeleteSession,
+  updateSessionTitle,
+  getLastChatId,
+  type ChatSession,
+} from "@/src/lib/chat-storage";
 import {
   SidebarContent,
   SidebarFooter,
@@ -14,8 +20,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+} from "@/src/components/ui/sidebar";
+import { Button } from "@/src/components/ui/button";
 import { SquarePen, Download, Info } from "lucide-react";
 import Link from "next/link";
 import { fetchSession } from "@/src/lib/chat-storage";
@@ -50,7 +56,9 @@ export function ChatSidebarContent() {
         setLastChatId(lastId);
       }
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Re-fetch when any component dispatches chat-session-updated
@@ -73,13 +81,16 @@ export function ChatSidebarContent() {
     setEditValue(title);
   }, []);
 
-  const commitEdit = useCallback(async (id: string) => {
-    const trimmed = editValue.trim();
-    setEditingId(null);
-    if (!trimmed) return;
-    await updateSessionTitle(id, trimmed);
-    window.dispatchEvent(new CustomEvent("chat-session-updated"));
-  }, [editValue]);
+  const commitEdit = useCallback(
+    async (id: string) => {
+      const trimmed = editValue.trim();
+      setEditingId(null);
+      if (!trimmed) return;
+      await updateSessionTitle(id, trimmed);
+      window.dispatchEvent(new CustomEvent("chat-session-updated"));
+    },
+    [editValue],
+  );
 
   const cancelEdit = useCallback(() => {
     setEditingId(null);
@@ -95,11 +106,7 @@ export function ChatSidebarContent() {
     const session = await fetchSession(id);
     if (!session) return;
 
-    const lines: string[] = [
-      `# ${session.title}`,
-      `> Exported ${new Date(session.updatedAt).toLocaleString()}`,
-      "",
-    ];
+    const lines: string[] = [`# ${session.title}`, `> Exported ${new Date(session.updatedAt).toLocaleString()}`, ""];
     for (const msg of session.messages) {
       lines.push(`**${msg.role === "user" ? "User" : "Assistant"}**`);
       lines.push("");
@@ -179,7 +186,10 @@ export function ChatSidebarContent() {
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") { e.preventDefault(); void commitEdit(s.id); }
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void commitEdit(s.id);
+                              }
                               if (e.key === "Escape") cancelEdit();
                             }}
                             onBlur={() => void commitEdit(s.id)}
@@ -192,7 +202,12 @@ export function ChatSidebarContent() {
                         <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
                       </div>
                     </SidebarMenuButton>
-                    <SidebarMenuAction showOnHover onClick={(e) => handleExport(e, s.id, s.title)} aria-label="Export chat" className="right-7">
+                    <SidebarMenuAction
+                      showOnHover
+                      onClick={(e) => handleExport(e, s.id, s.title)}
+                      aria-label="Export chat"
+                      className="right-7"
+                    >
                       <Download className="h-3.5 w-3.5" />
                     </SidebarMenuAction>
                     <SidebarMenuAction showOnHover onClick={(e) => handleDelete(e, s.id)} aria-label="Delete chat">

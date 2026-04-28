@@ -4,8 +4,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Button } from "@/src/components/ui/button";
 import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/src/lib/chat-storage";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ import { useProvider } from "@/src/context/provider-context";
 
 export function ChatWindow({ chatId, initialSession }: { chatId: string | null; initialSession: ChatSession | null }) {
   const router = useRouter();
-  const { provider, setProvider } = useProvider();
+  const { provider } = useProvider();
   const { setSubtitle } = usePageTitle();
   const [session, setSession] = useState<ChatSession | null>(initialSession);
   const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
@@ -27,7 +27,10 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
 
   useEffect(() => {
     if (!chatId) return;
-    if (!initialSession) { router.replace("/chat/new"); return; }
+    if (!initialSession) {
+      router.replace("/chat/new");
+      return;
+    }
     setLastChatId(chatId);
   }, [chatId, initialSession, router]);
 
@@ -36,23 +39,26 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     return () => setSubtitle(null);
   }, [session?.title, setSubtitle]);
 
-  const persistMessages = useCallback(async (updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
-    const now = Date.now();
-    const s: ChatSession = currentSession ?? {
-      id: idToUse,
-      title: "New Chat",
-      messages: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    const title =
-      s.title === "New Chat" ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat") : s.title;
-    const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
-    setSession(next);
-    setLastChatId(idToUse);
-    await upsertSession(next);
-    window.dispatchEvent(new CustomEvent("chat-session-updated"));
-  }, []);
+  const persistMessages = useCallback(
+    async (updated: Message[], currentSession: ChatSession | null, idToUse: string) => {
+      const now = Date.now();
+      const s: ChatSession = currentSession ?? {
+        id: idToUse,
+        title: "New Chat",
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      const title =
+        s.title === "New Chat" ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat") : s.title;
+      const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
+      setSession(next);
+      setLastChatId(idToUse);
+      await upsertSession(next);
+      window.dispatchEvent(new CustomEvent("chat-session-updated"));
+    },
+    [],
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,32 +110,35 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       let streamDone = false;
       let doneMessages: Message[] | null = null;
 
-      const parser = createParser({ onEvent: (event) => {
-        const raw = event.data;
-        let payload: { type: string; citations?: Citation[]; token?: string; answer?: string };
-        try { payload = JSON.parse(raw); } catch { return; }
+      const parser = createParser({
+        onEvent: (event) => {
+          const raw = event.data;
+          let payload: { type: string; citations?: Citation[]; token?: string; answer?: string };
+          try {
+            payload = JSON.parse(raw);
+          } catch {
+            return;
+          }
 
-        if (payload.type === "citations") {
-          citations = payload.citations ?? [];
-        } else if (payload.type === "token") {
-          assistantContent += payload.token ?? "";
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
-            return updated;
-          });
-        } else if (payload.type === "done") {
-          streamDone = true;
-          const usedNums = new Set([...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)));
-          const usedCitations = citations.filter((c) => usedNums.has(c.id));
-          doneMessages = [
-            ...withUser,
-            { role: "assistant", content: assistantContent, citations: usedCitations },
-          ];
-          setMessages(doneMessages);
-          // persist + navigate happen after the stream loop so persistMessages is awaited
-        }
-      }});
+          if (payload.type === "citations") {
+            citations = payload.citations ?? [];
+          } else if (payload.type === "token") {
+            assistantContent += payload.token ?? "";
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
+              return updated;
+            });
+          } else if (payload.type === "done") {
+            streamDone = true;
+            const usedNums = new Set([...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)));
+            const usedCitations = citations.filter((c) => usedNums.has(c.id));
+            doneMessages = [...withUser, { role: "assistant", content: assistantContent, citations: usedCitations }];
+            setMessages(doneMessages);
+            // persist + navigate happen after the stream loop so persistMessages is awaited
+          }
+        },
+      });
 
       try {
         while (true) {
@@ -141,10 +150,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
         // stream interrupted mid-response — save whatever was generated
         if (assistantContent && !doneMessages) {
           const interrupted = assistantContent + "\n\n⚠️ _回答被中断_";
-          const finalMessages: Message[] = [
-            ...withUser,
-            { role: "assistant", content: interrupted, citations: [] },
-          ];
+          const finalMessages: Message[] = [...withUser, { role: "assistant", content: interrupted, citations: [] }];
           setMessages(finalMessages);
           await persistMessages(finalMessages, sessionAtSend, resolvedId);
           if (!chatId) router.replace(`/chat/${resolvedId}`);
@@ -159,10 +165,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       } else if (!streamDone && assistantContent) {
         // stream ended without "done" event (e.g. server crash) — save partial content
         const partial = assistantContent + "\n\n⚠️ _回答被中断_";
-        const finalMessages: Message[] = [
-          ...withUser,
-          { role: "assistant", content: partial, citations: [] },
-        ];
+        const finalMessages: Message[] = [...withUser, { role: "assistant", content: partial, citations: [] }];
         setMessages(finalMessages);
         await persistMessages(finalMessages, sessionAtSend, resolvedId);
         if (!chatId) router.replace(`/chat/${resolvedId}`);

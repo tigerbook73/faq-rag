@@ -10,18 +10,14 @@ export const claudeProvider: LLMProvider = {
   name: PROVIDER.CLAUDE,
 
   async *chat({ system, messages }) {
-    const lastAssistantIdx = messages.reduce(
-      (found, msg, idx) => (msg.role === "assistant" ? idx : found),
-      -1,
-    );
+    const lastAssistantIdx = messages.reduce((found, msg, idx) => (msg.role === "assistant" ? idx : found), -1);
 
     const stream = client.messages.stream({
       model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
       max_tokens: LLM_MAX_TOKENS,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       messages: messages.map((m, i) => {
-        const addCache =
-          i === lastAssistantIdx || (i === messages.length - 1 && m.role === "user");
+        const addCache = i === lastAssistantIdx || (i === messages.length - 1 && m.role === "user");
         if (addCache) {
           return {
             role: m.role,

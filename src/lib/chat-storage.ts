@@ -30,7 +30,13 @@ export function setLastChatId(id: string): void {
   localStorage.setItem(LAST_KEY, id);
 }
 
-function toSession(raw: { id: string; title: string; createdAt: string | Date; updatedAt: string | Date; messages?: Array<{ role: string; content: string; citations: unknown }> }): ChatSession {
+function toSession(raw: {
+  id: string;
+  title: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  messages?: Array<{ role: string; content: string; citations: unknown }>;
+}): ChatSession {
   return {
     id: raw.id,
     title: raw.title,

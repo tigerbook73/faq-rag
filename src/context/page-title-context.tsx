@@ -15,11 +15,7 @@ const PageTitleContext = createContext<PageTitleContextValue>({
 export function PageTitleProvider({ children }: { children: React.ReactNode }) {
   const [subtitle, setSubtitleState] = useState<string | null>(null);
   const setSubtitle = useCallback((t: string | null) => setSubtitleState(t), []);
-  return (
-    <PageTitleContext.Provider value={{ subtitle, setSubtitle }}>
-      {children}
-    </PageTitleContext.Provider>
-  );
+  return <PageTitleContext.Provider value={{ subtitle, setSubtitle }}>{children}</PageTitleContext.Provider>;
 }
 
 export function usePageTitle() {

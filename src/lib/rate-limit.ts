@@ -15,7 +15,7 @@ function evictExpired() {
 export function checkRateLimit(
   key: string,
   limit: number,
-  windowMs: number
+  windowMs: number,
 ): { allowed: boolean; retryAfterMs: number } {
   const now = Date.now();
   const entry = store.get(key);

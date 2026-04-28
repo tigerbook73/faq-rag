@@ -1,6 +1,6 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/src/components/ui/select";
 import { PROVIDER, PROVIDER_LABEL, type Provider } from "@/src/lib/llm/providers";
 
 interface Props {
@@ -16,9 +16,7 @@ export function ProviderSelect({ value, onChange }: Props) {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={PROVIDER.DEEPSEEK}>{PROVIDER_LABEL[PROVIDER.DEEPSEEK]}</SelectItem>
-        <SelectItem value={PROVIDER.CLAUDE}>
-          {PROVIDER_LABEL[PROVIDER.CLAUDE]}
-        </SelectItem>
+        <SelectItem value={PROVIDER.CLAUDE}>{PROVIDER_LABEL[PROVIDER.CLAUDE]}</SelectItem>
       </SelectContent>
     </Select>
   );

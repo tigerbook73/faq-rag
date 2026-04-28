@@ -36,7 +36,16 @@ export const deepseekProvider: LLMProvider = {
       const miss = usage.prompt_cache_miss_tokens ?? 0;
       const total = hit + miss;
       const ratio = total > 0 ? ((hit / total) * 100).toFixed(1) : "n/a";
-      logger.debug({ cache_hit: hit, cache_miss: miss, ratio, prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens }, "deepseek usage");
+      logger.debug(
+        {
+          cache_hit: hit,
+          cache_miss: miss,
+          ratio,
+          prompt_tokens: usage.prompt_tokens,
+          completion_tokens: usage.completion_tokens,
+        },
+        "deepseek usage",
+      );
     }
   },
 };

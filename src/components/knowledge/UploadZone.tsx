@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/src/components/ui/progress";
 
 export function UploadZone() {
   const [progress, setProgress] = useState<number | null>(null);
@@ -64,9 +64,7 @@ export function UploadZone() {
       if (errors.length === 0) {
         toast.success(`Uploaded ${success} file(s). Indexing in background…`);
       } else {
-        toast.error(
-          `${success} uploaded, ${errors.length} failed: ${errors.join("; ")}`,
-        );
+        toast.error(`${success} uploaded, ${errors.length} failed: ${errors.join("; ")}`);
       }
 
       router.refresh();
@@ -90,9 +88,7 @@ export function UploadZone() {
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-          isDragActive
-            ? "border-primary bg-primary/5"
-            : "border-muted-foreground/30 hover:border-primary/50"
+          isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
         } ${progress !== null ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <input {...getInputProps()} />
@@ -106,9 +102,7 @@ export function UploadZone() {
         <p className="text-xs text-muted-foreground/60 mt-1">Supports .md .txt .pdf .docx</p>
       </div>
 
-      {progress !== null && (
-        <Progress value={progress} className="h-1.5" />
-      )}
+      {progress !== null && <Progress value={progress} className="h-1.5" />}
     </div>
   );
 }

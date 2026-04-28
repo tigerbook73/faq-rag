@@ -16,11 +16,7 @@ const ProviderContext = createContext<ProviderContextValue>({
 export function ProviderContextProvider({ children }: { children: React.ReactNode }) {
   const [provider, setProviderState] = useState<Provider>(PROVIDER.DEEPSEEK);
   const setProvider = useCallback((p: Provider) => setProviderState(p), []);
-  return (
-    <ProviderContext.Provider value={{ provider, setProvider }}>
-      {children}
-    </ProviderContext.Provider>
-  );
+  return <ProviderContext.Provider value={{ provider, setProvider }}>{children}</ProviderContext.Provider>;
 }
 
 export function useProvider() {

@@ -24,7 +24,7 @@ describe("truncateHistory", () => {
     // Fill budget with 3 large messages, add a 4th that pushes over
     const chunkSize = Math.floor(MAX_CHARS / 3) - 1;
     const history: Msg[] = [
-      msg("user", chunkSize),      // oldest — should be dropped
+      msg("user", chunkSize), // oldest — should be dropped
       msg("assistant", chunkSize),
       msg("user", chunkSize),
       msg("assistant", chunkSize), // this tips over budget
@@ -39,8 +39,8 @@ describe("truncateHistory", () => {
     // Oldest user message is dropped, leaving assistant as the first
     const chunkSize = Math.floor(MAX_CHARS / 2) - 1;
     const history: Msg[] = [
-      msg("user", chunkSize),       // dropped — too old
-      msg("assistant", chunkSize),  // now would be first — must be dropped
+      msg("user", chunkSize), // dropped — too old
+      msg("assistant", chunkSize), // now would be first — must be dropped
       msg("user", 10),
     ];
     const result = truncateHistory(history);

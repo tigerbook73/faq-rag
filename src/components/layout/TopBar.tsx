@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, LogOut, LogIn } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/src/components/ui/button";
+import { SidebarTrigger } from "@/src/components/ui/sidebar";
 import { ProviderSelect } from "@/src/components/chat/ProviderSelect";
 import { usePageTitle } from "@/src/context/page-title-context";
 import { useProvider } from "@/src/context/provider-context";
-import { logout } from "@/app/actions/auth";
+import { logout } from "@/src/app/actions/auth";
 
 export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
   const pathname = usePathname();
@@ -24,15 +24,20 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
     <header className="h-12 flex items-center justify-between px-4 border-b bg-background shrink-0">
       <div className="flex items-center gap-2">
         <SidebarTrigger />
-        <Link href="/chat/new" className="font-bold text-base">FAQ-RAG</Link>
+        <Link href="/chat/new" className="font-bold text-base">
+          FAQ-RAG
+        </Link>
         {isChat && subtitle && (
           <>
             <span className="text-muted-foreground">/</span>
             <span className="text-sm text-muted-foreground truncate max-w-[200px]">{subtitle}</span>
           </>
         )}
+      </div>
+
+      <div className="flex items-center gap-2">
         {!isSignIn && (
-          <nav className="ml-4 flex items-center gap-3 text-sm">
+          <nav className="mr-2 flex items-center gap-3 text-sm">
             <Link href="/chat/new" className={isChat ? "font-medium" : "text-muted-foreground"}>
               Chat
             </Link>
@@ -44,37 +49,29 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
             </Link>
           </nav>
         )}
-      </div>
-
-      <div className="flex items-center gap-2">
         {isChat && (
           <>
             <span className="text-sm text-muted-foreground">Provider:</span>
             <ProviderSelect value={provider} onChange={setProvider} />
           </>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-        >
+        <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
-        {!isSignIn && (
-          isAuthenticated ? (
+        {!isSignIn &&
+          (isAuthenticated ? (
             <form action={logout}>
               <Button variant="ghost" size="icon" type="submit" title="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </form>
           ) : (
-            <Button variant="ghost" size="sm" render={<Link href="/auth/signin" />}>
+            <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/signin" />}>
               <LogIn className="h-4 w-4" />
               Sign In
             </Button>
-          )
-        )}
+          ))}
       </div>
     </header>
   );
