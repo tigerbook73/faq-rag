@@ -40,6 +40,64 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
   return "outline";
 }
 
+interface DeleteDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  deleting: boolean;
+}
+
+function DeleteDialog({ open, onClose, onConfirm, deleting }: DeleteDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Delete document?</DialogTitle>
+          <DialogDescription>This will permanently remove the document and all its indexed chunks.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <Button variant="destructive" disabled={deleting} onClick={onConfirm}>
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface RebuildDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  rebuilding: boolean;
+}
+
+function RebuildDialog({ open, onOpenChange, onConfirm, rebuilding }: RebuildDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Rebuild all documents?</DialogTitle>
+          <DialogDescription>
+            This will re-embed every document. It may take a while and cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <Button
+            variant="outline"
+            disabled={rebuilding}
+            onClick={onConfirm}
+          >
+            Rebuild All
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function DocumentTable({ initialDocuments }: Props) {
   const router = useRouter();
   const [polledDocuments, setPolledDocuments] = useState<Document[] | null>(null);
@@ -208,55 +266,19 @@ export function DocumentTable({ initialDocuments }: Props) {
         </TableBody>
       </Table>
 
-      <Dialog
+      <DeleteDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-      >
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Delete document?</DialogTitle>
-            <DialogDescription>This will permanently remove the document and all its indexed chunks.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button
-              variant="destructive"
-              disabled={!!deletingId}
-              onClick={() => {
-                if (deleteTarget) handleDelete(deleteTarget);
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget); }}
+        deleting={!!deletingId}
+      />
 
-      <Dialog open={rebuildDialogOpen} onOpenChange={setRebuildDialogOpen}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Rebuild all documents?</DialogTitle>
-            <DialogDescription>
-              This will re-embed every document. It may take a while and cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button
-              variant="outline"
-              disabled={rebuilding}
-              onClick={() => {
-                setRebuildDialogOpen(false);
-                handleRebuildAll();
-              }}
-            >
-              Rebuild All
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RebuildDialog
+        open={rebuildDialogOpen}
+        onOpenChange={setRebuildDialogOpen}
+        onConfirm={() => { setRebuildDialogOpen(false); handleRebuildAll(); }}
+        rebuilding={rebuilding}
+      />
     </>
   );
 }

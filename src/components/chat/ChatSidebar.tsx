@@ -39,6 +39,78 @@ function relativeDate(ts: number): string {
   return `${days}d ago`;
 }
 
+interface SessionItemProps {
+  session: ChatSession;
+  active: boolean;
+  isEditing: boolean;
+  editValue: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onNavigate: () => void;
+  onDoubleClick: () => void;
+  onEditChange: (value: string) => void;
+  onCommit: () => void;
+  onCancelEdit: () => void;
+  onExport: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
+}
+
+function SessionItem({
+  session,
+  active,
+  isEditing,
+  editValue,
+  inputRef,
+  onNavigate,
+  onDoubleClick,
+  onEditChange,
+  onCommit,
+  onCancelEdit,
+  onExport,
+  onDelete,
+}: SessionItemProps) {
+  return (
+    <SidebarMenuItem key={session.id}>
+      <SidebarMenuButton
+        isActive={active}
+        onClick={() => {
+          if (!isEditing) onNavigate();
+        }}
+        onDoubleClick={onDoubleClick}
+        className="h-auto items-start overflow-visible"
+      >
+        <div className="min-w-0 flex-1">
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onCommit();
+                }
+                if (e.key === "Escape") onCancelEdit();
+              }}
+              onBlur={onCommit}
+              onClick={(e) => e.stopPropagation()}
+              className="border-primary w-full border-b bg-transparent text-sm outline-none"
+            />
+          ) : (
+            <p className="truncate text-sm">{session.title}</p>
+          )}
+          <p className="text-muted-foreground text-xs">{relativeDate(session.updatedAt)}</p>
+        </div>
+      </SidebarMenuButton>
+      <SidebarMenuAction showOnHover onClick={onExport} aria-label="Export chat" className="right-7">
+        <Download className="h-3.5 w-3.5" />
+      </SidebarMenuAction>
+      <SidebarMenuAction showOnHover onClick={onDelete} aria-label="Delete chat">
+        ✕
+      </SidebarMenuAction>
+    </SidebarMenuItem>
+  );
+}
+
 export function ChatSidebarContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -178,59 +250,23 @@ export function ChatSidebarContent() {
           <SidebarGroupContent>
             <SidebarMenu>
               {sessions.length === 0 && <p className="text-muted-foreground px-2 py-1 text-xs">No chats yet</p>}
-              {sessions.map((s: ChatSession) => {
-                const active = pathname === `/chat/${s.id}`;
-                const isEditing = editingId === s.id;
-                return (
-                  <SidebarMenuItem key={s.id}>
-                    <SidebarMenuButton
-                      isActive={active}
-                      onClick={() => {
-                        if (!isEditing) {
-                          router.push(`/chat/${s.id}`);
-                          closeOnMobile();
-                        }
-                      }}
-                      onDoubleClick={() => startEdit(s.id, s.title)}
-                      className="h-auto items-start overflow-visible"
-                    >
-                      <div className="min-w-0 flex-1">
-                        {isEditing ? (
-                          <input
-                            ref={inputRef}
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                void commitEdit(s.id);
-                              }
-                              if (e.key === "Escape") cancelEdit();
-                            }}
-                            onBlur={() => void commitEdit(s.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="border-primary w-full border-b bg-transparent text-sm outline-none"
-                          />
-                        ) : (
-                          <p className="truncate text-sm">{s.title}</p>
-                        )}
-                        <p className="text-muted-foreground text-xs">{relativeDate(s.updatedAt)}</p>
-                      </div>
-                    </SidebarMenuButton>
-                    <SidebarMenuAction
-                      showOnHover
-                      onClick={(e) => handleExport(e, s.id, s.title)}
-                      aria-label="Export chat"
-                      className="right-7"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                    </SidebarMenuAction>
-                    <SidebarMenuAction showOnHover onClick={(e) => handleDelete(e, s.id)} aria-label="Delete chat">
-                      ✕
-                    </SidebarMenuAction>
-                  </SidebarMenuItem>
-                );
-              })}
+              {sessions.map((s: ChatSession) => (
+                <SessionItem
+                  key={s.id}
+                  session={s}
+                  active={pathname === `/chat/${s.id}`}
+                  isEditing={editingId === s.id}
+                  editValue={editValue}
+                  inputRef={inputRef}
+                  onNavigate={() => { router.push(`/chat/${s.id}`); closeOnMobile(); }}
+                  onDoubleClick={() => startEdit(s.id, s.title)}
+                  onEditChange={setEditValue}
+                  onCommit={() => void commitEdit(s.id)}
+                  onCancelEdit={cancelEdit}
+                  onExport={(e) => handleExport(e, s.id, s.title)}
+                  onDelete={(e) => handleDelete(e, s.id)}
+                />
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
