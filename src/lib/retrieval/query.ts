@@ -4,11 +4,12 @@ import { deduplicateAndSort } from "./rerank";
 // import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
 import { deepseekClient, openaiClient } from "../llm/clients";
-import { IS_CLOUD, RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
+import { RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
 import { logger } from "../logger";
 
-const llmClient = IS_CLOUD ? openaiClient : deepseekClient;
-const llmModel = IS_CLOUD ? (process.env.OPENAI_MODEL ?? "gpt-4o-mini") : (process.env.DEEPSEEK_MODEL ?? "deepseek-chat");
+const useOpenAI = process.env.LLM_PROVIDER === "openai";
+const llmClient = useOpenAI ? openaiClient : deepseekClient;
+const llmModel = useOpenAI ? (process.env.OPENAI_MODEL ?? "gpt-4o-mini") : (process.env.DEEPSEEK_MODEL ?? "deepseek-chat");
 
 async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<string> {
   const prompt =

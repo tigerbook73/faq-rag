@@ -3,8 +3,7 @@ import path from "path";
 import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { ingestBuffer, processDocument } from "@/lib/ingest/pipeline";
-import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
-import { IS_CLOUD, MAX_FILE_BYTES_CLOUD, MAX_SIZE_BYTES_LOCAL } from "@/lib/config";
+import { MAX_FILE_BYTES_CLOUD } from "@/lib/config";
 
 const listSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -54,10 +53,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Unsupported MIME type: ${file.type}` }, { status: 400 });
   }
 
-  const maxSize = IS_CLOUD ? MAX_FILE_BYTES_CLOUD : MAX_SIZE_BYTES_LOCAL;
-  if (file.size > maxSize) {
-    const limitLabel = IS_CLOUD ? "50 KB" : "1 MB";
-    return NextResponse.json({ error: `File exceeds ${limitLabel} limit` }, { status: 413 });
+  if (file.size > MAX_FILE_BYTES_CLOUD) {
+    return NextResponse.json({ error: `File exceeds 50 KB limit` }, { status: 413 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -67,12 +64,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
   }
 
-  if (IS_CLOUD) {
-    // synchronous indexing — wait for completion before responding
-    await processDocument(result.docId, result.filePath);
-    return NextResponse.json({ id: result.docId }, { status: 201 });
-  }
-
-  enqueueIndexing(result.docId, result.filePath);
+  await processDocument(result.docId, result.filePath);
   return NextResponse.json({ id: result.docId }, { status: 201 });
 }

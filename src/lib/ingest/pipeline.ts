@@ -7,7 +7,6 @@ import { splitText } from "./split";
 import { getEmbedding } from "../embeddings/router";
 import { detectLang } from "../lang/detect";
 import { saveUploadedFile, readUploadedFile } from "../storage";
-import { IS_CLOUD } from "../config";
 import { logger } from "../logger";
 
 async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
@@ -96,14 +95,9 @@ export async function ingestBuffer(
 // Indexing — called by worker (local) or inline (cloud)
 export async function processDocument(docId: string, filePath: string): Promise<void> {
   try {
-    let text: string;
-    if (IS_CLOUD) {
-      const buffer = await readUploadedFile(filePath);
-      const ext = path.extname(filePath).toLowerCase();
-      text = await parseBuffer(buffer, ext);
-    } else {
-      text = await parseFile(filePath);
-    }
+    const buffer = await readUploadedFile(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const text = await parseBuffer(buffer, ext);
 
     const lang = detectLang(text);
     const chunks = await splitText(text);

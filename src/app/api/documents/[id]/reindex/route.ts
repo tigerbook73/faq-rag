@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
 import { processDocument } from "@/lib/ingest/pipeline";
-import { IS_CLOUD } from "@/lib/config";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,11 +25,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   await prisma.document.update({ where: { id }, data: { status: "pending", errorMsg: null } });
 
-  if (IS_CLOUD) {
-    await processDocument(id, doc.filePath);
-    return NextResponse.json({ status: "indexed" });
-  }
-
-  enqueueIndexing(id, doc.filePath);
-  return NextResponse.json({ status: "reindexing" });
+  await processDocument(id, doc.filePath);
+  return NextResponse.json({ status: "indexed" });
 }
