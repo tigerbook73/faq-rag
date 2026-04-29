@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 
@@ -72,8 +72,14 @@ export function UploadZone() {
     [router],
   );
 
+  const onDropRejected = useCallback((rejections: FileRejection[]) => {
+    const names = rejections.map((r) => r.file.name).join(", ");
+    toast.error(`Unsupported file type: ${names}. Supported: .md .txt .pdf .docx`);
+  }, []);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected,
     accept: {
       "text/markdown": [".md"],
       "text/plain": [".txt"],
