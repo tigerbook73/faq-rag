@@ -13,10 +13,11 @@
 
 ## 快速导航
 
-| 类别                                    | 项目数 |
-| --------------------------------------- | ------ |
-| [一、代码结构优化](#一代码结构优化)     | 5 项   |
-| [二、功能增强](#二功能增强)             | 4 项   |
+| 类别                                              | 项目数 |
+| ------------------------------------------------- | ------ |
+| [一、代码结构优化](#一代码结构优化)               | 5 项   |
+| [二、功能增强](#二功能增强)                       | 4 项   |
+| [三、索引性能优化](#三索引性能优化)               | 1 项   |
 
 ---
 
@@ -245,6 +246,56 @@ data: {"done": 47, "total": 47, "status": "indexed"}
   §1-C  ChatWindow Hook 拆解           → 3–5 小时，React 设计模式
   §2-D  索引进度 SSE                   → 4–6 小时，全栈 SSE 实践
 ```
+
+---
+
+## 三、索引性能优化
+
+### 3-A 索引编排重构（embedding 批量化 + 并行化 + 批量 INSERT）
+
+| 难度     | ⭐⭐⭐ 中等偏高                                           |
+| -------- | -------------------------------------------------------- |
+| 预计工时 | 2–3 小时                                                 |
+| 核心技能 | Promise.all 依赖分析、批量 DB 操作、embedding 层抽象设计 |
+| 详细设计 | `PLAN-optimize-indexing-orchestration.md`                |
+
+**问题**：`embedAndStoreChunks` 逐条调用 embedding + 逐条 INSERT，API 模式下 73 chunks 需要 74 次 HTTP 调用，串行延迟可达 22 秒；`processDocument` 内所有步骤全串行，存在可并行的 DB 操作。
+
+**三项改动，均在两个文件内完成**：
+
+**① `embeddings/router.ts` — 新增 `embedBatchForIndexing(texts)`**
+
+封装 IS_CLOUD 分批策略，`pipeline.ts` 不引入新的 IS_CLOUD 判断：
+- API 模式：一次 HTTP 请求处理全部 chunk（N → 1）
+- Local 模式：每 8 条批量 ONNX 推理，批次间 `setImmediate` yield（N 次独立 → ceil(N/8) 次批量）
+
+**② `pipeline.ts` — 重构 `embedAndStoreChunks`**
+
+```ts
+const embeddings = await embedBatchForIndexing(chunks);      // 批量 embedding
+await prisma.$transaction(chunks.map((text, i) => ...));     // 单次事务批量 INSERT
+```
+
+**③ `pipeline.ts` — 重构 `processDocument`（并行化）**
+
+```
+splitText ──────────────┐  并行（互不依赖）
+chunk.deleteMany ───────┘
+        ↓
+update(totalChunks) ────┐  并行（互不依赖）
+embedAndStoreChunks ────┘
+        ↓
+update(status: indexed)
+```
+
+**优化前后对比（50KB 文件，73 chunks）**：
+
+| 指标 | 优化前 | 优化后 (Local) | 优化后 (API) |
+|------|--------|---------------|-------------|
+| Embedding 调用次数 | 73 次独立 | 10 次批量 ONNX | **1 次 HTTP** |
+| DB INSERT 事务数 | 73 次 | **1 次** | **1 次** |
+| splitText 与 deleteMany 并行 | ✗ | **✓** | **✓** |
+| totalChunks 与 embedAndStore 并行 | ✗ | **✓** | **✓** |
 
 ---
 
