@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { POLL_INTERVAL_MS } from "@/lib/config";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -152,10 +153,15 @@ export function DocumentTable({ initialDocuments }: Props) {
     setPolledDocuments(prev.map((d) => (d.id === id ? { ...d, status: "pending" } : d)));
     setReindexingId(id);
     try {
-      await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
+      const res = await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `Reindex failed (${res.status})`);
+      }
       router.refresh();
-    } catch {
+    } catch (err) {
       setPolledDocuments(prev);
+      toast.error(err instanceof Error ? err.message : "Reindex failed");
     } finally {
       setReindexingId(null);
     }
@@ -164,14 +170,18 @@ export function DocumentTable({ initialDocuments }: Props) {
   async function handleRebuildAll() {
     setRebuilding(true);
     setRebuildProgress({ done: 0, total: documents.length });
+    let failed = 0;
     try {
       for (let i = 0; i < documents.length; i++) {
-        await fetch(`/api/documents/${documents[i].id}/reindex`, {
-          method: "POST",
-        });
+        const res = await fetch(`/api/documents/${documents[i].id}/reindex`, { method: "POST" });
+        if (!res.ok) failed++;
         setRebuildProgress({ done: i + 1, total: documents.length });
       }
       setPolledDocuments(null);
+      router.refresh();
+      if (failed > 0) toast.error(`${failed} document${failed > 1 ? "s" : ""} failed to reindex`);
+    } catch {
+      toast.error("Rebuild interrupted");
       router.refresh();
     } finally {
       setRebuilding(false);
