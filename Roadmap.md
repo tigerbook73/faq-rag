@@ -3,68 +3,36 @@
 > 记录项目改进方向。待办项按**学习价值 × 实施成本**排序。
 >
 > **实施规则（使用 Claude Code 执行时）：**
+>
 > - 按顺序执行子项目，前一项未完成前不开始下一项
 > - 不需要写计划，直接执行
 > - 非危险操作无需确认，直接执行
-> - 每个子项目完成后 `git add`，等确认后再 commit
+> - 每个子项目完成后 `git add`，不主动commit
 
 ---
 
-## 已完成项目总览
+## 快速导航
 
-| # | 项目 | 分类 |
-|---|------|------|
-| 1-A | DeepSeek Prefix Cache 验证 | RAG |
-| 1-B | Claude Prompt Caching | RAG |
-| 1-C | 交叉编码器重排序（实现完成，运行时禁用） | RAG |
-| 1-D | HyDE 检索 | RAG |
-| 1-E | 引用片段完整显示 | RAG |
-| 1-F | 语义分块 | RAG |
-| 2-A | 知识库页改 Server Components + Suspense | Next.js |
-| 2-B | 上传改 XHR + 进度条 | Next.js |
-| 2-C | DocumentTable 乐观更新 | Next.js |
-| 2-D | 会话持久化迁移至 PostgreSQL | Next.js |
-| 2-E | 多轮对话上下文管理（truncate.ts） | Next.js |
-| 3-A | 启用 Claude UI | UX |
-| 3-B | 暗色模式切换 | UX |
-| 3-C | 会话重命名（行内编辑） | UX |
-| 3-D | 文档搜索 / 筛选 | UX |
-| 3-E | 对话导出（Markdown） | UX |
-| 3-F | 文档失败错误内联显示 | UX |
-| 3-G | Rebuild All 进度反馈 | UX |
-| 4-A | 批量嵌入（getEmbeddingsBatch） | 可靠性 |
-| 4-B | API 层 Zod 输入验证 | 可靠性 |
-| 4-C | DB 索引补全（status / updatedAt / documentId） | 可靠性 |
-| 4-D | Sessions PATCH Zod 校验 | 可靠性 |
-| 4-E | 速率限制（chat API） | 可靠性 |
-| 4-F | SSE 流解析健壮化（eventsource-parser） | 可靠性 |
-| 4-G | pgvector HNSW 索引 | 可靠性 |
-| 4-H | Ingestion Worker Thread | 可靠性 |
-| 4-I | 断点续传索引（Resume Indexing） | 可靠性 |
-| 5-A | DeepSeek 客户端单例化 | 代码质量 |
-| 5-B | 魔法数字提取到 config.ts | 代码质量 |
-| 5-C | 文件扩展名改用 path.extname | 代码质量 |
-| 5-D | Embedding 单例并发初始化锁 | 代码质量 |
-| 6-A | 检索管道单元测试 | 测试 |
-| 6-B | Playwright E2E 测试 | 测试 |
-| 6-C | 嵌入质量对比实验 | 测试 |
+| 类别                                    | 项目数 |
+| --------------------------------------- | ------ |
+| [一、代码结构优化](#一代码结构优化)     | 5 项   |
+| [二、功能增强](#二功能增强)             | 4 项   |
 
 ---
 
-## 待办项目
+## 一、代码结构优化
 
-### 七、代码结构优化
+### 1-A 魔法字符串集中管理
 
-#### 7-A 魔法字符串集中管理
-
-| 难度 | ⭐ 简单 |
-|------|---------|
-| 预计工时 | 1 小时 |
+| 难度     | ⭐ 简单            |
+| -------- | ------------------ |
+| 预计工时 | 1 小时             |
 | 核心技能 | 常量管理、可维护性 |
 
 **问题**：多个字符串 key 分散在多个文件中，重命名或拼写错误时无类型错误提示。
 
 散落位置：
+
 - `"chat:last"` / `"chat:draft:"` / `"chat:scroll:"` — `ChatWindow.tsx`、`chat-storage.ts`、`chat/last/page.tsx`
 - `"chat-session-updated"` / `"chat-last-changed"` — `ChatWindow.tsx`、`ChatSidebar.tsx`、`chat-storage.ts`、`providers.tsx`
 
@@ -85,14 +53,15 @@ export const CHAT_EVENTS = {
 
 ---
 
-#### 7-B Supabase Browser Client 工厂
+### 1-B Supabase Browser Client 工厂
 
-| 难度 | ⭐ 简单 |
-|------|---------|
-| 预计工时 | 30 分钟 |
+| 难度     | ⭐ 简单       |
+| -------- | ------------- |
+| 预计工时 | 30 分钟       |
 | 核心技能 | DRY、可测试性 |
 
 **问题**：`createBrowserClient(URL, KEY)` 含环境变量的调用在三处重复：
+
 - `src/components/layout/TopBar.tsx`（sign-out）
 - `src/app/auth/signin/page.tsx`（sign-in）
 - `src/context/auth-context.tsx`（onAuthStateChange）
@@ -102,42 +71,39 @@ export const CHAT_EVENTS = {
 ```ts
 import { createBrowserClient } from "@supabase/ssr";
 export const createSupabaseBrowserClient = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 ```
 
 三处调用统一改为 `createSupabaseBrowserClient()`。
 
 ---
 
-#### 7-C ChatWindow 自定义 Hook 拆解
+### 1-C ChatWindow 自定义 Hook 拆解
 
-| 难度 | ⭐⭐⭐ 中等偏高 |
-|------|--------------|
-| 预计工时 | 3–5 小时 |
+| 难度     | ⭐⭐⭐ 中等偏高                         |
+| -------- | --------------------------------------- |
+| 预计工时 | 3–5 小时                                |
 | 核心技能 | 自定义 Hook、关注点分离、React 状态设计 |
 
 **问题**：`ChatWindow.tsx`（308 行）包含 5 个独立关注点，全部堆在一个组件里，难以单独测试和理解。
 
 **目标拆分**：
 
-| Hook | 职责 | 主要状态 |
-|------|------|----------|
-| `useDraftPersistence(chatId)` | localStorage draft 读写 + debounce | `input`, `setInput` |
+| Hook                              | 职责                                 | 主要状态                          |
+| --------------------------------- | ------------------------------------ | --------------------------------- |
+| `useDraftPersistence(chatId)`     | localStorage draft 读写 + debounce   | `input`, `setInput`               |
 | `useChatScroll(messages, chatId)` | scroll 位置保存/恢复、新消息时滚到底 | `bottomRef`, `scrollContainerRef` |
-| `useStreamingChat(...)` | fetch SSE、parse 事件、更新 messages | `loading`, `send` |
+| `useStreamingChat(...)`           | fetch SSE、parse 事件、更新 messages | `loading`, `send`                 |
 
 `ChatWindow` 只负责组合这些 hook 并渲染 JSX。
 
 ---
 
-#### 7-D ChatSidebar — SessionItem 组件提取
+### 1-D ChatSidebar — SessionItem 组件提取
 
-| 难度 | ⭐⭐ 中等 |
-|------|---------|
-| 预计工时 | 1–2 小时 |
+| 难度     | ⭐⭐ 中等           |
+| -------- | ------------------- |
+| 预计工时 | 1–2 小时            |
 | 核心技能 | 组件拆分、prop 设计 |
 
 **问题**：`ChatSidebar.tsx`（287 行）的 `sessions.map(...)` 块包含约 70 行的单个 session 渲染逻辑（含 inline edit 状态），大量嵌套难以阅读。
@@ -161,11 +127,11 @@ function SessionItem({
 
 ---
 
-#### 7-E DocumentTable — Dialog 组件提取
+### 1-E DocumentTable — Dialog 组件提取
 
-| 难度 | ⭐ 简单 |
-|------|---------|
-| 预计工时 | 1 小时 |
+| 难度     | ⭐ 简单              |
+| -------- | -------------------- |
+| 预计工时 | 1 小时               |
 | 核心技能 | 组件提取、JSX 可读性 |
 
 **问题**：`DocumentTable.tsx`（262 行）末尾两个 `<Dialog>` 共约 65 行（DeleteDialog + RebuildDialog），与表格逻辑交织。
@@ -181,13 +147,13 @@ function RebuildDialog({ open, onConfirm, onClose, disabled }: ...) { ... }
 
 ---
 
-### 八、功能增强
+## 二、功能增强
 
-#### 8-A Cross-encoder 重排序运行时开关
+### 2-A Cross-encoder 重排序运行时开关
 
-| 难度 | ⭐ 简单 |
-|------|---------|
-| 预计工时 | 30 分钟 |
+| 难度     | ⭐ 简单                |
+| -------- | ---------------------- |
+| 预计工时 | 30 分钟                |
 | 核心技能 | 特性开关、环境变量设计 |
 
 **问题**：`query.ts` 中 `rerankChunks` 以注释方式禁用，切换需要修改代码。
@@ -204,11 +170,11 @@ return IS_RERANK
 
 ---
 
-#### 8-B LLM 生成会话标题
+### 2-B LLM 生成会话标题
 
-| 难度 | ⭐⭐ 中等 |
-|------|---------|
-| 预计工时 | 2–3 小时 |
+| 难度     | ⭐⭐ 中等                  |
+| -------- | -------------------------- |
+| 预计工时 | 2–3 小时                   |
 | 核心技能 | 后台异步调用、乐观 UI 更新 |
 
 **问题**：当前标题是首条用户消息的前 60 字符截断，长问题的标题往往不可读。
@@ -217,9 +183,7 @@ return IS_RERANK
 
 ```ts
 if (isFirstMessage) {
-  generateTitle(question, provider).then((title) =>
-    upsertSession({ ...session, title })
-  );
+  generateTitle(question, provider).then((title) => upsertSession({ ...session, title }));
 }
 ```
 
@@ -227,26 +191,27 @@ if (isFirstMessage) {
 
 ---
 
-#### 8-C 上传接口速率限制
+### 2-C 上传接口速率限制
 
-| 难度 | ⭐ 简单 |
-|------|---------|
-| 预计工时 | 30 分钟 |
+| 难度     | ⭐ 简单  |
+| -------- | -------- |
+| 预计工时 | 30 分钟  |
 | 核心技能 | API 安全 |
 
 **问题**：`/api/documents`（上传）和 `/api/documents/:id/reindex`（重索引）没有速率限制，但这两个接口会触发嵌入计算，成本较高。`/api/chat` 已有限制（10 次/分/IP）。
 
 **方案**：复用 `checkRateLimit`：
+
 - 上传：5 次/分/IP
 - reindex：3 次/小时/IP（防止批量 rebuild 滥用）
 
 ---
 
-#### 8-D 索引进度实时推送（SSE）
+### 2-D 索引进度实时推送（SSE）
 
-| 难度 | ⭐⭐⭐ 中等偏高 |
-|------|--------------|
-| 预计工时 | 4–6 小时 |
+| 难度     | ⭐⭐⭐ 中等偏高                        |
+| -------- | -------------------------------------- |
+| 预计工时 | 4–6 小时                               |
 | 核心技能 | SSE、Worker 消息传递、前端轮询 vs 推送 |
 
 **问题**：`DocumentTable` 通过 3 秒轮询 `GET /api/documents` 检测索引完成。大文件有明显延迟感，且每次都拉全量列表。
@@ -266,21 +231,21 @@ data: {"done": 47, "total": 47, "status": "indexed"}
 
 ```
 高价值低成本（先做）
-  §7-B  Supabase Browser Client 工厂    → 30 分钟，消除重复代码
-  §8-A  Cross-encoder 运行时开关        → 30 分钟，立刻能试效果
-  §8-C  上传速率限制                    → 30 分钟，安全补漏
+  §1-B  Supabase Browser Client 工厂    → 30 分钟，消除重复代码
+  §2-A  Cross-encoder 运行时开关        → 30 分钟，立刻能试效果
+  §2-C  上传速率限制                    → 30 分钟，安全补漏
 
 中等（按需）
-  §7-A  魔法字符串                      → 1 小时，维护性提升
-  §7-E  DocumentTable Dialog 提取      → 1 小时，JSX 清爽
-  §7-D  SessionItem 组件               → 1–2 小时
-  §8-B  LLM 生成会话标题               → 2–3 小时，UX 提升明显
+  §1-A  魔法字符串                      → 1 小时，维护性提升
+  §1-E  DocumentTable Dialog 提取      → 1 小时，JSX 清爽
+  §1-D  SessionItem 组件               → 1–2 小时
+  §2-B  LLM 生成会话标题               → 2–3 小时，UX 提升明显
 
 较高成本（学习价值大）
-  §7-C  ChatWindow Hook 拆解           → 3–5 小时，React 设计模式
-  §8-D  索引进度 SSE                   → 4–6 小时，全栈 SSE 实践
+  §1-C  ChatWindow Hook 拆解           → 3–5 小时，React 设计模式
+  §2-D  索引进度 SSE                   → 4–6 小时，全栈 SSE 实践
 ```
 
 ---
 
-_最后更新：2026-04-29_
+_最后更新：2026-04-30_
