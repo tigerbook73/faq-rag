@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, LogOut, LogIn, LibraryBig } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,21 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ProviderSelect } from "@/components/chat/ProviderSelect";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
-export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
+import { useAuth } from "@/context/auth-context";
+import { createBrowserClient } from "@supabase/ssr";
+
+export function TopBar() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    await supabase.auth.signOut();
+    router.push("/auth/signin");
+  }
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const { subtitle } = usePageTitle();
@@ -88,13 +102,7 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
         </Button>
         {!isSignIn &&
           (isAuthenticated ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Sign out"
-              nativeButton={false}
-              render={<Link href="/auth/signout" />}
-            >
+            <Button variant="ghost" size="icon" title="Sign out" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (

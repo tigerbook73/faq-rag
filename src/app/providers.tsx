@@ -8,24 +8,27 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { PageTitleProvider } from "@/context/page-title-context";
 import { ProviderContextProvider } from "@/context/provider-context";
+import { AuthContextProvider } from "@/context/auth-context";
 
 export function Providers({ children, isAuthenticated }: { children: React.ReactNode; isAuthenticated: boolean }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <PageTitleProvider>
-        <ProviderContextProvider>
-          <TooltipProvider>
-            <SidebarProvider defaultOpen={true} className="h-screen overflow-hidden">
-              <AppSidebar isAuthenticated={isAuthenticated} />
-              <SidebarInset className="flex flex-col overflow-hidden">
-                <TopBar isAuthenticated={isAuthenticated} />
-                {children}
-              </SidebarInset>
-            </SidebarProvider>
-            <Toaster />
-          </TooltipProvider>
-        </ProviderContextProvider>
-      </PageTitleProvider>
+      <AuthContextProvider initialAuth={isAuthenticated}>
+        <PageTitleProvider>
+          <ProviderContextProvider>
+            <TooltipProvider>
+              <SidebarProvider defaultOpen={true} className="h-screen overflow-hidden">
+                <AppSidebar />
+                <SidebarInset className="flex flex-col overflow-hidden">
+                  <TopBar />
+                  {children}
+                </SidebarInset>
+              </SidebarProvider>
+              <Toaster />
+            </TooltipProvider>
+          </ProviderContextProvider>
+        </PageTitleProvider>
+      </AuthContextProvider>
     </ThemeProvider>
   );
 }

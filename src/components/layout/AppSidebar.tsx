@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/sidebar";
 import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
 import { Info, MessageSquare, BookOpen } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 
-export function AppSidebar({ isAuthenticated }: { isAuthenticated: boolean }) {
+export function AppSidebar() {
+  const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const isChat = pathname.startsWith("/chat");
   const { isMobile, setOpenMobile } = useSidebar();
