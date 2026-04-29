@@ -1,5 +1,5 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { getEmbeddingsBatch } from "../embeddings/bge";
+import { getEmbeddingsBatch } from "../embeddings/router";
 import { CHUNK_SIZE, CHUNK_OVERLAP, SEMANTIC_THRESHOLD } from "../config";
 
 const fallbackSplitter = new RecursiveCharacterTextSplitter({

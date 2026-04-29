@@ -1,11 +1,14 @@
-import { getEmbedding } from "../embeddings/bge";
+import { getEmbedding } from "../embeddings/router";
 import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
 // import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
-import { deepseekClient } from "../llm/clients";
-import { RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
+import { deepseekClient, openaiClient } from "../llm/clients";
+import { IS_CLOUD, RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
 import { logger } from "../logger";
+
+const llmClient = IS_CLOUD ? openaiClient : deepseekClient;
+const llmModel = IS_CLOUD ? (process.env.OPENAI_MODEL ?? "gpt-4o-mini") : (process.env.DEEPSEEK_MODEL ?? "deepseek-chat");
 
 async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<string> {
   const prompt =
@@ -13,8 +16,8 @@ async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<s
       ? `Translate the following query to Chinese. Return only the translation, no explanation:\n${query}`
       : `将以下查询翻译为英语。只返回翻译结果，不要解释：\n${query}`;
 
-  const resp = await deepseekClient.chat.completions.create({
-    model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+  const resp = await llmClient.chat.completions.create({
+    model: llmModel,
     messages: [{ role: "user", content: prompt }],
     max_tokens: QUERY_MAX_TOKENS,
   });
@@ -23,8 +26,8 @@ async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<s
 }
 
 async function generateHypotheticalAnswer(query: string): Promise<string> {
-  const resp = await deepseekClient.chat.completions.create({
-    model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+  const resp = await llmClient.chat.completions.create({
+    model: llmModel,
     messages: [
       {
         role: "user",
@@ -38,7 +41,7 @@ async function generateHypotheticalAnswer(query: string): Promise<string> {
 }
 
 export async function retrieve(userQuery: string, traceId?: string): Promise<ChunkRow[]> {
-  const t0 = Date.now();
+const t0 = Date.now();
   const srcLang = detectLang(userQuery);
   const targetLang = srcLang === "en" ? "zh" : "en";
 

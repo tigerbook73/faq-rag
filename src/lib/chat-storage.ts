@@ -45,7 +45,7 @@ function toSession(raw: {
     messages: (raw.messages ?? []).map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
-      citations: (m.citations as Citation[] | null) ?? undefined,
+      citations: Array.isArray(m.citations) ? (m.citations as Citation[]) : undefined,
     })),
   };
 }
@@ -64,11 +64,14 @@ export async function fetchSession(id: string): Promise<ChatSession | null> {
 }
 
 export async function upsertSession(session: ChatSession): Promise<void> {
-  await fetch(`/api/sessions/${session.id}`, {
+  const res = await fetch(`/api/sessions/${session.id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: session.title, messages: session.messages }),
   });
+  if (!res.ok) {
+    console.warn("[upsertSession] PATCH failed", res.status, await res.json().catch(() => null));
+  }
 }
 
 export async function updateSessionTitle(id: string, title: string): Promise<void> {

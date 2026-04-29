@@ -16,7 +16,12 @@ interface Props {
 export function MessageBubble({ role, content, citations, onCitationClick, isLoading }: Props) {
   const isUser = role === "user";
 
-  const rendered = content.replace(/\[(\d+)\]/g, (_, n) => `[^${parseInt(n, 10)}]`);
+  // Normalise all citation variants ([^n], [n], (^n)) to @@n@@ before passing to
+  // ReactMarkdown so remark doesn't parse [^n] as a footnote linkReference node.
+  const rendered = content
+    .replace(/\[\^(\d+)\]/g, (_, n) => `@@${parseInt(n, 10)}@@`)
+    .replace(/\[(\d+)\]/g, (_, n) => `@@${parseInt(n, 10)}@@`)
+    .replace(/\(\^(\d+)\)/g, (_, n) => `@@${parseInt(n, 10)}@@`);
 
   return (
     <div data-role={role} className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
@@ -43,6 +48,15 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
                       : [node],
                   );
                   return <p>{processed}</p>;
+                },
+                li({ children }) {
+                  const nodes = Array.isArray(children) ? children : [children];
+                  const processed = nodes.flatMap((node, nodeIndex) =>
+                    typeof node === "string"
+                      ? renderWithCitations(node, citations, onCitationClick, nodeIndex)
+                      : [node],
+                  );
+                  return <li>{processed}</li>;
                 },
               }}
             >
@@ -89,9 +103,9 @@ function renderWithCitations(
   nodeIndex = 0,
 ) {
   if (!citations) return [text];
-  const parts = text.split(/(\[\^\d+\])/g);
+  const parts = text.split(/(@@\d+@@)/g);
   return parts.map((part, i) => {
-    const match = part.match(/\[\^(\d+)\]/);
+    const match = part.match(/@@(\d+)@@/);
     if (match) {
       const num = parseInt(match[1], 10);
       const citation = citations.find((c) => c.id === num);

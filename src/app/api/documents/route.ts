@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { z } from "zod";
 import { prisma } from "@/lib/db/client";
-import { ingestBuffer } from "@/lib/ingest/pipeline";
+import { ingestBuffer, processDocument } from "@/lib/ingest/pipeline";
 import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
+import { IS_CLOUD, MAX_FILE_BYTES_CLOUD, MAX_SIZE_BYTES_LOCAL } from "@/lib/config";
 
 const listSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -35,7 +36,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
-const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -54,13 +54,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Unsupported MIME type: ${file.type}` }, { status: 400 });
   }
 
-  if (file.size > MAX_SIZE_BYTES) {
-    return NextResponse.json({ error: "File exceeds 50 MB limit" }, { status: 413 });
+  const maxSize = IS_CLOUD ? MAX_FILE_BYTES_CLOUD : MAX_SIZE_BYTES_LOCAL;
+  if (file.size > maxSize) {
+    const limitLabel = IS_CLOUD ? "50 KB" : "1 MB";
+    return NextResponse.json({ error: `File exceeds ${limitLabel} limit` }, { status: 413 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const { docId, uploadPath } = await ingestBuffer(file.name, buffer);
-  if (uploadPath) enqueueIndexing(docId, uploadPath);
+  const result = await ingestBuffer(file.name, buffer);
 
-  return NextResponse.json({ id: docId }, { status: 201 });
+  if (!result.filePath) {
+    return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
+  }
+
+  if (IS_CLOUD) {
+    // synchronous indexing — wait for completion before responding
+    await processDocument(result.docId, result.filePath);
+    return NextResponse.json({ id: result.docId }, { status: 201 });
+  }
+
+  enqueueIndexing(result.docId, result.filePath);
+  return NextResponse.json({ id: result.docId }, { status: 201 });
 }

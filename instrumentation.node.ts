@@ -1,35 +1,40 @@
-import path from "path";
-import fs from "fs/promises";
-import { prisma } from "./src/lib/db/client";
-import { warmIndexingWorker, enqueueIndexing } from "./src/lib/ingest/indexing-queue";
+import { IS_CLOUD } from "./src/lib/config";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
+// Cloud mode uses synchronous indexing in the request handler — no worker needed
+if (!IS_CLOUD) {
+  const path = await import("path");
+  const fs = await import("fs/promises");
+  const { prisma } = await import("./src/lib/db/client");
+  const { warmIndexingWorker, enqueueIndexing } = await import("./src/lib/ingest/indexing-queue");
 
-async function resumePendingDocuments() {
-  const pending = await prisma.document.findMany({
-    where: { status: "pending" },
-    select: { id: true, name: true },
-  });
+  const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
-  if (pending.length === 0) return;
+  async function resumePendingDocuments() {
+    const pending = await prisma.document.findMany({
+      where: { status: "pending" },
+      select: { id: true, name: true, filePath: true },
+    });
 
-  console.log(`[resume] Found ${pending.length} pending document(s), checking files...`);
+    if (pending.length === 0) return;
 
-  for (const doc of pending) {
-    const filePath = path.join(UPLOAD_DIR, doc.id, doc.name);
-    try {
-      await fs.access(filePath);
-      console.log(`[resume] Resuming: ${doc.name} (${doc.id})`);
-      enqueueIndexing(doc.id, filePath);
-    } catch {
-      console.warn(`[resume] File missing for ${doc.name} (${doc.id}), marking failed`);
-      await prisma.document.update({
-        where: { id: doc.id },
-        data: { status: "failed", errorMsg: "File missing, please re-upload" },
-      });
+    console.log(`[resume] Found ${pending.length} pending document(s), checking files...`);
+
+    for (const doc of pending) {
+      const filePath = doc.filePath ?? path.default.join(UPLOAD_DIR, doc.id, doc.name);
+      try {
+        await fs.default.access(filePath);
+        console.log(`[resume] Resuming: ${doc.name} (${doc.id})`);
+        enqueueIndexing(doc.id, filePath);
+      } catch {
+        console.warn(`[resume] File missing for ${doc.name} (${doc.id}), marking failed`);
+        await prisma.document.update({
+          where: { id: doc.id },
+          data: { status: "failed", errorMsg: "File missing, please re-upload" },
+        });
+      }
     }
   }
-}
 
-warmIndexingWorker();
-await resumePendingDocuments();
+  warmIndexingWorker();
+  await resumePendingDocuments();
+}

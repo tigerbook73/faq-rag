@@ -25,6 +25,29 @@ export async function parseFile(filePath: string): Promise<string> {
   throw new Error(`Unsupported file type: ${ext}`);
 }
 
+export async function parseBuffer(buffer: Buffer, ext: string): Promise<string> {
+  const normalExt = ext.startsWith(".") ? ext : `.${ext}`;
+
+  if (normalExt === ".md" || normalExt === ".txt") {
+    return buffer.toString("utf-8");
+  }
+
+  if (normalExt === ".pdf") {
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
+    return result.text;
+  }
+
+  if (normalExt === ".docx") {
+    const { default: mammoth } = await import("mammoth");
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value;
+  }
+
+  throw new Error(`Unsupported file type: ${normalExt}`);
+}
+
 export function mimeFromExt(ext: string): string {
   const map: Record<string, string> = {
     ".md": "text/markdown",

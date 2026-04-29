@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Document {
@@ -18,6 +19,7 @@ model Document {
   status      String   @default("pending") // pending | indexed | failed
   errorMsg    String?  @map("error_msg")
   totalChunks Int?     @map("total_chunks")
+  filePath    String?  @map("file_path")
   createdAt   DateTime @default(now()) @map("created_at")
   chunks      Chunk[]
 

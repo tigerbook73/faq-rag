@@ -1,11 +1,13 @@
 export const PROVIDER = {
-  CLAUDE: "claude",
   DEEPSEEK: "deepseek",
+  OPENAI: "openai",
+  CLAUDE: "claude",
 } as const;
 
 export type Provider = (typeof PROVIDER)[keyof typeof PROVIDER];
 
 export const PROVIDER_LABEL: Record<Provider, string> = {
-  claude: "Claude",
   deepseek: "DeepSeek",
+  openai: "OpenAI",
+  claude: "Claude",
 };

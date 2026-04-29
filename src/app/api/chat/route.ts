@@ -10,7 +10,7 @@ import { logger } from "@/lib/logger";
 
 const bodySchema = z.object({
   question: z.string().min(1).max(4000),
-  provider: z.enum([PROVIDER.CLAUDE, PROVIDER.DEEPSEEK]).default(PROVIDER.DEEPSEEK),
+  provider: z.enum([PROVIDER.DEEPSEEK, PROVIDER.OPENAI, PROVIDER.CLAUDE]).default(PROVIDER.DEEPSEEK),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(8000) }))
     .max(50)

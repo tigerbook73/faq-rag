@@ -7,7 +7,7 @@ const mockRerankChunks = jest.fn();
 const mockDetectLang = jest.fn().mockReturnValue("en");
 const mockCreate = jest.fn();
 
-jest.mock("@/lib/embeddings/bge", () => ({
+jest.mock("@/lib/embeddings/router", () => ({
   getEmbedding: (...args: unknown[]) => mockGetEmbedding(...args),
 }));
 jest.mock("@/lib/retrieval/vector-search", () => ({

@@ -9,8 +9,11 @@ const patchSchema = z.object({
     .array(
       z.object({
         role: z.enum(["user", "assistant"]),
-        content: z.string().max(8000),
-        citations: z.array(z.unknown()).optional(),
+        content: z.string().max(32000),
+        citations: z.preprocess(
+          (v) => (Array.isArray(v) ? v : undefined),
+          z.array(z.unknown()).optional(),
+        ),
       }),
     )
     .optional(),

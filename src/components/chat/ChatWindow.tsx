@@ -176,9 +176,14 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
             });
           } else if (payload.type === "done") {
             streamDone = true;
-            const usedNums = new Set([...assistantContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)));
-            const usedCitations = citations.filter((c) => usedNums.has(c.id));
-            doneMessages = [...withUser, { role: "assistant", content: assistantContent, citations: usedCitations }];
+            const finalContent = payload.answer ?? assistantContent;
+            const usedNums = new Set([
+              ...[...finalContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
+              ...[...finalContent.matchAll(/\(\^(\d+)\)/g)].map((m) => parseInt(m[1], 10)),
+              ...[...finalContent.matchAll(/\[(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
+            ]);
+const usedCitations = citations.filter((c) => usedNums.has(c.id));
+            doneMessages = [...withUser, { role: "assistant", content: finalContent, citations: usedCitations }];
             setMessages(doneMessages);
             // persist + navigate happen after the stream loop so persistMessages is awaited
           }

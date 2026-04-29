@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
 import { prisma } from "@/lib/db/client";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
+import { processDocument } from "@/lib/ingest/pipeline";
+import { IS_CLOUD } from "@/lib/config";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,14 +21,17 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const filePath = path.join(UPLOAD_DIR, id, doc.name);
+  if (!doc.filePath) {
+    return NextResponse.json({ error: "File path not available for reindexing" }, { status: 422 });
+  }
 
-  await prisma.document.update({
-    where: { id },
-    data: { status: "pending", errorMsg: null },
-  });
+  await prisma.document.update({ where: { id }, data: { status: "pending", errorMsg: null } });
 
-  enqueueIndexing(id, filePath);
+  if (IS_CLOUD) {
+    await processDocument(id, doc.filePath);
+    return NextResponse.json({ status: "indexed" });
+  }
 
+  enqueueIndexing(id, doc.filePath);
   return NextResponse.json({ status: "reindexing" });
 }

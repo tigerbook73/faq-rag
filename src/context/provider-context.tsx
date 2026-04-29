@@ -13,8 +13,10 @@ const ProviderContext = createContext<ProviderContextValue>({
   setProvider: () => {},
 });
 
+const defaultProvider = (process.env.NEXT_PUBLIC_DEFAULT_PROVIDER as Provider | undefined) ?? PROVIDER.DEEPSEEK;
+
 export function ProviderContextProvider({ children }: { children: React.ReactNode }) {
-  const [provider, setProviderState] = useState<Provider>(PROVIDER.DEEPSEEK);
+  const [provider, setProviderState] = useState<Provider>(defaultProvider);
   const setProvider = useCallback((p: Provider) => setProviderState(p), []);
   return <ProviderContext.Provider value={{ provider, setProvider }}>{children}</ProviderContext.Provider>;
 }
