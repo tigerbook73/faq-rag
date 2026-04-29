@@ -51,3 +51,8 @@ next-env.d.ts
 # Prisma generated client
 /src/generated/
 
+# Supabase CLI runtime state
+supabase/.temp
+supabase/.branches
+supabase/snippets/
+
