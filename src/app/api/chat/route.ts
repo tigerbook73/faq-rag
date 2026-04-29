@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   log.info({ question: question.slice(0, 100) }, "chat request");
 
   const t0 = Date.now();
-  const chunks = await retrieve(question, traceId);
+  const chunks = await retrieve(question, traceId, providerName);
   log.info({ retrieval_total_ms: Date.now() - t0, chunks: chunks.length }, "retrieval complete");
 
   const citations = chunks.map((c, i) => ({

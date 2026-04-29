@@ -7,20 +7,26 @@ import { deepseekClient, openaiClient } from "../llm/clients";
 import { RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
 import { logger } from "../logger";
 
-const useOpenAI = process.env.LLM_PROVIDER === "openai";
-const llmClient = useOpenAI ? openaiClient : deepseekClient;
-const llmModel = useOpenAI
-  ? (process.env.OPENAI_MODEL ?? "gpt-4o-mini")
-  : (process.env.DEEPSEEK_MODEL ?? "deepseek-chat");
+function resolveClient(provider?: string) {
+  if (provider === "openai") {
+    return { client: openaiClient, model: process.env.OPENAI_MODEL ?? "gpt-4o-mini" };
+  }
+  return { client: deepseekClient, model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat" };
+}
 
-async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<string> {
+async function translateQuery(
+  query: string,
+  targetLang: "zh" | "en",
+  client: typeof deepseekClient,
+  model: string,
+): Promise<string> {
   const prompt =
     targetLang === "zh"
       ? `Translate the following query to Chinese. Return only the translation, no explanation:\n${query}`
       : `将以下查询翻译为英语。只返回翻译结果，不要解释：\n${query}`;
 
-  const resp = await llmClient.chat.completions.create({
-    model: llmModel,
+  const resp = await client.chat.completions.create({
+    model,
     messages: [{ role: "user", content: prompt }],
     max_tokens: QUERY_MAX_TOKENS,
   });
@@ -28,9 +34,9 @@ async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<s
   return resp.choices[0]?.message?.content?.trim() ?? query;
 }
 
-async function generateHypotheticalAnswer(query: string): Promise<string> {
-  const resp = await llmClient.chat.completions.create({
-    model: llmModel,
+async function generateHypotheticalAnswer(query: string, client: typeof deepseekClient, model: string): Promise<string> {
+  const resp = await client.chat.completions.create({
+    model,
     messages: [
       {
         role: "user",
@@ -43,15 +49,16 @@ async function generateHypotheticalAnswer(query: string): Promise<string> {
   return resp.choices[0]?.message?.content?.trim() ?? query;
 }
 
-export async function retrieve(userQuery: string, traceId?: string): Promise<ChunkRow[]> {
+export async function retrieve(userQuery: string, traceId?: string, provider?: string): Promise<ChunkRow[]> {
+  const { client, model } = resolveClient(provider);
   const t0 = Date.now();
   const srcLang = detectLang(userQuery);
   const targetLang = srcLang === "en" ? "zh" : "en";
 
   // translation and HyDE generation run in parallel
   const [translatedQuery, hydeAnswer] = await Promise.all([
-    translateQuery(userQuery, targetLang).catch(() => userQuery),
-    generateHypotheticalAnswer(userQuery).catch(() => null),
+    translateQuery(userQuery, targetLang, client, model).catch(() => userQuery),
+    generateHypotheticalAnswer(userQuery, client, model).catch(() => null),
   ]);
 
   const queryZh = srcLang === "zh" ? userQuery : translatedQuery;
