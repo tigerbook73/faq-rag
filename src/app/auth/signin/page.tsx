@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
 import { STORAGE_KEYS } from "@/lib/constants";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
@@ -28,10 +28,7 @@ export default function SignInPage() {
     setPending(true);
     setError(null);
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    const supabase = createSupabaseBrowserClient();
 
     const { error: authError } = await supabase.auth.signInWithPassword({
       email,
