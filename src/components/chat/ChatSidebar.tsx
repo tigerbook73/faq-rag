@@ -23,7 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Download, Info, BookOpen } from "lucide-react";
+import { SquarePen, Download, Info, BookOpen, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/chat-storage";
 
@@ -237,6 +237,16 @@ export function ChatSidebarContent() {
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/chat")}
+              tooltip="Chat"
+              render={<Link href="/chat/last" onClick={closeOnMobile} />}
+            >
+              <MessageSquare />
+              <span>Chat</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={pathname === "/knowledge"}

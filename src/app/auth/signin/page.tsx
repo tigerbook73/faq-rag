@@ -12,8 +12,8 @@ import { Eye, EyeOff } from "lucide-react";
 export default function SignInPage() {
   const router = useRouter();
   const from = useSearchParams().get("from") ?? "/chat/new";
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@test.com");
+  const [password, setPassword] = useState("admin@123");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
