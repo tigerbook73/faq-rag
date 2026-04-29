@@ -4,32 +4,29 @@ import fs from "fs/promises";
 import { prisma } from "../db/client";
 import { parseFile, parseBuffer, mimeFromExt } from "./parse";
 import { splitText } from "./split";
-import { getEmbedding } from "../embeddings/router";
+import { embedBatchForIndexing } from "../embeddings/router";
 import { detectLang } from "../lang/detect";
 import { saveUploadedFile, readUploadedFile } from "../storage";
 import { logger } from "../logger";
 
 async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
-  for (let i = 0; i < chunks.length; i++) {
-    await new Promise((r) => setImmediate(r));
-    const chunkText = chunks[i];
-    const chunkLang = detectLang(chunkText);
-    const embedding = await getEmbedding(chunkText);
-    const vec = `[${embedding.join(",")}]`;
-    const chunkId = crypto.randomUUID();
-    await prisma.$executeRaw`
-      INSERT INTO chunks (id, document_id, ord, content, lang, embedding, created_at)
-      VALUES (
-        ${chunkId}::uuid,
-        ${docId}::uuid,
-        ${i},
-        ${chunkText},
-        ${chunkLang},
-        ${vec}::vector,
-        NOW()
-      )
-    `;
-  }
+  const embeddings = await embedBatchForIndexing(chunks);
+  await prisma.$transaction(
+    chunks.map((text, i) =>
+      prisma.$executeRaw`
+        INSERT INTO chunks (id, document_id, ord, content, lang, embedding, created_at)
+        VALUES (
+          ${crypto.randomUUID()}::uuid,
+          ${docId}::uuid,
+          ${i},
+          ${text},
+          ${detectLang(text)},
+          ${`[${embeddings[i].join(",")}]`}::vector,
+          NOW()
+        )
+      `,
+    ),
+  );
 }
 
 // CLI path — local filesystem only
@@ -117,16 +114,20 @@ export async function processDocument(docId: string, filePath: string): Promise<
     const buffer = await readUploadedFile(filePath);
     const ext = path.extname(filePath).toLowerCase();
     const text = await parseBuffer(buffer, ext);
-
     const lang = detectLang(text);
-    const chunks = await splitText(text);
 
-    await prisma.chunk.deleteMany({ where: { documentId: docId } });
-    await prisma.document.update({
-      where: { id: docId },
-      data: { totalChunks: chunks.length },
-    });
-    await embedAndStoreChunks(docId, chunks);
+    // splitText and deleteMany are independent — run in parallel
+    const [chunks] = await Promise.all([
+      splitText(text),
+      prisma.chunk.deleteMany({ where: { documentId: docId } }),
+    ]);
+
+    // totalChunks update and embedding are independent — run in parallel
+    await Promise.all([
+      prisma.document.update({ where: { id: docId }, data: { totalChunks: chunks.length } }),
+      embedAndStoreChunks(docId, chunks),
+    ]);
+
     await prisma.document.update({
       where: { id: docId },
       data: { status: "indexed", lang, errorMsg: null },
