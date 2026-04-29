@@ -34,7 +34,11 @@ async function translateQuery(
   return resp.choices[0]?.message?.content?.trim() ?? query;
 }
 
-async function generateHypotheticalAnswer(query: string, client: typeof deepseekClient, model: string): Promise<string> {
+async function generateHypotheticalAnswer(
+  query: string,
+  client: typeof deepseekClient,
+  model: string,
+): Promise<string> {
   const resp = await client.chat.completions.create({
     model,
     messages: [
