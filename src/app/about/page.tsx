@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
-import { getSession } from "@/lib/session";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function AboutPage() {
-  const session = await getSession();
-  const isAuthenticated = !!session;
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = !!user;
   return (
     <PageShell className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">About FAQ-RAG</h1>
