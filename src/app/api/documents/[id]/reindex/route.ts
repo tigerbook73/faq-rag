@@ -10,7 +10,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   if (!allowed) {
     return NextResponse.json(
       { error: "Already reindexed recently, please wait before trying again." },
-      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
+      },
     );
   }
 
@@ -23,7 +26,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "File path not available for reindexing" }, { status: 422 });
   }
 
-  await prisma.document.update({ where: { id }, data: { status: "pending", errorMsg: null } });
+  await prisma.document.update({
+    where: { id },
+    data: { status: "pending", errorMsg: null },
+  });
 
   await processDocument(id, doc.filePath);
   return NextResponse.json({ status: "indexed" });

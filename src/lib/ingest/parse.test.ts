@@ -48,7 +48,9 @@ describe("parseFile", () => {
   it("parses .docx files and returns extracted value", async () => {
     const { default: mammoth } = await import("mammoth");
     const result = await parseFile("/tmp/doc.docx");
-    expect(mammoth.extractRawText).toHaveBeenCalledWith({ path: "/tmp/doc.docx" });
+    expect(mammoth.extractRawText).toHaveBeenCalledWith({
+      path: "/tmp/doc.docx",
+    });
     expect(result).toBe("extracted docx text");
   });
 

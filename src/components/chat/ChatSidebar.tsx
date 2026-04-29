@@ -154,7 +154,7 @@ export function ChatSidebarContent() {
   return (
     <>
       <SidebarHeader>
-        <div className="hidden md:flex items-center justify-between">
+        <div className="hidden items-center justify-between md:flex">
           <SidebarTrigger />
         </div>
       </SidebarHeader>
@@ -176,7 +176,7 @@ export function ChatSidebarContent() {
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupContent>
             <SidebarMenu>
-              {sessions.length === 0 && <p className="px-2 py-1 text-xs text-muted-foreground">No chats yet</p>}
+              {sessions.length === 0 && <p className="text-muted-foreground px-2 py-1 text-xs">No chats yet</p>}
               {sessions.map((s: ChatSession) => {
                 const active = pathname === `/chat/${s.id}`;
                 const isEditing = editingId === s.id;
@@ -184,9 +184,14 @@ export function ChatSidebarContent() {
                   <SidebarMenuItem key={s.id}>
                     <SidebarMenuButton
                       isActive={active}
-                      onClick={() => { if (!isEditing) { router.push(`/chat/${s.id}`); closeOnMobile(); } }}
+                      onClick={() => {
+                        if (!isEditing) {
+                          router.push(`/chat/${s.id}`);
+                          closeOnMobile();
+                        }
+                      }}
                       onDoubleClick={() => startEdit(s.id, s.title)}
-                      className="h-auto overflow-visible items-start"
+                      className="h-auto items-start overflow-visible"
                     >
                       <div className="min-w-0 flex-1">
                         {isEditing ? (
@@ -203,12 +208,12 @@ export function ChatSidebarContent() {
                             }}
                             onBlur={() => void commitEdit(s.id)}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full text-sm bg-transparent border-b border-primary outline-none"
+                            className="border-primary w-full border-b bg-transparent text-sm outline-none"
                           />
                         ) : (
                           <p className="truncate text-sm">{s.title}</p>
                         )}
-                        <p className="text-xs text-muted-foreground">{relativeDate(s.updatedAt)}</p>
+                        <p className="text-muted-foreground text-xs">{relativeDate(s.updatedAt)}</p>
                       </div>
                     </SidebarMenuButton>
                     <SidebarMenuAction
@@ -228,19 +233,26 @@ export function ChatSidebarContent() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={pathname === "/knowledge"} tooltip="Knowledge" render={<Link href="/knowledge" onClick={closeOnMobile} />}>
+            <SidebarMenuButton
+              isActive={pathname === "/knowledge"}
+              tooltip="Knowledge"
+              render={<Link href="/knowledge" onClick={closeOnMobile} />}
+            >
               <BookOpen />
               <span>Knowledge</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="About" isActive={pathname === "/about"} render={<Link href="/about" onClick={closeOnMobile} />}>
+            <SidebarMenuButton
+              tooltip="About"
+              isActive={pathname === "/about"}
+              render={<Link href="/about" onClick={closeOnMobile} />}
+            >
               <Info />
               <span>About</span>
             </SidebarMenuButton>
@@ -250,8 +262,11 @@ export function ChatSidebarContent() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-muted-foreground group-data-[collapsible=icon]:hidden"
-            onClick={() => { router.push("/chat/last"); closeOnMobile(); }}
+            className="text-muted-foreground w-full justify-start group-data-[collapsible=icon]:hidden"
+            onClick={() => {
+              router.push("/chat/last");
+              closeOnMobile();
+            }}
           >
             ↩ Back to last chat
           </Button>

@@ -20,7 +20,7 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
   const isChat = pathname.startsWith("/chat");
 
   return (
-    <header className="h-12 flex items-center justify-between px-4 border-b bg-background shrink-0">
+    <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-4">
       <div className="flex items-center gap-2">
         {isSignIn ? (
           <LibraryBig className="size-6" />
@@ -29,16 +29,16 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
             <SidebarTrigger className="md:hidden">
               <LibraryBig className="size-6" />
             </SidebarTrigger>
-            <LibraryBig className="hidden md:block size-6" />
+            <LibraryBig className="hidden size-6 md:block" />
           </>
         )}
-        <Link href="/chat/new" className="font-bold text-base">
+        <Link href="/chat/new" className="text-base font-bold">
           FAQ-RAG
         </Link>
         {isChat && subtitle && (
           <>
             <span className="text-muted-foreground hidden sm:inline">/</span>
-            <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-30 sm:max-w-50">
+            <span className="text-muted-foreground hidden max-w-30 truncate text-sm sm:inline sm:max-w-50">
               {subtitle}
             </span>
           </>
@@ -48,20 +48,20 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
       <div className="flex items-center gap-2">
         {isChat && (
           <>
-            <span className="hidden sm:inline text-sm text-muted-foreground">Provider:</span>
+            <span className="text-muted-foreground hidden text-sm sm:inline">Provider:</span>
             <ProviderSelect value={provider} onChange={setProvider} />
-            <Separator orientation="vertical" className="self-stretch my-2" />
+            <Separator orientation="vertical" className="my-2 self-stretch" />
           </>
         )}
         {isSignIn ? (
-          <nav className="mr-2 hidden md:flex items-center gap-3 text-sm">
+          <nav className="mr-2 hidden items-center gap-3 text-sm md:flex">
             <Link href="/about" className="text-muted-foreground">
               About
             </Link>
           </nav>
         ) : (
           <>
-            <nav className="mr-2 hidden md:flex items-center gap-3 text-sm">
+            <nav className="mr-2 hidden items-center gap-3 text-sm md:flex">
               {isAuthenticated && (
                 <>
                   <Link href="/chat/last" className={isChat ? "font-medium" : "text-muted-foreground"}>
@@ -79,7 +79,7 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
                 About
               </Link>
             </nav>
-            <Separator orientation="vertical" className="self-stretch my-2 hidden md:block" />
+            <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />
           </>
         )}
         <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
@@ -88,7 +88,13 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
         </Button>
         {!isSignIn &&
           (isAuthenticated ? (
-            <Button variant="ghost" size="icon" title="Sign out" nativeButton={false} render={<Link href="/auth/signout" />}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Sign out"
+              nativeButton={false}
+              render={<Link href="/auth/signout" />}
+            >
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (

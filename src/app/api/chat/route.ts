@@ -12,7 +12,12 @@ const bodySchema = z.object({
   question: z.string().min(1).max(4000),
   provider: z.enum([PROVIDER.DEEPSEEK, PROVIDER.OPENAI, PROVIDER.CLAUDE]).default(PROVIDER.DEEPSEEK),
   history: z
-    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(8000) }))
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(8000),
+      }),
+    )
     .max(50)
     .default([]),
 });
@@ -29,7 +34,10 @@ export async function POST(req: NextRequest) {
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests, please slow down." },
-      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
+      },
     );
   }
 
@@ -88,7 +96,10 @@ export async function POST(req: NextRequest) {
       const tLlm = Date.now();
       let firstToken = true;
       try {
-        for await (const token of provider.chat({ system: SYSTEM_PROMPT, messages })) {
+        for await (const token of provider.chat({
+          system: SYSTEM_PROMPT,
+          messages,
+        })) {
           if (firstToken) {
             log.debug({ llm_first_token_ms: Date.now() - tLlm }, "first token");
             firstToken = false;

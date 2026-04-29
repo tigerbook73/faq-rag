@@ -6,7 +6,10 @@ export const logger = pino(
   isDev
     ? {
         level: "debug",
-        transport: { target: "pino-pretty", options: { colorize: true, ignore: "pid,hostname" } },
+        transport: {
+          target: "pino-pretty",
+          options: { colorize: true, ignore: "pid,hostname" },
+        },
       }
     : { level: "info" },
 );

@@ -15,7 +15,9 @@ function getReranker(): Promise<RerankerBundle> {
   initPromise ??= (async () => {
     const [tokenizer, model] = await Promise.all([
       AutoTokenizer.from_pretrained(MODEL_NAME),
-      AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, { dtype: "fp32" }),
+      AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, {
+        dtype: "fp32",
+      }),
     ]);
     return { tokenizer, model };
   })();

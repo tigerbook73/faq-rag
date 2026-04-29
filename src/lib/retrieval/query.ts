@@ -9,7 +9,9 @@ import { logger } from "../logger";
 
 const useOpenAI = process.env.LLM_PROVIDER === "openai";
 const llmClient = useOpenAI ? openaiClient : deepseekClient;
-const llmModel = useOpenAI ? (process.env.OPENAI_MODEL ?? "gpt-4o-mini") : (process.env.DEEPSEEK_MODEL ?? "deepseek-chat");
+const llmModel = useOpenAI
+  ? (process.env.OPENAI_MODEL ?? "gpt-4o-mini")
+  : (process.env.DEEPSEEK_MODEL ?? "deepseek-chat");
 
 async function translateQuery(query: string, targetLang: "zh" | "en"): Promise<string> {
   const prompt =
@@ -42,7 +44,7 @@ async function generateHypotheticalAnswer(query: string): Promise<string> {
 }
 
 export async function retrieve(userQuery: string, traceId?: string): Promise<ChunkRow[]> {
-const t0 = Date.now();
+  const t0 = Date.now();
   const srcLang = detectLang(userQuery);
   const targetLang = srcLang === "en" ? "zh" : "en";
 

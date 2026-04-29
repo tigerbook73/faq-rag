@@ -29,7 +29,10 @@ if (!IS_CLOUD) {
         console.warn(`[resume] File missing for ${doc.name} (${doc.id}), marking failed`);
         await prisma.document.update({
           where: { id: doc.id },
-          data: { status: "failed", errorMsg: "File missing, please re-upload" },
+          data: {
+            status: "failed",
+            errorMsg: "File missing, please re-upload",
+          },
         });
       }
     }

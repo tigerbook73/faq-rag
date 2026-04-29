@@ -87,9 +87,9 @@ export function UploadZone() {
     <div className="space-y-3">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+        className={`cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
           isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
-        } ${progress !== null ? "opacity-50 cursor-not-allowed" : ""}`}
+        } ${progress !== null ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <input {...getInputProps()} />
         <p className="text-muted-foreground text-sm">
@@ -99,7 +99,7 @@ export function UploadZone() {
               ? "Drop files here"
               : "Drag & drop files here, or click to select"}
         </p>
-        <p className="text-xs text-muted-foreground/60 mt-1">Supports .md .txt .pdf .docx</p>
+        <p className="text-muted-foreground/60 mt-1 text-xs">Supports .md .txt .pdf .docx</p>
       </div>
 
       {progress !== null && <Progress value={progress} className="h-1.5" />}

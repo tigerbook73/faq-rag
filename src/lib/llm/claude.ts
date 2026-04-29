@@ -21,7 +21,13 @@ export const claudeProvider: LLMProvider = {
         if (addCache) {
           return {
             role: m.role,
-            content: [{ type: "text" as const, text: m.content, cache_control: { type: "ephemeral" as const } }],
+            content: [
+              {
+                type: "text" as const,
+                text: m.content,
+                cache_control: { type: "ephemeral" as const },
+              },
+            ],
           };
         }
         return { role: m.role, content: m.content };
@@ -37,7 +43,15 @@ export const claudeProvider: LLMProvider = {
       const read = u.cache_read_input_tokens ?? 0;
       const total = u.input_tokens + creation + read;
       const ratio = total > 0 ? ((read / total) * 100).toFixed(1) : "n/a";
-      logger.debug({ cache_read: read, cache_created: creation, ratio, input_tokens: u.input_tokens }, "claude usage");
+      logger.debug(
+        {
+          cache_read: read,
+          cache_created: creation,
+          ratio,
+          input_tokens: u.input_tokens,
+        },
+        "claude usage",
+      );
     });
 
     for await (const event of stream) {

@@ -53,7 +53,10 @@ export function DocumentTable({ initialDocuments }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
-  const [rebuildProgress, setRebuildProgress] = useState<{ done: number; total: number } | null>(null);
+  const [rebuildProgress, setRebuildProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
   const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
   // Lightweight polling during indexing — fetch JSON, not a full RSC re-render.
@@ -105,7 +108,9 @@ export function DocumentTable({ initialDocuments }: Props) {
     setRebuildProgress({ done: 0, total: documents.length });
     try {
       for (let i = 0; i < documents.length; i++) {
-        await fetch(`/api/documents/${documents[i].id}/reindex`, { method: "POST" });
+        await fetch(`/api/documents/${documents[i].id}/reindex`, {
+          method: "POST",
+        });
         setRebuildProgress({ done: i + 1, total: documents.length });
       }
       setPolledDocuments(null);
@@ -118,13 +123,13 @@ export function DocumentTable({ initialDocuments }: Props) {
 
   if (allDocuments.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground text-sm">No documents yet. Upload some files above.</div>
+      <div className="text-muted-foreground py-12 text-center text-sm">No documents yet. Upload some files above.</div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Search documents…"
           value={search}
@@ -132,7 +137,12 @@ export function DocumentTable({ initialDocuments }: Props) {
           className="sm:max-w-xs"
         />
         <div className="sm:ml-auto">
-          <Button variant="outline" disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            disabled={rebuilding}
+            onClick={() => setRebuildDialogOpen(true)}
+            className="w-full sm:w-auto"
+          >
             {rebuildProgress ? `Rebuilding ${rebuildProgress.done}/${rebuildProgress.total}…` : "Rebuild All"}
           </Button>
         </div>
@@ -152,14 +162,14 @@ export function DocumentTable({ initialDocuments }: Props) {
         <TableBody>
           {documents.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
+              <TableCell colSpan={6} className="text-muted-foreground py-8 text-center text-sm">
                 No documents match &ldquo;{search}&rdquo;
               </TableCell>
             </TableRow>
           )}
           {documents.map((doc) => (
             <TableRow key={doc.id}>
-              <TableCell className="font-medium max-w-32 sm:max-w-50 truncate">{doc.name}</TableCell>
+              <TableCell className="max-w-32 truncate font-medium sm:max-w-50">{doc.name}</TableCell>
               <TableCell className="hidden sm:table-cell">{doc.lang}</TableCell>
               <TableCell className="hidden sm:table-cell">
                 {doc.status === "pending" && doc.totalChunks
@@ -169,13 +179,13 @@ export function DocumentTable({ initialDocuments }: Props) {
               <TableCell>
                 <Badge variant={statusVariant(doc.status)}>{doc.status}</Badge>
                 {doc.status === "failed" && doc.errorMsg && (
-                  <p className="mt-1 text-xs text-destructive max-w-48 break-words">{doc.errorMsg}</p>
+                  <p className="text-destructive mt-1 max-w-48 text-xs break-words">{doc.errorMsg}</p>
                 )}
               </TableCell>
-              <TableCell className="hidden lg:table-cell text-muted-foreground text-xs">
+              <TableCell className="text-muted-foreground hidden text-xs lg:table-cell">
                 {new Date(doc.createdAt).toLocaleDateString()}
               </TableCell>
-              <TableCell className="text-right space-x-2">
+              <TableCell className="space-x-2 text-right">
                 <Button
                   variant="outline"
                   size="sm"

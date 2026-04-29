@@ -21,7 +21,9 @@ jest.mock("@/lib/lang/detect", () => ({
 }));
 jest.mock("@/lib/llm/clients", () => ({
   deepseekClient: {
-    chat: { completions: { create: (...args: unknown[]) => mockCreate(...args) } },
+    chat: {
+      completions: { create: (...args: unknown[]) => mockCreate(...args) },
+    },
   },
 }));
 
@@ -29,7 +31,15 @@ import { retrieve } from "./query";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 function makeChunk(id: string, score = 0.9): ChunkRow {
-  return { id, document_id: "doc1", ord: 0, content: `content-${id}`, lang: "en", score, document_name: "doc.txt" };
+  return {
+    id,
+    document_id: "doc1",
+    ord: 0,
+    content: `content-${id}`,
+    lang: "en",
+    score,
+    document_name: "doc.txt",
+  };
 }
 
 function mockLLMResponse(text: string) {
@@ -62,7 +72,9 @@ describe("retrieve()", () => {
   it("falls back to original query when translation fails", async () => {
     mockCreate
       .mockRejectedValueOnce(new Error("API error")) // translation fails
-      .mockResolvedValueOnce({ choices: [{ message: { content: "hypothetical answer" } }] }); // HyDE succeeds
+      .mockResolvedValueOnce({
+        choices: [{ message: { content: "hypothetical answer" } }],
+      }); // HyDE succeeds
     await retrieve("What is RAG?");
     // Should still complete without throwing
     expect(mockRerankChunks).toHaveBeenCalledTimes(1);
@@ -70,7 +82,9 @@ describe("retrieve()", () => {
 
   it("still returns results when HyDE generation fails", async () => {
     mockCreate
-      .mockResolvedValueOnce({ choices: [{ message: { content: "translated" } }] }) // translation ok
+      .mockResolvedValueOnce({
+        choices: [{ message: { content: "translated" } }],
+      }) // translation ok
       .mockRejectedValueOnce(new Error("HyDE error")); // HyDE fails
     const chunks = await retrieve("What is RAG?");
     // HyDE vector search is skipped but bi-encoder results still returned

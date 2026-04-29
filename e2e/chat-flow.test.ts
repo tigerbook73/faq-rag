@@ -13,7 +13,9 @@ test.describe("Chat flow", () => {
     await expect(assistantBubble).not.toBeEmpty({ timeout: 30_000 });
 
     // Wait for stream to fully complete: Send button returns (was "Thinking…" while loading)
-    await expect(page.getByRole("button", { name: "Send" })).toBeEnabled({ timeout: 30_000 });
+    await expect(page.getByRole("button", { name: "Send" })).toBeEnabled({
+      timeout: 30_000,
+    });
 
     const text = await assistantBubble.innerText();
     expect(text.trim().length).toBeGreaterThan(10);
@@ -33,7 +35,9 @@ test.describe("Chat flow", () => {
     });
 
     // Wait for stream to fully complete: Send button re-appears (was "Thinking…" while loading)
-    await expect(page.getByRole("button", { name: "Send" })).toBeEnabled({ timeout: 30_000 });
+    await expect(page.getByRole("button", { name: "Send" })).toBeEnabled({
+      timeout: 30_000,
+    });
 
     // Verify a citation sup is present
     const citation = page.locator("sup").first();

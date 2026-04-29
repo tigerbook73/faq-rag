@@ -48,7 +48,14 @@ export async function ingestFile(filePath: string): Promise<string> {
   }
 
   const doc = await prisma.document.create({
-    data: { name: fileName, mime, contentHash, sizeBytes, status: "pending", filePath },
+    data: {
+      name: fileName,
+      mime,
+      contentHash,
+      sizeBytes,
+      status: "pending",
+      filePath,
+    },
   });
 
   try {
@@ -56,15 +63,24 @@ export async function ingestFile(filePath: string): Promise<string> {
     const lang = detectLang(text);
     const chunks = await splitText(text);
 
-    await prisma.document.update({ where: { id: doc.id }, data: { totalChunks: chunks.length } });
+    await prisma.document.update({
+      where: { id: doc.id },
+      data: { totalChunks: chunks.length },
+    });
     await embedAndStoreChunks(doc.id, chunks);
-    await prisma.document.update({ where: { id: doc.id }, data: { status: "indexed", lang } });
+    await prisma.document.update({
+      where: { id: doc.id },
+      data: { status: "indexed", lang },
+    });
 
     logger.info({ fileName, chunks: chunks.length, lang }, "ingest: indexed");
     return doc.id;
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    await prisma.document.update({ where: { id: doc.id }, data: { status: "failed", errorMsg } });
+    await prisma.document.update({
+      where: { id: doc.id },
+      data: { status: "failed", errorMsg },
+    });
     throw err;
   }
 }
@@ -87,7 +103,10 @@ export async function ingestBuffer(
   });
 
   const storagePath = await saveUploadedFile(buffer, doc.id, fileName);
-  await prisma.document.update({ where: { id: doc.id }, data: { filePath: storagePath } });
+  await prisma.document.update({
+    where: { id: doc.id },
+    data: { filePath: storagePath },
+  });
 
   return { docId: doc.id, filePath: storagePath };
 }
@@ -103,16 +122,20 @@ export async function processDocument(docId: string, filePath: string): Promise<
     const chunks = await splitText(text);
 
     await prisma.chunk.deleteMany({ where: { documentId: docId } });
-    await prisma.document.update({ where: { id: docId }, data: { totalChunks: chunks.length } });
+    await prisma.document.update({
+      where: { id: docId },
+      data: { totalChunks: chunks.length },
+    });
     await embedAndStoreChunks(docId, chunks);
-    await prisma.document.update({ where: { id: docId }, data: { status: "indexed", lang, errorMsg: null } });
+    await prisma.document.update({
+      where: { id: docId },
+      data: { status: "indexed", lang, errorMsg: null },
+    });
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    await prisma.document
-      .update({ where: { id: docId }, data: { status: "failed", errorMsg } })
-      .catch(() => {
-        logger.info({ docId }, "ingest: indexing aborted — document was deleted mid-indexing");
-      });
+    await prisma.document.update({ where: { id: docId }, data: { status: "failed", errorMsg } }).catch(() => {
+      logger.info({ docId }, "ingest: indexing aborted — document was deleted mid-indexing");
+    });
     throw err;
   }
 }

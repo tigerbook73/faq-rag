@@ -23,7 +23,7 @@ export function CitationDrawer({ open, onClose, citation }: Props) {
   return (
     <Drawer open={open} onClose={onClose}>
       <DrawerContent aria-describedby={undefined}>
-        <div className="w-full md:w-[80%] md:mx-auto">
+        <div className="w-full md:mx-auto md:w-[80%]">
           <DrawerHeader>
             <DrawerTitle>{citation ? `[^${citation.id}] ${citation.documentName}` : "Citation"}</DrawerTitle>
           </DrawerHeader>
@@ -34,7 +34,7 @@ export function CitationDrawer({ open, onClose, citation }: Props) {
                   <Badge variant="secondary">score {citation.score.toFixed(3)}</Badge>
                   <Badge variant="outline">{citation.documentName}</Badge>
                 </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{citation.preview}</p>
+                <p className="text-muted-foreground text-sm whitespace-pre-wrap">{citation.preview}</p>
               </div>
             )}
           </ScrollArea>

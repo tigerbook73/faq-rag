@@ -32,7 +32,10 @@ export default function SignInPage() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (authError) {
       setError(authError.message);
@@ -44,11 +47,11 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="h-full flex items-center justify-center bg-background p-4">
+    <div className="bg-background flex h-full items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">FAQ RAG</CardTitle>
-          <p className="text-sm text-muted-foreground text-center">Sign in to continue</p>
+          <CardTitle className="text-center text-2xl">FAQ RAG</CardTitle>
+          <p className="text-muted-foreground text-center text-sm">Sign in to continue</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,7 +88,7 @@ export default function SignInPage() {
                 </InputGroupAddon>
               </InputGroup>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? "Signing in…" : "Sign in"}
             </Button>

@@ -33,7 +33,7 @@ export function AppSidebar({ isAuthenticated }: { isAuthenticated: boolean }) {
       ) : (
         <>
           <SidebarHeader>
-            <div className="hidden md:flex items-center justify-between">
+            <div className="hidden items-center justify-between md:flex">
               <SidebarTrigger />
             </div>
           </SidebarHeader>

@@ -39,7 +39,7 @@
 ```tsx
 <button
   onClick={() => router.push("/chat/last")}
-  className="w-full px-2 text-sm text-muted-foreground hover:text-foreground text-left transition-colors"
+  className="text-muted-foreground hover:text-foreground w-full px-2 text-left text-sm transition-colors"
 >
   ↩ Back to last chat
 </button>
@@ -66,7 +66,7 @@
 ```tsx
 <button
   onClick={() => onCitationClick?.(c)}
-  className="block text-xs text-muted-foreground hover:text-foreground text-left"
+  className="text-muted-foreground hover:text-foreground block text-left text-xs"
 >
   [{c.id}] {c.documentName} — {c.preview.slice(0, 60)}…
 </button>

@@ -28,7 +28,10 @@ export const openaiProvider: LLMProvider = {
 
     if (usage) {
       logger.debug(
-        { prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens },
+        {
+          prompt_tokens: usage.prompt_tokens,
+          completion_tokens: usage.completion_tokens,
+        },
         "openai usage",
       );
     }

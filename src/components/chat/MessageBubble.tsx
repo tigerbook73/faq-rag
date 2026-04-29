@@ -26,7 +26,7 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
   return (
     <div data-role={role} className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       <div
-        className={`max-w-[90%] sm:max-w-[80%] overflow-hidden rounded-2xl px-4 py-3 text-sm ${
+        className={`max-w-[90%] overflow-hidden rounded-2xl px-4 py-3 text-sm sm:max-w-[80%] ${
           isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
         }`}
       >
@@ -63,13 +63,13 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
               {rendered}
             </ReactMarkdown>
             {citations && citations.length > 0 && (
-              <div className="mt-3 border-t pt-2 space-y-1">
+              <div className="mt-3 space-y-1 border-t pt-2">
                 {citations.map((c) => (
                   <Button
                     key={c.id}
                     variant="ghost"
                     size="sm"
-                    className="h-auto w-full justify-start text-xs text-muted-foreground font-normal px-2 py-0.5"
+                    className="text-muted-foreground h-auto w-full justify-start px-2 py-0.5 text-xs font-normal"
                     onClick={() => onCitationClick?.(c)}
                   >
                     <span className="truncate">
@@ -89,9 +89,9 @@ export function MessageBubble({ role, content, citations, onCitationClick, isLoa
 function TypingDots() {
   return (
     <div className="flex items-center gap-1 py-0.5">
-      <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
-      <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
-      <span className="h-2 w-2 rounded-full bg-current animate-bounce" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-current" />
     </div>
   );
 }
@@ -112,7 +112,7 @@ function renderWithCitations(
       if (citation) {
         return (
           <sup key={`${nodeIndex}-${i}`}>
-            <button className="text-primary underline cursor-pointer" onClick={() => onClick?.(citation)}>
+            <button className="text-primary cursor-pointer underline" onClick={() => onClick?.(citation)}>
               [{num}]
             </button>
           </sup>

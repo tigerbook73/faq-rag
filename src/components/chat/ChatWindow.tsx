@@ -61,7 +61,13 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       };
       const title =
         s.title === "New Chat" ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat") : s.title;
-      const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
+      const next: ChatSession = {
+        ...s,
+        id: idToUse,
+        title,
+        messages: updated,
+        updatedAt: now,
+      };
       setSession(next);
       setLastChatId(idToUse);
       await upsertSession(next);
@@ -158,7 +164,12 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       const parser = createParser({
         onEvent: (event) => {
           const raw = event.data;
-          let payload: { type: string; citations?: Citation[]; token?: string; answer?: string };
+          let payload: {
+            type: string;
+            citations?: Citation[];
+            token?: string;
+            answer?: string;
+          };
           try {
             payload = JSON.parse(raw);
           } catch {
@@ -171,7 +182,10 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
             assistantContent += payload.token ?? "";
             setMessages((prev) => {
               const updated = [...prev];
-              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
+              updated[assistantIndex] = {
+                ...updated[assistantIndex],
+                content: assistantContent,
+              };
               return updated;
             });
           } else if (payload.type === "done") {
@@ -182,8 +196,15 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
               ...[...finalContent.matchAll(/\(\^(\d+)\)/g)].map((m) => parseInt(m[1], 10)),
               ...[...finalContent.matchAll(/\[(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
             ]);
-const usedCitations = citations.filter((c) => usedNums.has(c.id));
-            doneMessages = [...withUser, { role: "assistant", content: finalContent, citations: usedCitations }];
+            const usedCitations = citations.filter((c) => usedNums.has(c.id));
+            doneMessages = [
+              ...withUser,
+              {
+                role: "assistant",
+                content: finalContent,
+                citations: usedCitations,
+              },
+            ];
             setMessages(doneMessages);
             // persist + navigate happen after the stream loop so persistMessages is awaited
           }
@@ -241,11 +262,11 @@ const usedCitations = citations.filter((c) => usedNums.has(c.id));
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto w-full px-4 py-4">
+        <div className="mx-auto w-full max-w-3xl px-4 py-4">
           {messages.length === 0 && (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+            <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
               Ask a question about your knowledge base
             </div>
           )}
@@ -264,14 +285,14 @@ const usedCitations = citations.filter((c) => usedNums.has(c.id));
       </div>
 
       <div className="border-t">
-        <div className="max-w-3xl mx-auto w-full px-4 py-3 flex gap-2 items-end">
+        <div className="mx-auto flex w-full max-w-3xl items-end gap-2 px-4 py-3">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask a question… (Ctrl+Enter / ⌘+Enter to send)"
-            className="flex-1 resize-none min-h-15 max-h-50"
+            className="max-h-50 min-h-15 flex-1 resize-none"
             rows={2}
             disabled={loading}
           />
