@@ -1,6 +1,5 @@
 // Cloud mode switches
 export const EMBEDDING_PROVIDER = process.env.EMBEDDING_PROVIDER ?? "local"; // "local" | "openai"
-export const AUTH_PROVIDER = process.env.AUTH_PROVIDER ?? "local"; // "local" | "supabase"
 export const IS_CLOUD = EMBEDDING_PROVIDER === "openai";
 export const MAX_FILE_BYTES_CLOUD = 50 * 1024; // 50 KB
 export const MAX_SIZE_BYTES_LOCAL = 1 * 1024 * 1024; // 1 MB local limit

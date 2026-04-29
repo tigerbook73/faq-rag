@@ -10,8 +10,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ProviderSelect } from "@/components/chat/ProviderSelect";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
-import { logout } from "@/app/actions/auth";
-
 export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
@@ -90,11 +88,9 @@ export function TopBar({ isAuthenticated }: { isAuthenticated: boolean }) {
         </Button>
         {!isSignIn &&
           (isAuthenticated ? (
-            <form action={logout}>
-              <Button variant="ghost" size="icon" type="submit" title="Sign out">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </form>
+            <Button variant="ghost" size="icon" title="Sign out" nativeButton={false} render={<Link href="/auth/signout" />}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           ) : (
             <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/signin" />}>
               <LogIn className="h-4 w-4" />

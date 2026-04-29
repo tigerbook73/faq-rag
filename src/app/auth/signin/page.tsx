@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useActionState } from "react";
-import { useSearchParams } from "next/navigation";
-import { login, type LoginState } from "@/app/actions/auth";
+import { useSearchParams, useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
@@ -11,13 +10,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function SignInPage() {
-  const [state, action, pending] = useActionState<LoginState, FormData>(login, undefined);
+  const router = useRouter();
+  const from = useSearchParams().get("from") ?? "/chat/new";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const from = useSearchParams().get("from") ?? "";
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     sessionStorage.removeItem("chat:last");
   }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (authError) {
+      setError(authError.message);
+      setPending(false);
+      return;
+    }
+
+    router.replace(from);
+  }
 
   return (
     <div className="h-full flex items-center justify-center bg-background p-4">
@@ -27,18 +51,18 @@ export default function SignInPage() {
           <p className="text-sm text-muted-foreground text-center">Sign in to continue</p>
         </CardHeader>
         <CardContent>
-          <form action={action} className="space-y-4">
-            <input type="hidden" name="from" value={from} />
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="off"
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
                 required
                 disabled={pending}
-                defaultValue="admin"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -48,10 +72,11 @@ export default function SignInPage() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   required
                   disabled={pending}
-                  defaultValue="admin@123"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <InputGroupAddon align="inline-end">
                   <InputGroupButton tabIndex={-1} onClick={() => setShowPassword((v) => !v)}>
@@ -60,7 +85,7 @@ export default function SignInPage() {
                 </InputGroupAddon>
               </InputGroup>
             </div>
-            {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? "Signing in…" : "Sign in"}
             </Button>
