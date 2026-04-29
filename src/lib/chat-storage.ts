@@ -1,4 +1,5 @@
 import type { Citation } from "@/components/chat/CitationDrawer";
+import { STORAGE_KEYS } from "./constants";
 
 export interface Message {
   role: "user" | "assistant";
@@ -14,20 +15,18 @@ export interface ChatSession {
   updatedAt: number;
 }
 
-const LAST_KEY = "chat:last";
-
 function isClient() {
   return typeof window !== "undefined";
 }
 
 export function getLastChatId(): string | null {
   if (!isClient()) return null;
-  return sessionStorage.getItem(LAST_KEY);
+  return sessionStorage.getItem(STORAGE_KEYS.LAST_CHAT);
 }
 
 export function setLastChatId(id: string): void {
   if (!isClient()) return;
-  sessionStorage.setItem(LAST_KEY, id);
+  sessionStorage.setItem(STORAGE_KEYS.LAST_CHAT, id);
 }
 
 function toSession(raw: {

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { STORAGE_KEYS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
@@ -19,7 +20,7 @@ export default function SignInPage() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    sessionStorage.removeItem("chat:last");
+    sessionStorage.removeItem(STORAGE_KEYS.LAST_CHAT);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

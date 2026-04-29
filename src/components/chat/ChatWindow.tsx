@@ -7,6 +7,7 @@ import { CitationDrawer, type Citation } from "./CitationDrawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/lib/chat-storage";
+import { STORAGE_KEYS, CHAT_EVENTS } from "@/lib/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
 import { usePageTitle } from "@/context/page-title-context";
@@ -18,7 +19,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   const { setSubtitle } = usePageTitle();
   const [session, setSession] = useState<ChatSession | null>(initialSession);
   const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
-  const draftKey = `chat:draft:${chatId ?? "new"}`;
+  const draftKey = STORAGE_KEYS.DRAFT(chatId ?? "new");
   const readDraft = (key: string) => (typeof window !== "undefined" ? (localStorage.getItem(key) ?? "") : "");
   const [input, setInput] = useState(() => readDraft(draftKey));
   const [prevDraftKey, setPrevDraftKey] = useState(draftKey);
@@ -41,7 +42,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       return;
     }
     setLastChatId(chatId);
-    window.dispatchEvent(new CustomEvent("chat-last-changed"));
+    window.dispatchEvent(new CustomEvent(CHAT_EVENTS.LAST_CHANGED));
   }, [chatId, initialSession, router]);
 
   useEffect(() => {
@@ -71,14 +72,14 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       setSession(next);
       setLastChatId(idToUse);
       await upsertSession(next);
-      window.dispatchEvent(new CustomEvent("chat-session-updated"));
+      window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
     },
     [],
   );
 
   // Restore saved scroll position before first paint; fall back to bottom
   useLayoutEffect(() => {
-    const saved = chatId ? sessionStorage.getItem(`chat:scroll:${chatId}`) : null;
+    const saved = chatId ? sessionStorage.getItem(STORAGE_KEYS.SCROLL(chatId)) : null;
     if (saved && scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = parseInt(saved);
     } else {
@@ -92,7 +93,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     const el = scrollContainerRef.current;
     return () => {
       if (chatId && el) {
-        sessionStorage.setItem(`chat:scroll:${chatId}`, String(el.scrollTop));
+        sessionStorage.setItem(STORAGE_KEYS.SCROLL(chatId), String(el.scrollTop));
       }
     };
   }, [chatId]);
@@ -130,7 +131,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     if (!question || loading) return;
 
     setInput("");
-    localStorage.removeItem(`chat:draft:${chatId ?? "new"}`);
+    localStorage.removeItem(draftKey);
     setLoading(true);
 
     const resolvedId = chatId ?? crypto.randomUUID();
@@ -249,7 +250,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, provider, session, chatId, router, persistMessages]);
+  }, [input, loading, messages, provider, session, chatId, router, persistMessages, draftKey]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

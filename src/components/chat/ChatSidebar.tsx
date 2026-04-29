@@ -9,6 +9,7 @@ import {
   getLastChatId,
   type ChatSession,
 } from "@/lib/chat-storage";
+import { CHAT_EVENTS } from "@/lib/constants";
 import {
   SidebarContent,
   SidebarFooter,
@@ -45,8 +46,8 @@ export function ChatSidebarContent() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const lastChatId = useSyncExternalStore(
     (onStoreChange) => {
-      window.addEventListener("chat-last-changed", onStoreChange);
-      return () => window.removeEventListener("chat-last-changed", onStoreChange);
+      window.addEventListener(CHAT_EVENTS.LAST_CHANGED, onStoreChange);
+      return () => window.removeEventListener(CHAT_EVENTS.LAST_CHANGED, onStoreChange);
     },
     () => getLastChatId(),
     () => null,
@@ -71,8 +72,8 @@ export function ChatSidebarContent() {
     function onUpdate() {
       fetchSessions().then((data) => setSessions(data));
     }
-    window.addEventListener("chat-session-updated", onUpdate);
-    return () => window.removeEventListener("chat-session-updated", onUpdate);
+    window.addEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
+    return () => window.removeEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
   }, []);
 
   // Focus input when edit mode activates
@@ -91,7 +92,7 @@ export function ChatSidebarContent() {
       setEditingId(null);
       if (!trimmed) return;
       await updateSessionTitle(id, trimmed);
-      window.dispatchEvent(new CustomEvent("chat-session-updated"));
+      window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
     },
     [editValue],
   );
@@ -143,7 +144,7 @@ export function ChatSidebarContent() {
       e.preventDefault();
       e.stopPropagation();
       await apiDeleteSession(id);
-      window.dispatchEvent(new CustomEvent("chat-session-updated"));
+      window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
       if (pathname === `/chat/${id}`) router.replace("/chat/new");
     },
     [pathname, router],
