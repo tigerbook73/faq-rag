@@ -36,9 +36,6 @@ yarn-error.log*
 !.env
 !.env.example
 
-# vercel
-.vercel
-
 # runtime data (docker volume remnant + user uploads)
 /data/*
 
@@ -52,3 +49,4 @@ next-env.d.ts
 # Prisma generated client
 /src/generated/
 
+.env*.local
