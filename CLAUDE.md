@@ -14,15 +14,16 @@ A local FAQ question-answering system. Users upload documents (Chinese or Englis
 | UI              | Tailwind CSS + shadcn/ui (components in `components/ui/`)                                     |
 | Database        | PostgreSQL 16 + pgvector via Docker                                                           |
 | ORM             | Prisma (`prisma/schema.prisma`)                                                               |
-| Embedding       | `Xenova/bge-m3` via `@huggingface/transformers` — local, multilingual, 1024-dim               |
-| LLM default     | DeepSeek `deepseek-chat` via `openai` SDK (`baseURL: https://api.deepseek.com`)               |
-| LLM alternate   | Claude `claude-sonnet-4-6` via `@anthropic-ai/sdk` (default when no provider specified)       |
+| Embedding       | `Xenova/bge-m3` (local, 1024-dim) **or** `text-embedding-3-small` (OpenAI) — switched via `EMBEDDING_PROVIDER` env var; dispatched through `embeddings/router.ts` |
+| LLM providers   | Claude `claude-sonnet-4-6` (default) · DeepSeek `deepseek-chat` · OpenAI `gpt-4o-mini` — all selectable in UI via `NEXT_PUBLIC_DEFAULT_PROVIDER` |
+| Auth            | Supabase Auth — email/password, session cookies via `@supabase/ssr`; protected by `proxy.ts` middleware |
+| Storage         | Supabase Storage — uploaded files stored in `documents` bucket via `src/lib/storage/index.ts` |
 | Text splitting  | Semantic chunking (embedding cosine boundary detection) + `@langchain/textsplitters` fallback |
-| Reranking       | `Xenova/bge-reranker-base` cross-encoder via `@huggingface/transformers`                      |
+| Reranking       | `Xenova/bge-reranker-base` cross-encoder — implemented in `cross-encoder.ts`, **currently disabled** in `query.ts` (commented out) due to added latency |
 | Package manager | pnpm                                                                                          |
 | Language detect | `franc-min`                                                                                   |
 | File parsing    | pdf-parse v2 (`PDFParse` class), mammoth (docx), native fs (md/txt)                           |
-| Testing         | Jest + ts-jest                                                                                |
+| Testing         | Jest + ts-jest + Playwright                                                                   |
 
 ---
 
@@ -31,6 +32,7 @@ A local FAQ question-answering system. Users upload documents (Chinese or Englis
 ```
 Browser
   └── / → redirect to /chat/new
+  └── /auth/signin       ← Supabase email/password sign-in (public)
   └── /chat/layout       ← passthrough (global layout lives in providers.tsx)
       ├── /chat/new      ← ChatWindow with chatId=null (new ephemeral session)
       ├── /chat/[id]     ← ChatWindow with chatId from URL
@@ -148,21 +150,24 @@ interface LLMProvider {
 
 ```ts
 // src/lib/llm/providers.ts
-export const PROVIDER = { CLAUDE: "claude", DEEPSEEK: "deepseek" } as const;
+export const PROVIDER = { CLAUDE: "claude", DEEPSEEK: "deepseek", OPENAI: "openai" } as const;
 export type Provider = (typeof PROVIDER)[keyof typeof PROVIDER];
 export const PROVIDER_LABEL: Record<Provider, string> = {
   claude: "Claude",
   deepseek: "DeepSeek",
+  openai: "OpenAI",
 };
 ```
 
-`getProvider(name)` in `router.ts` returns `claudeProvider` by default; pass `"deepseek"` for DeepSeek. `/api/chat` uses SSE to stream tokens from `provider.chat(...)`.
+`getProvider(name)` in `router.ts` returns `claudeProvider` when name is unrecognized/undefined. The UI default is set via `NEXT_PUBLIC_DEFAULT_PROVIDER` (`.env.example` defaults to `claude`). The `bodySchema` in `/api/chat` falls back to `PROVIDER.DEEPSEEK` when no provider is sent.
+
+`/api/chat` uses SSE to stream tokens from `provider.chat(...)`. Query expansion (translate + HyDE) in `retrieval/query.ts` uses DeepSeek or OpenAI client independently of the chat provider.
 
 History is truncated before the LLM call via `truncate.ts` — keeps the most recent turns within a token budget (estimated as `length / 4`), then drops any leading assistant turn.
 
-Both providers respect `process.env.ANTHROPIC_MODEL` / `process.env.DEEPSEEK_MODEL` to override the model name. Defaults are `claude-sonnet-4-6` and `deepseek-chat` respectively.
+All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODEL`, `OPENAI_MODEL`. Defaults: `claude-sonnet-4-6`, `deepseek-chat`, `gpt-4o-mini`.
 
-**UI**: Both Claude and DeepSeek are selectable in `ProviderSelect`.
+**UI**: Claude, DeepSeek, and OpenAI are all selectable in `ProviderSelect`.
 
 ---
 
@@ -178,6 +183,11 @@ Both providers respect `process.env.ANTHROPIC_MODEL` / `process.env.DEEPSEEK_MOD
 - **Session sync**: after any session write (API call), dispatch `new CustomEvent("chat-session-updated")` so `ChatSidebar` re-renders.
 - **Batch embedding**: use `getEmbeddingsBatch(texts[])` for multi-text embedding (used in semantic splitter). `getEmbedding(text)` is for single-text cases.
 - **Rate limiting**: `checkRateLimit(key, limit, windowMs)` in `src/lib/rate-limit.ts` — in-memory only, not distributed.
+- **Embedding routing**: `getEmbedding()` / `getEmbeddingsBatch()` in `embeddings/router.ts` dispatch to bge-m3 or OpenAI based on `IS_CLOUD` (`EMBEDDING_PROVIDER === "openai"`). Always import from `router.ts`, not directly from `bge.ts`.
+- **Cloud mode (`IS_CLOUD`)**: when true, `instrumentation.ts` skips the worker thread (indexing runs inline in the request handler) and applies a 50 KB file size limit.
+- **Cross-encoder disabled**: `rerankChunks` in `retrieval/query.ts` is commented out — the `deduplicateAndSort` cosine ranking is used instead. Uncomment to enable; be aware of cold-start latency for the ONNX model.
+- **Supabase browser client**: `createBrowserClient(URL, KEY)` is called inline in `TopBar.tsx` and `signin/page.tsx`. Not yet centralized — a future refactor target (`src/lib/supabase/browser.ts`).
+- **`filePath` field duality**: on local mode, `Document.filePath` holds a local filesystem path; on cloud mode (Supabase Storage), it holds a storage object path (`{docId}/{filename}`). `readUploadedFile` / `saveUploadedFile` in `storage/index.ts` abstract this.
 
 ---
 
@@ -207,8 +217,16 @@ Both providers respect `process.env.ANTHROPIC_MODEL` / `process.env.DEEPSEEK_MOD
 | `src/lib/llm/providers.ts`                       | PROVIDER const + PROVIDER_LABEL                                   |
 | `src/lib/llm/router.ts`                          | LLM provider selection (Claude default)                           |
 | `src/lib/llm/truncate.ts`                        | Token-budget history truncation (keeps recent turns, ≤6000 est.)  |
-| `src/lib/llm/clients.ts`                         | Shared LLM client singletons (deepseekClient)                     |
-| `src/lib/retrieval/query.ts`                     | Retrieval orchestration: translate + HyDE + embed + rerank        |
+| `src/lib/llm/openai.ts`                          | OpenAI GPT provider (`gpt-4o-mini` default)                       |
+| `src/lib/llm/clients.ts`                         | Shared LLM client singletons (deepseekClient, openaiClient)       |
+| `src/lib/embeddings/router.ts`                   | Embedding dispatch: local bge-m3 vs OpenAI via `IS_CLOUD`         |
+| `src/lib/embeddings/openai-embed.ts`             | OpenAI `text-embedding-3-small` — single + batch                  |
+| `src/lib/storage/index.ts`                       | Supabase Storage helpers: save / read / delete uploaded files     |
+| `src/lib/supabase/server.ts`                     | Supabase server clients: SSR (cookie-based) + service-role        |
+| `src/context/auth-context.tsx`                   | Reactive auth state (`isAuthenticated`) via `onAuthStateChange`   |
+| `src/app/auth/signin/page.tsx`                   | Email/password sign-in form (Supabase)                            |
+| `src/app/auth/signout/route.ts`                  | Server-side sign-out route                                        |
+| `src/lib/retrieval/query.ts`                     | Retrieval orchestration: translate + HyDE + embed + (rerank)      |
 | `src/lib/retrieval/vector-search.ts`             | pgvector cosine search (`<=>`)                                    |
 | `src/lib/retrieval/rerank.ts`                    | Deduplicate + sort candidate chunks by score                      |
 | `src/lib/retrieval/cross-encoder.ts`             | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)      |
