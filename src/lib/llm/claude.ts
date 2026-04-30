@@ -3,8 +3,7 @@ import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
 import { LLM_MAX_TOKENS } from "../config";
 import { logger } from "../logger";
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { getAnthropicClient } from "./clients";
 
 export const claudeProvider: LLMProvider = {
   name: PROVIDER.CLAUDE,
@@ -12,7 +11,7 @@ export const claudeProvider: LLMProvider = {
   async *chat({ system, messages }) {
     const lastAssistantIdx = messages.reduce((found, msg, idx) => (msg.role === "assistant" ? idx : found), -1);
 
-    const stream = client.messages.stream({
+    const stream = getAnthropicClient().messages.stream({
       model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
       max_tokens: LLM_MAX_TOKENS,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],

@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { MAX_FILE_BYTES_CLOUD } from "@/lib/config";
+
+async function computeSHA256(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export function UploadZone() {
   const [progress, setProgress] = useState<number | null>(null);
@@ -20,39 +29,58 @@ export function UploadZone() {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const baseProgress = Math.round((i / files.length) * 100);
+        // Each file occupies an equal slice of 0–100%
+        const sliceStart = Math.round((i / files.length) * 100);
+        const sliceSize = Math.round(100 / files.length);
+        const pct = (localPct: number) => sliceStart + Math.round((localPct / 100) * sliceSize);
 
         try {
+          // Step 1: compute SHA-256 (0–5% of slice)
+          setProgress(pct(0));
+          const hash = await computeSHA256(file);
+          setProgress(pct(5));
+
+          // Step 2: request signed upload URL from server
+          const prepareRes = await fetch("/api/documents/prepare", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: file.name, size: file.size, mime: file.type, hash }),
+          });
+
+          if (!prepareRes.ok) {
+            const data = await prepareRes.json().catch(() => ({}));
+            throw new Error((data as { error?: string }).error ?? `Prepare failed (${prepareRes.status})`);
+          }
+
+          const { docId, signedUrl } = (await prepareRes.json()) as { docId: string; signedUrl: string };
+          setProgress(pct(10));
+
+          // Step 3: upload directly to Supabase Storage (10–90% of slice)
           await new Promise<void>((resolve, reject) => {
-            const formData = new FormData();
-            formData.append("file", file);
+            const form = new FormData();
+            form.append("cacheControl", "3600");
+            form.append("", file); // Supabase Storage SDK format
 
             const xhr = new XMLHttpRequest();
-
             xhr.upload.onprogress = (e) => {
               if (e.lengthComputable) {
-                const fileSlice = Math.round((e.loaded / e.total) * (100 / files.length));
-                setProgress(baseProgress + fileSlice);
+                setProgress(pct(10 + Math.round((e.loaded / e.total) * 80)));
               }
             };
-
             xhr.onload = () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                resolve();
-              } else {
-                try {
-                  const body = JSON.parse(xhr.responseText);
-                  reject(new Error(body.error ?? xhr.statusText));
-                } catch {
-                  reject(new Error(xhr.statusText));
-                }
-              }
+              if (xhr.status >= 200 && xhr.status < 300) resolve();
+              else reject(new Error(`Upload failed (${xhr.status})`));
             };
-
             xhr.onerror = () => reject(new Error("Network error"));
-            xhr.open("POST", "/api/documents");
-            xhr.send(formData);
+            xhr.open("PUT", signedUrl);
+            xhr.send(form);
           });
+          setProgress(pct(90));
+
+          // Step 4: trigger indexing (A-path fallback; webhook may already handle it)
+          await fetch(`/api/documents/${docId}/index`, { method: "POST" }).catch(() => {});
+          setProgress(pct(100));
+
           success++;
         } catch (err) {
           errors.push(`${file.name}: ${err instanceof Error ? err.message : String(err)}`);
@@ -73,8 +101,13 @@ export function UploadZone() {
   );
 
   const onDropRejected = useCallback((rejections: FileRejection[]) => {
-    const names = rejections.map((r) => r.file.name).join(", ");
-    toast.error(`Unsupported file type: ${names}. Supported: .md .txt .pdf .docx`);
+    for (const { file, errors } of rejections) {
+      if (errors.some((e) => e.code === "file-too-large")) {
+        toast.error(`${file.name}: exceeds 50 KB limit`);
+      } else {
+        toast.error(`Unsupported file type: ${file.name}. Supported: .md .txt .pdf .docx`);
+      }
+    }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -86,6 +119,7 @@ export function UploadZone() {
       "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
+    maxSize: MAX_FILE_BYTES_CLOUD,
     disabled: progress !== null,
   });
 

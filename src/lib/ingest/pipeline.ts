@@ -110,6 +110,7 @@ export async function ingestBuffer(
 
 // Indexing — called by worker (local) or inline (cloud)
 export async function processDocument(docId: string, filePath: string): Promise<void> {
+  await prisma.document.update({ where: { id: docId }, data: { status: "indexing" } });
   try {
     const buffer = await readUploadedFile(filePath);
     const ext = path.extname(filePath).toLowerCase();

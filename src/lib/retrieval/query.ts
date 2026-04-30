@@ -3,21 +3,22 @@ import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
 // import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
-import { deepseekClient, openaiClient } from "../llm/clients";
+import type OpenAI from "openai";
+import { getDeepseekClient, getOpenaiClient } from "../llm/clients";
 import { RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
 import { logger } from "../logger";
 
 function resolveClient(provider?: string) {
   if (provider === "openai") {
-    return { client: openaiClient, model: process.env.OPENAI_MODEL ?? "gpt-4o-mini" };
+    return { client: getOpenaiClient(), model: process.env.OPENAI_MODEL ?? "gpt-4o-mini" };
   }
-  return { client: deepseekClient, model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat" };
+  return { client: getDeepseekClient(), model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat" };
 }
 
 async function translateQuery(
   query: string,
   targetLang: "zh" | "en",
-  client: typeof deepseekClient,
+  client: OpenAI,
   model: string,
 ): Promise<string> {
   const prompt =
@@ -36,7 +37,7 @@ async function translateQuery(
 
 async function generateHypotheticalAnswer(
   query: string,
-  client: typeof deepseekClient,
+  client: OpenAI,
   model: string,
 ): Promise<string> {
   const resp = await client.chat.completions.create({

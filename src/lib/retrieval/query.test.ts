@@ -20,11 +20,16 @@ jest.mock("@/lib/lang/detect", () => ({
   detectLang: (...args: unknown[]) => mockDetectLang(...args),
 }));
 jest.mock("@/lib/llm/clients", () => ({
-  deepseekClient: {
+  getDeepseekClient: () => ({
     chat: {
       completions: { create: (...args: unknown[]) => mockCreate(...args) },
     },
-  },
+  }),
+  getOpenaiClient: () => ({
+    chat: {
+      completions: { create: (...args: unknown[]) => mockCreate(...args) },
+    },
+  }),
 }));
 
 import { retrieve } from "./query";

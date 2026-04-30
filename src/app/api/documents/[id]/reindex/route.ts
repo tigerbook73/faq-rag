@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { processDocument } from "@/lib/ingest/pipeline";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

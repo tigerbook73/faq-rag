@@ -1,6 +1,6 @@
 import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
-import { deepseekClient as client } from "./clients";
+import { getDeepseekClient } from "./clients";
 import { LLM_MAX_TOKENS } from "../config";
 import { logger } from "../logger";
 
@@ -15,7 +15,7 @@ export const deepseekProvider: LLMProvider = {
   name: PROVIDER.DEEPSEEK,
 
   async *chat({ system, messages }) {
-    const stream = await client.chat.completions.create({
+    const stream = await getDeepseekClient().chat.completions.create({
       model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
       max_tokens: LLM_MAX_TOKENS,
       stream: true,

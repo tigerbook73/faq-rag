@@ -16,7 +16,7 @@ model Document {
   contentHash String   @unique @map("content_hash")
   lang        String   @default("unknown")
   sizeBytes   Int      @map("size_bytes")
-  status      String   @default("pending") // pending | indexed | failed
+  status      String   @default("pending") // pending | uploaded | indexing | indexed | failed
   errorMsg    String?  @map("error_msg")
   totalChunks Int?     @map("total_chunks")
   filePath    String?  @map("file_path")

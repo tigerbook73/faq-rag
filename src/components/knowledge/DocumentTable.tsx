@@ -34,10 +34,12 @@ interface Props {
   initialDocuments: Document[];
 }
 
+const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
+
 function statusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
   if (status === "indexed") return "default";
-  if (status === "pending") return "secondary";
   if (status === "failed") return "destructive";
+  if (ACTIVE_STATUSES.has(status)) return "secondary";
   return "outline";
 }
 
@@ -121,12 +123,12 @@ export function DocumentTable({ initialDocuments }: Props) {
   // Lightweight polling during indexing — fetch JSON, not a full RSC re-render.
   // router.refresh() is called only once when indexing finishes to sync RSC state.
   useEffect(() => {
-    if (!documents.some((d) => d.status === "pending")) return;
+    if (!documents.some((d) => ACTIVE_STATUSES.has(d.status))) return;
     const id = setInterval(async () => {
       const res = await fetch("/api/documents");
       const data = await res.json();
       setPolledDocuments(data.items);
-      if (!data.items.some((d: Document) => d.status === "pending")) {
+      if (!data.items.some((d: Document) => ACTIVE_STATUSES.has(d.status))) {
         router.refresh();
       }
     }, POLL_INTERVAL_MS);
@@ -240,7 +242,7 @@ export function DocumentTable({ initialDocuments }: Props) {
               <TableCell className="max-w-32 truncate font-medium sm:max-w-50">{doc.name}</TableCell>
               <TableCell className="hidden sm:table-cell">{doc.lang}</TableCell>
               <TableCell className="hidden sm:table-cell">
-                {doc.status === "pending" && doc.totalChunks
+                {doc.status === "indexing" && doc.totalChunks
                   ? `${doc._count.chunks} / ${doc.totalChunks}`
                   : doc._count.chunks}
               </TableCell>
@@ -254,14 +256,16 @@ export function DocumentTable({ initialDocuments }: Props) {
                 {new Date(doc.createdAt).toLocaleDateString()}
               </TableCell>
               <TableCell className="space-x-2 text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={reindexingId === doc.id}
-                  onClick={() => handleReindex(doc.id)}
-                >
-                  {reindexingId === doc.id ? "Reindexing…" : "Reindex"}
-                </Button>
+                {(doc.status === "indexed" || doc.status === "failed") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reindexingId === doc.id}
+                    onClick={() => handleReindex(doc.id)}
+                  >
+                    {reindexingId === doc.id ? "Reindexing…" : "Reindex"}
+                  </Button>
+                )}
                 <Button
                   variant="destructive"
                   size="sm"
