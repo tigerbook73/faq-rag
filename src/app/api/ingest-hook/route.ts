@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/client";
-import { IS_CLOUD } from "@/lib/config";
+import { config } from "@/lib/config";
 import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
 import { processDocument } from "@/lib/ingest/pipeline";
 import { logger } from "@/lib/logger";
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "already_processing" });
   }
 
-  if (IS_CLOUD) {
+  if (config.embedding.useOpenAI) {
     // Fire and forget — pg_net does not need to wait for indexing to complete
     processDocument(docId, doc.filePath).catch(async (err) => {
       logger.error({ docId, err }, "[ingest-hook] processDocument failed");

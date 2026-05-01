@@ -5,7 +5,7 @@ import { deduplicateAndSort } from "./rerank";
 import { detectLang } from "../lang/detect";
 import type OpenAI from "openai";
 import { getDeepseekClient, getOpenaiClient } from "../llm/clients";
-import { RETRIEVAL_TOP_K, RETRIEVAL_TOP_FINAL, QUERY_MAX_TOKENS } from "../config";
+import { config } from "../config";
 import { logger } from "../logger";
 
 function resolveClient(provider?: string) {
@@ -15,12 +15,7 @@ function resolveClient(provider?: string) {
   return { client: getDeepseekClient(), model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat" };
 }
 
-async function translateQuery(
-  query: string,
-  targetLang: "zh" | "en",
-  client: OpenAI,
-  model: string,
-): Promise<string> {
+async function translateQuery(query: string, targetLang: "zh" | "en", client: OpenAI, model: string): Promise<string> {
   const prompt =
     targetLang === "zh"
       ? `Translate the following query to Chinese. Return only the translation, no explanation:\n${query}`
@@ -29,17 +24,13 @@ async function translateQuery(
   const resp = await client.chat.completions.create({
     model,
     messages: [{ role: "user", content: prompt }],
-    max_tokens: QUERY_MAX_TOKENS,
+    max_tokens: config.retrieval.queryMaxTokens,
   });
 
   return resp.choices[0]?.message?.content?.trim() ?? query;
 }
 
-async function generateHypotheticalAnswer(
-  query: string,
-  client: OpenAI,
-  model: string,
-): Promise<string> {
+async function generateHypotheticalAnswer(query: string, client: OpenAI, model: string): Promise<string> {
   const resp = await client.chat.completions.create({
     model,
     messages: [
@@ -48,7 +39,7 @@ async function generateHypotheticalAnswer(
         content: `Write a brief factual answer to the following question. Answer directly, no explanation:\n${query}`,
       },
     ],
-    max_tokens: QUERY_MAX_TOKENS,
+    max_tokens: config.retrieval.queryMaxTokens,
   });
 
   return resp.choices[0]?.message?.content?.trim() ?? query;
@@ -79,9 +70,9 @@ export async function retrieve(userQuery: string, traceId?: string, provider?: s
 
   // vector search in parallel across all query vectors
   const searchResults = await Promise.all([
-    vectorSearch(embZh, RETRIEVAL_TOP_K),
-    vectorSearch(embEn, RETRIEVAL_TOP_K),
-    embHyde ? vectorSearch(embHyde, RETRIEVAL_TOP_K) : Promise.resolve([]),
+    vectorSearch(embZh, config.retrieval.topK),
+    vectorSearch(embEn, config.retrieval.topK),
+    embHyde ? vectorSearch(embHyde, config.retrieval.topK) : Promise.resolve([]),
   ]);
 
   const candidates = deduplicateAndSort(searchResults.flat());
@@ -98,7 +89,7 @@ export async function retrieve(userQuery: string, traceId?: string, provider?: s
     "vector search done",
   );
 
-  return candidates.slice(0, RETRIEVAL_TOP_FINAL);
+  return candidates.slice(0, config.retrieval.topFinal);
   // For better relevance, we can rerank the candidates with a cross-encoder, but it adds latency. Uncomment to enable.
-  // return rerankChunks(userQuery, candidates, RETRIEVAL_TOP_FINAL, traceId);
+  // return rerankChunks(userQuery, candidates, config.retrieval.topFinal, traceId);
 }

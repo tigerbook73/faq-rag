@@ -1,4 +1,4 @@
-import { HISTORY_TOKEN_BUDGET } from "../config";
+import { config } from "../config";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -7,7 +7,7 @@ function estimateTokens(text: string): number {
 }
 
 export function truncateHistory(history: Msg[]): Msg[] {
-  let budget = HISTORY_TOKEN_BUDGET;
+  let budget = config.llm.historyTokenBudget;
   const kept: Msg[] = [];
 
   for (let i = history.length - 1; i >= 0; i--) {

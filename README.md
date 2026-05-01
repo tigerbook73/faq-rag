@@ -55,12 +55,12 @@ Open [http://localhost:3000](http://localhost:3000). Sign in with the default lo
 
 ### Prerequisites
 
-| Requirement | Notes |
-|-------------|-------|
-| Vercel account + project linked | `vercel link` once in the project root |
-| Supabase Cloud project | Provides Auth, Storage, and PostgreSQL with pgvector |
-| Supabase CLI linked locally | `supabase link --project-ref <ref>` once |
-| `.env.cloud` configured | `NEXT_PUBLIC_APP_URL`, `INGEST_HOOK_SECRET`, DB connection strings |
+| Requirement                     | Notes                                                              |
+| ------------------------------- | ------------------------------------------------------------------ |
+| Vercel account + project linked | `vercel link` once in the project root                             |
+| Supabase Cloud project          | Provides Auth, Storage, and PostgreSQL with pgvector               |
+| Supabase CLI linked locally     | `supabase link --project-ref <ref>` once                           |
+| `.env.cloud` configured         | `NEXT_PUBLIC_APP_URL`, `INGEST_HOOK_SECRET`, DB connection strings |
 
 > **Without Supabase Cloud**: the Storage webhook (`/api/ingest-hook`) will not fire — files uploaded via the UI won't be indexed automatically. Manual reindex from the UI remains available.
 >

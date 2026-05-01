@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { MAX_FILE_BYTES_CLOUD } from "@/lib/config";
+import { config } from "@/lib/config";
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -119,7 +119,7 @@ export function UploadZone() {
       "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
-    maxSize: MAX_FILE_BYTES_CLOUD,
+    maxSize: config.embedding.maxBytesCloud,
     disabled: progress !== null,
   });
 

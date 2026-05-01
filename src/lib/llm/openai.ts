@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
-import { LLM_MAX_TOKENS } from "../config";
+import { config } from "../config";
 import { logger } from "../logger";
 import { getOpenaiClient } from "./clients";
 
@@ -11,7 +11,7 @@ export const openaiProvider: LLMProvider = {
   async *chat({ system, messages }) {
     const stream = await getOpenaiClient().chat.completions.create({
       model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-      max_tokens: LLM_MAX_TOKENS,
+      max_tokens: config.llm.maxTokens,
       stream: true,
       stream_options: { include_usage: true },
       messages: [{ role: "system", content: system }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
@@ -36,4 +36,3 @@ export const openaiProvider: LLMProvider = {
     }
   },
 };
-

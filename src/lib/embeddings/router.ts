@@ -1,9 +1,9 @@
-import { IS_CLOUD } from "../config";
+import { config } from "../config";
 
 const INDEXING_BATCH_SIZE = 8;
 
 export async function getEmbedding(text: string): Promise<number[]> {
-  if (IS_CLOUD) {
+  if (config.embedding.useOpenAI) {
     const { getEmbeddingOpenAI } = await import("./openai-embed");
     return getEmbeddingOpenAI(text);
   }
@@ -12,7 +12,7 @@ export async function getEmbedding(text: string): Promise<number[]> {
 }
 
 export async function getEmbeddingsBatch(texts: string[]): Promise<number[][]> {
-  if (IS_CLOUD) {
+  if (config.embedding.useOpenAI) {
     const { getEmbeddingsBatchOpenAI } = await import("./openai-embed");
     return getEmbeddingsBatchOpenAI(texts);
   }
@@ -23,7 +23,7 @@ export async function getEmbeddingsBatch(texts: string[]): Promise<number[][]> {
 // For indexing: API mode sends all texts in one request; local mode batches
 // ONNX inference in groups of INDEXING_BATCH_SIZE with event-loop yields between.
 export async function embedBatchForIndexing(texts: string[]): Promise<number[][]> {
-  if (IS_CLOUD) {
+  if (config.embedding.useOpenAI) {
     const { getEmbeddingsBatchOpenAI } = await import("./openai-embed");
     return getEmbeddingsBatchOpenAI(texts);
   }

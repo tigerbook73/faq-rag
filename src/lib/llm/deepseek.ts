@@ -1,7 +1,7 @@
 import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
 import { getDeepseekClient } from "./clients";
-import { LLM_MAX_TOKENS } from "../config";
+import { config } from "../config";
 import { logger } from "../logger";
 
 type DeepSeekUsage = {
@@ -17,7 +17,7 @@ export const deepseekProvider: LLMProvider = {
   async *chat({ system, messages }) {
     const stream = await getDeepseekClient().chat.completions.create({
       model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
-      max_tokens: LLM_MAX_TOKENS,
+      max_tokens: config.llm.maxTokens,
       stream: true,
       stream_options: { include_usage: true },
       messages: [{ role: "system", content: system }, ...messages.map((m) => ({ role: m.role, content: m.content }))],

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
-import { IS_CLOUD } from "@/lib/config";
+import { config } from "@/lib/config";
 import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
 import { processDocument } from "@/lib/ingest/pipeline";
 
@@ -26,7 +26,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ status: "already_processing" });
   }
 
-  if (IS_CLOUD) {
+  if (config.embedding.useOpenAI) {
     await processDocument(id, doc.filePath);
   } else {
     enqueueIndexing(id, doc.filePath);

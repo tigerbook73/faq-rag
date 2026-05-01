@@ -1,5 +1,5 @@
 import { truncateHistory } from "./truncate";
-import { HISTORY_TOKEN_BUDGET } from "../config";
+import { config } from "../config";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -8,7 +8,7 @@ function msg(role: "user" | "assistant", chars: number): Msg {
 }
 
 // Each char ≈ 0.25 tokens, so budget tokens * 4 = max chars
-const MAX_CHARS = HISTORY_TOKEN_BUDGET * 4;
+const MAX_CHARS = config.llm.historyTokenBudget * 4;
 
 describe("truncateHistory", () => {
   it("returns [] for empty history", () => {

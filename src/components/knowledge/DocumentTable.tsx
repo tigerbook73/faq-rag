@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { POLL_INTERVAL_MS } from "@/lib/config";
+import { config } from "@/lib/config";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,12 @@ interface DeleteDialogProps {
 
 function DeleteDialog({ open, onClose, onConfirm, deleting }: DeleteDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Delete document?</DialogTitle>
@@ -88,11 +93,7 @@ function RebuildDialog({ open, onOpenChange, onConfirm, rebuilding }: RebuildDia
         </DialogHeader>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button
-            variant="outline"
-            disabled={rebuilding}
-            onClick={onConfirm}
-          >
+          <Button variant="outline" disabled={rebuilding} onClick={onConfirm}>
             Rebuild All
           </Button>
         </DialogFooter>
@@ -131,7 +132,7 @@ export function DocumentTable({ initialDocuments }: Props) {
       if (!data.items.some((d: Document) => ACTIVE_STATUSES.has(d.status))) {
         router.refresh();
       }
-    }, POLL_INTERVAL_MS);
+    }, config.ui.pollIntervalMs);
     return () => clearInterval(id);
   }, [documents, router]);
 
@@ -283,14 +284,19 @@ export function DocumentTable({ initialDocuments }: Props) {
       <DeleteDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget); }}
+        onConfirm={() => {
+          if (deleteTarget) handleDelete(deleteTarget);
+        }}
         deleting={!!deletingId}
       />
 
       <RebuildDialog
         open={rebuildDialogOpen}
         onOpenChange={setRebuildDialogOpen}
-        onConfirm={() => { setRebuildDialogOpen(false); handleRebuildAll(); }}
+        onConfirm={() => {
+          setRebuildDialogOpen(false);
+          handleRebuildAll();
+        }}
         rebuilding={rebuilding}
       />
     </>

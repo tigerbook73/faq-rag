@@ -1,10 +1,10 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { CHUNK_SIZE, CHUNK_OVERLAP } from "../config";
+import { config } from "../config";
 import { splitTextSemantic } from "./semantic-splitter";
 
 const fixedSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: CHUNK_SIZE,
-  chunkOverlap: CHUNK_OVERLAP,
+  chunkSize: config.chunking.size,
+  chunkOverlap: config.chunking.overlap,
 });
 
 // Fixed-size fallback — used by semantic splitter internally for oversized chunks

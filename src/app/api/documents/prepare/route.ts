@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db/client";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/storage";
 import { mimeFromExt } from "@/lib/ingest/parse";
-import { MAX_FILE_BYTES_CLOUD } from "@/lib/config";
+import { config } from "@/lib/config";
 
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
 const ALLOWED_MIME_TYPES = new Set([
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Unsupported MIME type: ${mime}` }, { status: 400 });
   }
 
-  if (size > MAX_FILE_BYTES_CLOUD) {
+  if (size > config.embedding.maxBytesCloud) {
     return NextResponse.json({ error: "File exceeds 50 KB limit" }, { status: 413 });
   }
 
@@ -78,8 +78,5 @@ export async function POST(req: NextRequest) {
     data: { filePath: storagePath },
   });
 
-  return NextResponse.json(
-    { docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token },
-    { status: 201 },
-  );
+  return NextResponse.json({ docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token }, { status: 201 });
 }

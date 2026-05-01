@@ -11,8 +11,8 @@
 
 | #   | 状态 | 项目                 | 说明                                                                                                                                |
 | --- | ---- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1 | Y    | `IS_CLOUD` 命名问题  | 实际语义是 `EMBEDDING_PROVIDER === "openai"`，名称掩盖切换维度；改为直接判断 `EMBEDDING_PROVIDER` 或重命名为 `USE_OPENAI_EMBEDDING` |
-| 1.2 | Y    | `config.ts` 组织方式 | 当前是平铺的裸 export 全大写常量；可改为命名空间对象（`Config.retrieval.topK`）或按功能拆分为多个小文件                             |
+| 1.1 | ✅   | `IS_CLOUD` 命名问题  | 实际语义是 `EMBEDDING_PROVIDER === "openai"`，名称掩盖切换维度；改为直接判断 `EMBEDDING_PROVIDER` 或重命名为 `USE_OPENAI_EMBEDDING` |
+| 1.2 | ✅   | `config.ts` 组织方式 | 当前是平铺的裸 export 全大写常量；可改为命名空间对象（`Config.retrieval.topK`）或按功能拆分为多个小文件                             |
 
 ---
 

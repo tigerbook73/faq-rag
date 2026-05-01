@@ -1,10 +1,10 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { getEmbeddingsBatch } from "../embeddings/router";
-import { CHUNK_SIZE, CHUNK_OVERLAP, SEMANTIC_THRESHOLD } from "../config";
+import { config } from "../config";
 
 const fallbackSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: CHUNK_SIZE,
-  chunkOverlap: CHUNK_OVERLAP,
+  chunkSize: config.chunking.size,
+  chunkOverlap: config.chunking.overlap,
 });
 
 function sentenceSplit(text: string): string[] {
@@ -44,7 +44,7 @@ export async function splitTextSemantic(text: string): Promise<string[]> {
   const breakpoints = new Set<number>();
   for (let i = 0; i < embeddings.length - 1; i++) {
     const sim = cosineSimilarity(embeddings[i], embeddings[i + 1]);
-    if (sim < SEMANTIC_THRESHOLD) {
+    if (sim < config.chunking.semanticThreshold) {
       breakpoints.add(i + 1); // break before sentence i+1
     }
   }
@@ -64,7 +64,7 @@ export async function splitTextSemantic(text: string): Promise<string[]> {
   // Split any candidate chunk that exceeds CHUNK_SIZE with the fixed splitter
   const finalChunks: string[] = [];
   for (const chunk of candidateChunks) {
-    if (chunk.length > CHUNK_SIZE) {
+    if (chunk.length > config.chunking.size) {
       const sub = await fallbackSplitter.splitText(chunk);
       finalChunks.push(...sub);
     } else {

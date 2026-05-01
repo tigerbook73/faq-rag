@@ -12,8 +12,9 @@ import { logger } from "../logger";
 async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
   const embeddings = await embedBatchForIndexing(chunks);
   await prisma.$transaction(
-    chunks.map((text, i) =>
-      prisma.$executeRaw`
+    chunks.map(
+      (text, i) =>
+        prisma.$executeRaw`
         INSERT INTO chunks (id, document_id, ord, content, lang, embedding, created_at)
         VALUES (
           ${crypto.randomUUID()}::uuid,
@@ -118,10 +119,7 @@ export async function processDocument(docId: string, filePath: string): Promise<
     const lang = detectLang(text);
 
     // splitText and deleteMany are independent — run in parallel
-    const [chunks] = await Promise.all([
-      splitText(text),
-      prisma.chunk.deleteMany({ where: { documentId: docId } }),
-    ]);
+    const [chunks] = await Promise.all([splitText(text), prisma.chunk.deleteMany({ where: { documentId: docId } })]);
 
     // totalChunks update and embedding are independent — run in parallel
     await Promise.all([

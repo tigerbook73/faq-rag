@@ -51,13 +51,13 @@ class VercelEnvManager {
     for (const key of allKeys) {
       if (SYSTEM_VAR.test(key)) continue;
       const vVal = this.effective(vercel, key);
-      const cVal = this.effective(cloud,  key);
+      const cVal = this.effective(cloud, key);
       if (vVal === undefined && cVal === undefined) continue;
 
       let status: string;
-      if      (vVal !== undefined && cVal === undefined) status = "← only Vercel";
+      if (vVal !== undefined && cVal === undefined) status = "← only Vercel";
       else if (vVal === undefined && cVal !== undefined) status = "→ not pushed";
-      else if (vVal !== cVal)                            status = "≠  differs";
+      else if (vVal !== cVal) status = "≠  differs";
       else continue;
 
       rows.push({
@@ -72,8 +72,8 @@ class VercelEnvManager {
 
   private printTable(rows: Row[]): void {
     const LOCAL_HDR = ".env+cloud";
-    const W_KEY = Math.min(Math.max("Key".length,     ...rows.map((r) => r.key.length)),   34);
-    const W_VER = Math.min(Math.max("Vercel".length,  ...rows.map((r) => r.vDisp.length)), 40);
+    const W_KEY = Math.min(Math.max("Key".length, ...rows.map((r) => r.key.length)), 34);
+    const W_VER = Math.min(Math.max("Vercel".length, ...rows.map((r) => r.vDisp.length)), 40);
     const W_LOC = Math.min(Math.max(LOCAL_HDR.length, ...rows.map((r) => r.cDisp.length)), 40);
     const header = `${this.padR("Key", W_KEY)}  ${this.padR("Vercel", W_VER)}  ${this.padR(LOCAL_HDR, W_LOC)}  Status`;
     console.log("\n" + header);
@@ -85,11 +85,9 @@ class VercelEnvManager {
   }
 
   private pullVercel(): void {
-    execFileSync(
-      "vercel",
-      ["env", "pull", ".env.vercel", "--environment", "production", "--yes"],
-      { stdio: "inherit" },
-    );
+    execFileSync("vercel", ["env", "pull", ".env.vercel", "--environment", "production", "--yes"], {
+      stdio: "inherit",
+    });
   }
 
   pull(): void {
@@ -114,7 +112,7 @@ class VercelEnvManager {
     console.log("Fetching current Vercel production state...\n");
     this.pullVercel();
 
-    const rows   = this.computeDiff(this.parseEnvFile(".env.vercel"), cloud);
+    const rows = this.computeDiff(this.parseEnvFile(".env.vercel"), cloud);
     const toPush = rows.filter((r) => r.status !== "← only Vercel");
 
     if (toPush.length === 0) {
@@ -126,25 +124,25 @@ class VercelEnvManager {
     console.log(`Pushing ${toPush.length} changed var(s) to Vercel production...\n`);
 
     const clean = (s: string) =>
-      (s ?? "").split("\n").filter((l) => l.trim() && !l.includes("<claude-code-hint")).join(" | ");
+      (s ?? "")
+        .split("\n")
+        .filter((l) => l.trim() && !l.includes("<claude-code-hint"))
+        .join(" | ");
 
-    let ok = 0, fail = 0;
+    let ok = 0,
+      fail = 0;
     for (const { key } of toPush) {
-      const value    = cloud.get(key) ?? "";
+      const value = cloud.get(key) ?? "";
       const baseArgs = ["production", "--value", value, "--no-sensitive", "--yes"];
 
       let result = spawnSync("vercel", ["env", "add", key, ...baseArgs], { encoding: "utf8" });
 
-      const alreadyExists =
-        result.status !== 0 &&
-        (result.stdout + result.stderr).includes("already exists");
+      const alreadyExists = result.status !== 0 && (result.stdout + result.stderr).includes("already exists");
 
       if (alreadyExists) {
-        result = spawnSync(
-          "vercel",
-          ["env", "update", key, "production", "--value", value, "--yes"],
-          { encoding: "utf8" },
-        );
+        result = spawnSync("vercel", ["env", "update", key, "production", "--value", value, "--yes"], {
+          encoding: "utf8",
+        });
       }
 
       if (result.status === 0) {
@@ -183,14 +181,15 @@ class VercelEnvManager {
 // ── CLI ───────────────────────────────────────────────────────────────────────
 const cli = cac("vercel-env");
 
-cli.command("pull",   "Pull Vercel production vars → .env.vercel, then diff with .env + .env.cloud")
-   .action(() => new VercelEnvManager().pull());
+cli
+  .command("pull", "Pull Vercel production vars → .env.vercel, then diff with .env + .env.cloud")
+  .action(() => new VercelEnvManager().pull());
 
-cli.command("push",   "Diff then push only changed vars to Vercel production")
-   .action(() => new VercelEnvManager().push());
+cli
+  .command("push", "Diff then push only changed vars to Vercel production")
+  .action(() => new VercelEnvManager().push());
 
-cli.command("delete", "Interactively delete a Vercel production env var")
-   .action(() => new VercelEnvManager().delete());
+cli.command("delete", "Interactively delete a Vercel production env var").action(() => new VercelEnvManager().delete());
 
 cli.help();
 cli.parse();

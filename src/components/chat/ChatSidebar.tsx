@@ -258,7 +258,10 @@ export function ChatSidebarContent() {
                   isEditing={editingId === s.id}
                   editValue={editValue}
                   inputRef={inputRef}
-                  onNavigate={() => { router.push(`/chat/${s.id}`); closeOnMobile(); }}
+                  onNavigate={() => {
+                    router.push(`/chat/${s.id}`);
+                    closeOnMobile();
+                  }}
                   onDoubleClick={() => startEdit(s.id, s.title)}
                   onEditChange={setEditValue}
                   onCommit={() => void commitEdit(s.id)}

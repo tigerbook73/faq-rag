@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { LLMProvider } from "./types";
 import { PROVIDER } from "./providers";
-import { LLM_MAX_TOKENS } from "../config";
+import { config } from "../config";
 import { logger } from "../logger";
 import { getAnthropicClient } from "./clients";
 
@@ -13,7 +13,7 @@ export const claudeProvider: LLMProvider = {
 
     const stream = getAnthropicClient().messages.stream({
       model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
-      max_tokens: LLM_MAX_TOKENS,
+      max_tokens: config.llm.maxTokens,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       messages: messages.map((m, i) => {
         const addCache = i === lastAssistantIdx || (i === messages.length - 1 && m.role === "user");
