@@ -43,10 +43,10 @@
 
 | #   | 状态 | 项目                                   | 说明                                                                                                                                |
 | --- | ---- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 4.1 | N    | Supabase 浏览器客户端集中化            | `TopBar.tsx` 和 `signin/page.tsx` 各自内联 `createBrowserClient`；提取到 `src/lib/supabase/browser.ts`                              |
-| 4.2 | N    | `filePath` 字段二义性                  | 本地模式存 FS 路径，云模式存 Storage 对象路径，同字段两种语义；可重命名为 `fileRef` 并在 schema 层注释说明                          |
-| 4.3 | N    | `retrieval/query.ts` provider 逻辑重复 | `resolveClient()` 独立维护客户端选择，与 `llm/router.ts` 并行不复用；translate/HyDE 始终走 DeepSeek/OpenAI，与主 chat provider 脱钩 |
-| 4.4 | N    | Rate limiting 跨实例评估               | 当前为进程内内存实现，多进程/云部署时失效；评估是否需要升级为 Redis 或数据库级方案                                                  |
+| 4.1 | ✅   | Supabase 浏览器客户端集中化            | `TopBar.tsx` 和 `signin/page.tsx` 各自内联 `createBrowserClient`；提取到 `src/lib/supabase/browser.ts`                              |
+| 4.2 | ✅   | `filePath` 字段二义性                  | 本地模式存 FS 路径，云模式存 Storage 对象路径，同字段两种语义；重命名为 `fileRef`（DB 列 `file_path` 不变，无需迁移）               |
+| 4.3 | ✅   | `retrieval/query.ts` provider 逻辑重复 | 将 `resolveClient()` 提取为 `resolveQueryClient()` 移至 `llm/clients.ts`，与客户端单例同处                                          |
+| 4.4 | ✅   | Rate limiting 删除                     | 进程内内存实现在多进程/云部署下无效；直接删除 `rate-limit.ts` 及 `/api/chat` 中的限速逻辑                                           |
 | 4.5 | N    | LLM provider 重复模式观察              | `claude.ts` / `deepseek.ts` / `openai.ts` 有相似的 token 流循环和错误处理；目前量少不急于抽象，随 provider 增加再评估               |
 | 4.6 | N    | `ingest/pipeline.ts` 扩展性            | parse/split/embed/store 目前逻辑清晰；若后续阶段变复杂（错误重试、多格式分支）再考虑引入 pipeline step 接口                         |
 

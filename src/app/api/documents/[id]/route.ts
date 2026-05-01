@@ -10,8 +10,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (doc.filePath) {
-    await deleteUploadedFile(doc.filePath).catch(() => {});
+  if (doc.fileRef) {
+    await deleteUploadedFile(doc.fileRef).catch(() => {});
   }
 
   await prisma.document.delete({ where: { id } });

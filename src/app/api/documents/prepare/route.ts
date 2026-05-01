@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
   await prisma.document.update({
     where: { id: doc.id },
-    data: { filePath: storagePath },
+    data: { fileRef: storagePath },
   });
 
   return NextResponse.json({ docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token }, { status: 201 });

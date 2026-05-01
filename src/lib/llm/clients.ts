@@ -22,3 +22,10 @@ export function getAnthropicClient(): Anthropic {
     apiKey: process.env.ANTHROPIC_API_KEY ?? "",
   }));
 }
+
+export function resolveQueryClient(provider?: string): { client: OpenAI; model: string } {
+  if (provider === "openai") {
+    return { client: getOpenaiClient(), model: process.env.OPENAI_MODEL ?? "gpt-4o-mini" };
+  }
+  return { client: getDeepseekClient(), model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat" };
+}

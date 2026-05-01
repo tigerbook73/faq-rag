@@ -19,7 +19,7 @@ model Document {
   status      String   @default("pending") // pending | uploaded | indexing | indexed | failed
   errorMsg    String?  @map("error_msg")
   totalChunks Int?     @map("total_chunks")
-  filePath    String?  @map("file_path")
+  fileRef     String?  @map("file_path")
   createdAt   DateTime @default(now()) @map("created_at")
   chunks      Chunk[]
 

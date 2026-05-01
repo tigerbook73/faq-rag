@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
   logger.info({ docId }, "[ingest-hook] webhook received");
 
   const doc = await prisma.document.findUnique({ where: { id: docId } });
-  if (!doc?.filePath) {
-    logger.warn({ docId }, "[ingest-hook] document not found or missing filePath");
-    return NextResponse.json({ error: "Document not found or missing filePath" }, { status: 404 });
+  if (!doc?.fileRef) {
+    logger.warn({ docId }, "[ingest-hook] document not found or missing fileRef");
+    return NextResponse.json({ error: "Document not found or missing fileRef" }, { status: 404 });
   }
 
   // Idempotent: only one of A-path or B-path wins this update
@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
 
   if (config.embedding.useOpenAI) {
     // Fire and forget — pg_net does not need to wait for indexing to complete
-    processDocument(docId, doc.filePath).catch(async (err) => {
+    processDocument(docId, doc.fileRef).catch(async (err) => {
       logger.error({ docId, err }, "[ingest-hook] processDocument failed");
       await prisma.document
         .update({ where: { id: docId }, data: { status: "failed", errorMsg: String(err) } })
         .catch(() => {});
     });
   } else {
-    enqueueIndexing(docId, doc.filePath);
+    enqueueIndexing(docId, doc.fileRef);
   }
 
   logger.info({ docId }, "[ingest-hook] queued for indexing");

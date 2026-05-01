@@ -52,7 +52,7 @@ export async function ingestFile(filePath: string): Promise<string> {
       contentHash,
       sizeBytes,
       status: "pending",
-      filePath,
+      fileRef: filePath,
     },
   });
 
@@ -103,7 +103,7 @@ export async function ingestBuffer(
   const storagePath = await saveUploadedFile(buffer, doc.id, fileName);
   await prisma.document.update({
     where: { id: doc.id },
-    data: { filePath: storagePath },
+    data: { fileRef: storagePath },
   });
 
   return { docId: doc.id, filePath: storagePath };

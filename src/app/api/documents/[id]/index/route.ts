@@ -12,7 +12,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (!doc.filePath) {
+  if (!doc.fileRef) {
     return NextResponse.json({ error: "File not yet uploaded" }, { status: 422 });
   }
 
@@ -27,9 +27,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (config.embedding.useOpenAI) {
-    await processDocument(id, doc.filePath);
+    await processDocument(id, doc.fileRef);
   } else {
-    enqueueIndexing(id, doc.filePath);
+    enqueueIndexing(id, doc.fileRef);
   }
 
   return NextResponse.json({ status: "queued" });

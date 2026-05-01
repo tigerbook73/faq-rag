@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { retrieve } from "@/lib/retrieval/query";
 import { getProvider } from "@/lib/llm/router";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { truncateHistory } from "@/lib/llm/truncate";
 import { logger } from "@/lib/logger";
 import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/schemas/chat";
@@ -14,18 +13,6 @@ const SYSTEM_PROMPT = `You are an FAQ assistant that answers strictly based on t
 - After each key claim, add a citation marker [^n] where n matches the snippet number in context.`;
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
-  const { allowed, retryAfterMs } = checkRateLimit(`chat:${ip}`, 10, 60_000);
-  if (!allowed) {
-    return NextResponse.json(
-      { error: "Too many requests, please slow down." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
-      },
-    );
-  }
-
   let body: ChatRequestInput;
   try {
     body = ChatRequestInputSchema.parse(await req.json());
