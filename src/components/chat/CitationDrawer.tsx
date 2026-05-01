@@ -3,15 +3,9 @@
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import type { Citation } from "@/lib/schemas/session";
 
-export interface Citation {
-  id: number;
-  documentId: string;
-  documentName: string;
-  chunkId: string;
-  preview: string;
-  score: number;
-}
+export type { Citation };
 
 interface Props {
   open: boolean;

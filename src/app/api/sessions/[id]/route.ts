@@ -1,20 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { Prisma } from "@/generated/prisma";
-
-const patchSchema = z.object({
-  title: z.string().min(1).max(100).optional(),
-  messages: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string().max(32000),
-        citations: z.preprocess((v) => (Array.isArray(v) ? v : undefined), z.array(z.unknown()).optional()),
-      }),
-    )
-    .optional(),
-});
+import { UpdateSessionInputSchema } from "@/lib/schemas/session";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -31,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const parsed = patchSchema.safeParse(await req.json());
+  const parsed = UpdateSessionInputSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }

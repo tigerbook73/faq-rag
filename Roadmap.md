@@ -18,12 +18,13 @@
 
 ### 二、模块职责拆分
 
-| #   | 状态 | 项目                                    | 说明                                                                                                     |
-| --- | ---- | --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 2.1 | Y    | `chat-storage.ts` 关注点分离            | API 调用（session CRUD）与 localStorage 操作混杂；拆成两个独立模块                                       |
-| 2.2 | Y    | `chat-storage.ts` localStorage 接口升级 | 当前只暴露 key 常量；改为提供对象级读写接口（`lastChat.get()` / `lastChat.set(id)`）                     |
-| 2.3 | N    | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；可拆出 `SessionItem` / `SessionActions` 子组件 |
-| 2.4 | N    | `DocumentTable.tsx`（298 行）拆分       | 文档列表、状态轮询、删除确认、reindex 操作在同一组件；可拆出 `DocumentRow` / `DocumentActions`           |
+| #   | 状态 | 项目                                    | 说明                                                                                                                                                                                         |
+| --- | ---- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1 | ✅   | `chat-storage.ts` 关注点分离            | API 调用（session CRUD）与 localStorage 操作混杂；拆成两个独立模块                                                                                                                           |
+| 2.2 | ✅   | `chat-storage.ts` localStorage 接口升级 | 当前只暴露 key 常量；改为提供对象级读写接口（`lastChat.get()` / `lastChat.set(id)`）                                                                                                         |
+| 2.3 | N    | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；可拆出 `SessionItem` / `SessionActions` 子组件                                                                                     |
+| 2.4 | N    | `DocumentTable.tsx`（298 行）拆分       | 文档列表、状态轮询、删除确认、reindex 操作在同一组件；可拆出 `DocumentRow` / `DocumentActions`                                                                                               |
+| 2.5 | N    | `DocumentTable.tsx` 上传后立即刷新      | 当前轮询只在**所有**文档 indexing 完成后才调用 `router.refresh()`；若有旧文档正在 indexing，新上传文档需等旧文档全部完成才触发 RSC 刷新。应改为：每当某个文档从 active → done 时立即刷新一次 |
 
 ---
 
@@ -77,3 +78,4 @@
 - 脚本类的命令是否需要添加测试？怎么添加？
 - config.ts文件，全部红全局大写变量，感觉不太合适，是否使用config类来管理这些变量更好？
 - 评估一下，本项目还有那些可以重构地方
+- DocumentTable.tsx完善，在上载完成后，就自动刷新一次，不要等到indexing完成才刷新

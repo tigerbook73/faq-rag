@@ -2,13 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  fetchSessions,
-  apiDeleteSession,
-  updateSessionTitle,
-  getLastChatId,
-  type ChatSession,
-} from "@/lib/chat-storage";
+import { fetchSessions, apiDeleteSession, updateSessionTitle, type ChatSession } from "@/lib/session-api";
+import { lastChat } from "@/lib/last-chat";
 import { CHAT_EVENTS } from "@/lib/constants";
 import {
   SidebarContent,
@@ -26,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SquarePen, Download, Info, BookOpen, MessageSquare } from "lucide-react";
 import Link from "next/link";
-import { fetchSession } from "@/lib/chat-storage";
+import { fetchSession } from "@/lib/session-api";
 
 function relativeDate(ts: number): string {
   const diff = Date.now() - ts;
@@ -121,7 +116,7 @@ export function ChatSidebarContent() {
       window.addEventListener(CHAT_EVENTS.LAST_CHANGED, onStoreChange);
       return () => window.removeEventListener(CHAT_EVENTS.LAST_CHANGED, onStoreChange);
     },
-    () => getLastChatId(),
+    () => lastChat.get(),
     () => null,
   );
   const [editingId, setEditingId] = useState<string | null>(null);

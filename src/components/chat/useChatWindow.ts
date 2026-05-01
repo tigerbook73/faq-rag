@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type Dispatch, type SetStateAction } from "react";
 import { type AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { setLastChatId, upsertSession, type Message, type ChatSession } from "@/lib/chat-storage";
+import { upsertSession, type Message, type ChatSession } from "@/lib/session-api";
+import { lastChat } from "@/lib/last-chat";
 import { STORAGE_KEYS, CHAT_EVENTS } from "@/lib/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
@@ -125,7 +126,7 @@ export function useStreamingChat({
         s.title === "New Chat" ? (updated.find((m) => m.role === "user")?.content.slice(0, 60) ?? "New Chat") : s.title;
       const next: ChatSession = { ...s, id: idToUse, title, messages: updated, updatedAt: now };
       setSession(next);
-      setLastChatId(idToUse);
+      lastChat.set(idToUse);
       await upsertSession(next);
       window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
     },

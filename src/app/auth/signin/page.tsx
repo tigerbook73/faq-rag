@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { lastChat } from "@/lib/last-chat";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export default function SignInPage() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    sessionStorage.removeItem(STORAGE_KEYS.LAST_CHAT);
+    lastChat.clear();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

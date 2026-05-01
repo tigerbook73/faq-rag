@@ -6,7 +6,8 @@ import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { setLastChatId, type Message, type ChatSession } from "@/lib/chat-storage";
+import { type Message, type ChatSession } from "@/lib/session-api";
+import { lastChat } from "@/lib/last-chat";
 import { CHAT_EVENTS } from "@/lib/constants";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
@@ -42,7 +43,7 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       router.replace("/chat/new");
       return;
     }
-    setLastChatId(chatId);
+    lastChat.set(chatId);
     window.dispatchEvent(new CustomEvent(CHAT_EVENTS.LAST_CHANGED));
   }, [chatId, initialSession, router]);
 

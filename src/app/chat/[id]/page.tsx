@@ -1,6 +1,6 @@
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { prisma } from "@/lib/db/client";
-import type { ChatSession, Message } from "@/lib/chat-storage";
+import type { ChatSession, Message } from "@/lib/session-api";
 import type { Citation } from "@/components/chat/CitationDrawer";
 
 export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {

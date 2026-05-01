@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import crypto from "crypto";
 import { retrieve } from "@/lib/retrieval/query";
 import { getProvider } from "@/lib/llm/router";
-import { PROVIDER } from "@/lib/llm/providers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { truncateHistory } from "@/lib/llm/truncate";
 import { logger } from "@/lib/logger";
-
-const bodySchema = z.object({
-  question: z.string().min(1).max(4000),
-  provider: z.enum([PROVIDER.DEEPSEEK, PROVIDER.OPENAI, PROVIDER.CLAUDE]).default(PROVIDER.DEEPSEEK),
-  history: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string().max(8000),
-      }),
-    )
-    .max(50)
-    .default([]),
-});
+import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/schemas/chat";
 
 const SYSTEM_PROMPT = `You are an FAQ assistant that answers strictly based on the provided knowledge snippets.
 - Only use information from <context>. Do not fabricate answers.
@@ -41,9 +26,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: z.infer<typeof bodySchema>;
+  let body: ChatRequestInput;
   try {
-    body = bodySchema.parse(await req.json());
+    body = ChatRequestInputSchema.parse(await req.json());
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 400,
