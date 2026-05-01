@@ -45,6 +45,7 @@ Next.js Route Handlers (src/app/api/)
   ├── GET/POST /api/documents               ← list, upload + async index
   ├── GET/DELETE /api/documents/[id]
   ├── POST /api/documents/[id]/reindex
+  ├── POST /api/ingest-hook                 ← Supabase Storage webhook (pg_net trigger → index doc)
   ├── GET/POST /api/sessions                ← session list CRUD
   ├── GET/PATCH/DELETE /api/sessions/[id]   ← single session CRUD
   └── GET /api/health
@@ -195,7 +196,7 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 
 | Path                                             | Purpose                                                           |
 | ------------------------------------------------ | ----------------------------------------------------------------- |
-| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about) |
+| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about, /api/ingest-hook) |
 | `src/app/layout.tsx`                             | Root layout — async, reads session, passes isAuthenticated        |
 | `src/app/providers.tsx`                          | Client shell — TopBar + AppSidebar + contexts + TooltipProvider   |
 | `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval + LLM streaming (SSE)                   |
@@ -243,5 +244,7 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 | `src/components/chat/CitationDrawer.tsx`         | Bottom drawer for citation detail view                            |
 | `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, inline citation superscripts        |
 | `src/components/chat/ProviderSelect.tsx`         | Provider dropdown (Claude + DeepSeek both selectable)             |
+| `src/app/api/ingest-hook/route.ts`               | Supabase Storage webhook — validates secret, triggers indexing    |
+| `scripts/setup-webhook.ts`                       | CLI to read/write `app.ingest_config` (hook_url, hook_secret)     |
 | `prisma/schema.prisma`                           | DB schema (Document, Chunk, Session, SessionMessage)              |
 | `jest.config.ts`                                 | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)        |
