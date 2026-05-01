@@ -5,8 +5,8 @@
  * Usage:
  *   tsx scripts/setup-webhook.ts --update           Apply hook settings to local DB
  *   tsx scripts/setup-webhook.ts --query            Show current hook settings in local DB
- *   tsx scripts/setup-webhook.ts --prod --update    Print UPDATE SQL for Supabase Dashboard
- *   tsx scripts/setup-webhook.ts --prod --query     Print SELECT SQL for Supabase Dashboard
+ *   tsx scripts/setup-webhook.ts --prod --update    Apply hook settings to remote DB via supabase db psql
+ *   tsx scripts/setup-webhook.ts --prod --query     Query hook settings from remote DB via supabase db psql
  *
  * Env files:
  *   Local : .env + .env.development.local  (INGEST_HOOK_SECRET)
@@ -14,6 +14,9 @@
  */
 
 import { execSync } from "child_process";
+import { writeFileSync, unlinkSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 import { config } from "dotenv";
 
 const isProd   = process.argv.includes("--prod");
@@ -27,13 +30,13 @@ if (isHelp || (!isUpdate && !isQuery)) {
 Usage:
   pnpm hook:set          Apply hook settings to local DB
   pnpm hook:query        Show current hook settings in local DB
-  pnpm hook:prod:set     Print UPDATE SQL for Supabase Dashboard
-  pnpm hook:prod:query   Print SELECT SQL for Supabase Dashboard
+  pnpm hook:prod:set     Apply hook settings to remote DB (via supabase db psql)
+  pnpm hook:prod:query   Query hook settings from remote DB (via supabase db psql)
 
 Flags:
   --update   Apply / set the config values
   --query    Show current config values
-  --prod     Production mode: read .env.cloud, print SQL instead of executing
+  --prod     Production mode: read .env.cloud, execute via supabase db psql
   --help     Show this help
   `);
   process.exit(0);
@@ -51,6 +54,20 @@ function execLocal(sql: string) {
     `docker exec ${CONTAINER} psql "host=127.0.0.1 user=postgres dbname=postgres" -c "${sql.replace(/"/g, '\\"')}"`,
     { stdio: "inherit" },
   );
+}
+
+// ── remote helper ─────────────────────────────────────────────────────────────
+// Executes SQL against the linked Supabase project via `supabase db query --linked`.
+// Uses a temp file to avoid shell-escaping issues with single quotes in SQL values.
+// Requires: supabase CLI installed + project linked (`supabase link`).
+function execRemote(sql: string) {
+  const tmp = join(tmpdir(), `supabase-hook-${Date.now()}.sql`);
+  writeFileSync(tmp, sql);
+  try {
+    execSync(`supabase db query --linked --output table -f "${tmp}"`, { stdio: "inherit" });
+  } finally {
+    unlinkSync(tmp);
+  }
 }
 
 // ── SQL templates ─────────────────────────────────────────────────────────────
@@ -71,8 +88,8 @@ const QUERY_SQL =
 // ── execute ───────────────────────────────────────────────────────────────────
 if (isQuery) {
   if (isProd) {
-    console.log("Paste the following SQL into Supabase Dashboard → SQL Editor:\n");
-    console.log(QUERY_SQL);
+    console.log("Querying remote database...\n");
+    execRemote(QUERY_SQL);
   } else {
     console.log("Current webhook settings in local database:\n");
     execLocal(QUERY_SQL);
@@ -86,8 +103,10 @@ if (isUpdate) {
   }
 
   if (isProd) {
-    console.log("Paste the following SQL into Supabase Dashboard → SQL Editor:\n");
-    console.log(UPDATE_SQL);
+    console.log("Applying to remote database...\n");
+    execRemote(UPDATE_SQL);
+    console.log("\nVerifying...");
+    execRemote(QUERY_SQL);
   } else {
     console.log(`Applying to local database (${CONTAINER})...`);
     execLocal(UPDATE_SQL);

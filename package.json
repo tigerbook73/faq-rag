@@ -23,6 +23,7 @@
     "prisma": "prisma",
     "db:migrate": "supabase migration up && prisma migrate deploy",
     "db:reset": "supabase db reset && prisma migrate deploy && pnpm hook:set",
+    "deploy:remote": "supabase db push && prisma migrate deploy && pnpm hook:prod:set",
     "db:studio": "prisma studio",
     "sb:start": "supabase start",
     "sb:stop": "supabase stop",
