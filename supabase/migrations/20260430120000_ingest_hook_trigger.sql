@@ -44,7 +44,7 @@ BEGIN
     headers := jsonb_build_object(
                  'Content-Type',     'application/json',
                  'x-webhook-secret', COALESCE(hook_secret, '')),
-    body    := jsonb_build_object('docId', split_part(NEW.name, '/', 2))::text
+    body    := jsonb_build_object('docId', split_part(NEW.name, '/', 2))
   );
 
   RETURN NEW;

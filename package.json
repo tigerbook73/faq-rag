@@ -22,7 +22,7 @@
     "hook:prod:query": "tsx scripts/setup-webhook.ts --prod --query",
     "prisma": "prisma",
     "db:migrate": "supabase migration up && prisma migrate deploy",
-    "db:reset": "supabase db reset && prisma migrate deploy",
+    "db:reset": "supabase db reset && prisma migrate deploy && pnpm hook:set",
     "db:studio": "prisma studio",
     "sb:start": "supabase start",
     "sb:stop": "supabase stop",
