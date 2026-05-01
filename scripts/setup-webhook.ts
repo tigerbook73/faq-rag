@@ -15,8 +15,8 @@
 
 import { execSync } from "child_process";
 import { writeFileSync, unlinkSync } from "fs";
-import { join } from "path";
 import { tmpdir } from "os";
+import { join } from "path";
 import { config } from "dotenv";
 
 const isProd   = process.argv.includes("--prod");
@@ -46,29 +46,20 @@ Flags:
 config({ path: ".env", override: false });
 config({ path: isProd ? ".env.cloud" : ".env.development.local", override: true });
 
-// ── local docker helper ───────────────────────────────────────────────────────
-const CONTAINER = "supabase_db_faq-rag";
-// TCP from 127.0.0.1 inside container uses trust auth — no password needed.
-function execLocal(sql: string) {
-  execSync(
-    `docker exec ${CONTAINER} psql "host=127.0.0.1 user=postgres dbname=postgres" -c "${sql.replace(/"/g, '\\"')}"`,
-    { stdio: "inherit" },
-  );
-}
-
-// ── remote helper ─────────────────────────────────────────────────────────────
-// Executes SQL against the linked Supabase project via `supabase db query --linked`.
+// ── DB query helper ───────────────────────────────────────────────────────────
 // Uses a temp file to avoid shell-escaping issues with single quotes in SQL values.
-// Requires: supabase CLI installed + project linked (`supabase link`).
-function execRemote(sql: string) {
+function execQuery(sql: string, target: "--local" | "--linked") {
   const tmp = join(tmpdir(), `supabase-hook-${Date.now()}.sql`);
   writeFileSync(tmp, sql);
   try {
-    execSync(`supabase db query --linked --output table -f "${tmp}"`, { stdio: "inherit" });
+    execSync(`supabase db query ${target} --output table -f "${tmp}"`, { stdio: "inherit" });
   } finally {
     unlinkSync(tmp);
   }
 }
+
+const execLocal  = (sql: string) => execQuery(sql, "--local");
+const execRemote = (sql: string) => execQuery(sql, "--linked");
 
 // ── SQL templates ─────────────────────────────────────────────────────────────
 const appUrl     = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
@@ -77,10 +68,11 @@ const hookUrl    = isProd
   : "http://host.docker.internal:3000/api/ingest-hook";
 const hookSecret = process.env.INGEST_HOOK_SECRET ?? "";
 
-const UPDATE_SQL = [
-  `UPDATE app.ingest_config SET value = '${hookUrl}'    WHERE key = 'hook_url';`,
-  `UPDATE app.ingest_config SET value = '${hookSecret}' WHERE key = 'hook_secret';`,
-].join("\n");
+const UPDATE_SQL = `
+UPDATE app.ingest_config AS t SET value = v.value
+FROM (VALUES ('hook_url', '${hookUrl}'), ('hook_secret', '${hookSecret}')) AS v(key, value)
+WHERE t.key = v.key;
+`.trim();
 
 const QUERY_SQL =
   "SELECT key, value FROM app.ingest_config ORDER BY key;";
@@ -108,7 +100,7 @@ if (isUpdate) {
     console.log("\nVerifying...");
     execRemote(QUERY_SQL);
   } else {
-    console.log(`Applying to local database (${CONTAINER})...`);
+    console.log("Applying to local database...");
     execLocal(UPDATE_SQL);
     console.log("\nVerifying...");
     execLocal(QUERY_SQL);
