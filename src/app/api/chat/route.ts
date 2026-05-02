@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { retrieve } from "@/lib/retrieval/query";
 import { sanitizeChunkContent } from "@/lib/retrieval/utils";
@@ -13,10 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     body = ChatRequestInputSchema.parse(await req.json());
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json({ error: String(err) }, { status: 400 });
   }
 
   const { question, provider: providerName, history } = body;
