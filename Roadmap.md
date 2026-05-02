@@ -17,13 +17,13 @@
 
 ### 二、模块职责拆分
 
-| #   | 状态 | 项目                                    | 说明                                                                                                                                                                                         |
-| --- | ---- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.1 | ✅   | `chat-storage.ts` 关注点分离            | API 调用（session CRUD）与 localStorage 操作混杂；拆成两个独立模块                                                                                                                           |
-| 2.2 | ✅   | `chat-storage.ts` localStorage 接口升级 | 当前只暴露 key 常量；改为提供对象级读写接口（`lastChat.get()` / `lastChat.set(id)`）                                                                                                         |
-| 2.3 | ✅   | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；已拆出 `SessionItem` 组件和 `useChatSessions` hook |
-| 2.4 | N    | `DocumentTable.tsx`（298 行）拆分       | 文档列表、状态轮询、删除确认、reindex 操作在同一组件；可拆出 `DocumentRow` / `DocumentActions`                                                                                               |
-| 2.5 | N    | `DocumentTable.tsx` 上传后立即刷新      | 当前轮询只在**所有**文档 indexing 完成后才调用 `router.refresh()`；若有旧文档正在 indexing，新上传文档需等旧文档全部完成才触发 RSC 刷新。应改为：每当某个文档从 active → done 时立即刷新一次 |
+| #   | 状态 | 项目                                    | 说明                                                                                                                           |
+| --- | ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 2.1 | ✅   | `chat-storage.ts` 关注点分离            | API 调用（session CRUD）与 localStorage 操作混杂；拆成两个独立模块                                                             |
+| 2.2 | ✅   | `chat-storage.ts` localStorage 接口升级 | 当前只暴露 key 常量；改为提供对象级读写接口（`lastChat.get()` / `lastChat.set(id)`）                                           |
+| 2.3 | ✅   | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；已拆出 `SessionItem` 组件和 `useChatSessions` hook                   |
+| 2.4 | ✅   | `DocumentTable.tsx`（298 行）拆分       | 文档列表、状态轮询、删除确认、reindex 操作在同一组件；已拆出 `DocumentRow` / `DocumentDialogs` 及 `useDocumentManagement` hook |
+| 2.5 | ✅   | `DocumentTable.tsx` 上传后立即刷新      | 已优化轮询逻辑：每当有文档状态从 active 变为 terminal 时立即触发 `router.refresh()`；并增加了手动刷新按钮                      |
 
 ---
 

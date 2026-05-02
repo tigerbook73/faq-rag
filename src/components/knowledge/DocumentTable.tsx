@@ -1,196 +1,37 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { config } from "@/lib/config";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-
-interface Document {
-  id: string;
-  name: string;
-  lang: string | null;
-  status: string;
-  sizeBytes: number;
-  errorMsg: string | null;
-  totalChunks: number | null;
-  createdAt: Date;
-  _count: { chunks: number };
-}
+import { RefreshCw } from "lucide-react";
+import { useDocumentManagement } from "@/hooks/use-document-management";
+import { DocumentRow, type Document } from "./DocumentRow";
+import { DeleteDialog, RebuildDialog } from "./DocumentDialogs";
 
 interface Props {
   initialDocuments: Document[];
 }
 
-const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
-
-function statusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "indexed") return "default";
-  if (status === "failed") return "destructive";
-  if (ACTIVE_STATUSES.has(status)) return "secondary";
-  return "outline";
-}
-
-interface DeleteDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  deleting: boolean;
-}
-
-function DeleteDialog({ open, onClose, onConfirm, deleting }: DeleteDialogProps) {
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Delete document?</DialogTitle>
-          <DialogDescription>This will permanently remove the document and all its indexed chunks.</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button variant="destructive" disabled={deleting} onClick={onConfirm}>
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-interface RebuildDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  rebuilding: boolean;
-}
-
-function RebuildDialog({ open, onOpenChange, onConfirm, rebuilding }: RebuildDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Rebuild all documents?</DialogTitle>
-          <DialogDescription>
-            This will re-embed every document. It may take a while and cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-          <Button variant="outline" disabled={rebuilding} onClick={onConfirm}>
-            Rebuild All
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export function DocumentTable({ initialDocuments }: Props) {
-  const router = useRouter();
-  const [polledDocuments, setPolledDocuments] = useState<Document[] | null>(null);
-  const [search, setSearch] = useState("");
-  const allDocuments = polledDocuments ?? initialDocuments;
-  const documents = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return q ? allDocuments.filter((d) => d.name.toLowerCase().includes(q)) : allDocuments;
-  }, [allDocuments, search]);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [reindexingId, setReindexingId] = useState<string | null>(null);
-  const [rebuilding, setRebuilding] = useState(false);
-  const [rebuildProgress, setRebuildProgress] = useState<{
-    done: number;
-    total: number;
-  } | null>(null);
-  const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
-
-  // Lightweight polling during indexing — fetch JSON, not a full RSC re-render.
-  // router.refresh() is called only once when indexing finishes to sync RSC state.
-  useEffect(() => {
-    if (!documents.some((d) => ACTIVE_STATUSES.has(d.status))) return;
-    const id = setInterval(async () => {
-      const res = await fetch("/api/documents");
-      const data = await res.json();
-      setPolledDocuments(data.items);
-      if (!data.items.some((d: Document) => ACTIVE_STATUSES.has(d.status))) {
-        router.refresh();
-      }
-    }, config.ui.pollIntervalMs);
-    return () => clearInterval(id);
-  }, [documents, router]);
-
-  async function handleDelete(id: string) {
-    const prev = polledDocuments ?? initialDocuments;
-    setPolledDocuments(prev.filter((d) => d.id !== id));
-    setDeletingId(id);
-    try {
-      await fetch(`/api/documents/${id}`, { method: "DELETE" });
-      router.refresh();
-    } catch {
-      setPolledDocuments(prev);
-    } finally {
-      setDeletingId(null);
-      setDeleteTarget(null);
-    }
-  }
-
-  async function handleReindex(id: string) {
-    const prev = polledDocuments ?? initialDocuments;
-    setPolledDocuments(prev.map((d) => (d.id === id ? { ...d, status: "pending" } : d)));
-    setReindexingId(id);
-    try {
-      const res = await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Reindex failed (${res.status})`);
-      }
-      router.refresh();
-    } catch (err) {
-      setPolledDocuments(prev);
-      toast.error(err instanceof Error ? err.message : "Reindex failed");
-    } finally {
-      setReindexingId(null);
-    }
-  }
-
-  async function handleRebuildAll() {
-    setRebuilding(true);
-    setRebuildProgress({ done: 0, total: documents.length });
-    let failed = 0;
-    try {
-      for (let i = 0; i < documents.length; i++) {
-        const res = await fetch(`/api/documents/${documents[i].id}/reindex`, { method: "POST" });
-        if (!res.ok) failed++;
-        setRebuildProgress({ done: i + 1, total: documents.length });
-      }
-      setPolledDocuments(null);
-      router.refresh();
-      if (failed > 0) toast.error(`${failed} document${failed > 1 ? "s" : ""} failed to reindex`);
-    } catch {
-      toast.error("Rebuild interrupted");
-      router.refresh();
-    } finally {
-      setRebuilding(false);
-      setRebuildProgress(null);
-    }
-  }
+  const {
+    documents,
+    allDocuments,
+    search,
+    setSearch,
+    deletingId,
+    deleteTarget,
+    setDeleteTarget,
+    reindexingId,
+    rebuilding,
+    rebuildProgress,
+    rebuildDialogOpen,
+    setRebuildDialogOpen,
+    isManualRefreshing,
+    handleDelete,
+    handleReindex,
+    handleRebuildAll,
+    handleManualRefresh,
+  } = useDocumentManagement(initialDocuments);
 
   if (allDocuments.length === 0) {
     return (
@@ -207,7 +48,16 @@ export function DocumentTable({ initialDocuments }: Props) {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        <div className="sm:ml-auto">
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleManualRefresh}
+            disabled={isManualRefreshing}
+            title="Refresh Table"
+          >
+            <RefreshCw className={`h-4 w-4 ${isManualRefreshing ? "animate-spin" : ""}`} />
+          </Button>
           <Button
             variant="outline"
             disabled={rebuilding}
@@ -239,44 +89,14 @@ export function DocumentTable({ initialDocuments }: Props) {
             </TableRow>
           )}
           {documents.map((doc) => (
-            <TableRow key={doc.id}>
-              <TableCell className="max-w-32 truncate font-medium sm:max-w-50">{doc.name}</TableCell>
-              <TableCell className="hidden sm:table-cell">{doc.lang}</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                {doc.status === "indexing" && doc.totalChunks
-                  ? `${doc._count.chunks} / ${doc.totalChunks}`
-                  : doc._count.chunks}
-              </TableCell>
-              <TableCell>
-                <Badge variant={statusVariant(doc.status)}>{doc.status}</Badge>
-                {doc.status === "failed" && doc.errorMsg && (
-                  <p className="text-destructive mt-1 max-w-48 text-xs break-words">{doc.errorMsg}</p>
-                )}
-              </TableCell>
-              <TableCell className="text-muted-foreground hidden text-xs lg:table-cell">
-                {new Date(doc.createdAt).toLocaleDateString()}
-              </TableCell>
-              <TableCell className="space-x-2 text-right">
-                {(doc.status === "indexed" || doc.status === "failed") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={reindexingId === doc.id}
-                    onClick={() => handleReindex(doc.id)}
-                  >
-                    {reindexingId === doc.id ? "Reindexing…" : "Reindex"}
-                  </Button>
-                )}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={deletingId === doc.id}
-                  onClick={() => setDeleteTarget(doc.id)}
-                >
-                  Delete
-                </Button>
-              </TableCell>
-            </TableRow>
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              isDeleting={deletingId === doc.id}
+              isReindexing={reindexingId === doc.id}
+              onReindex={handleReindex}
+              onDelete={(id) => setDeleteTarget(id)}
+            />
           ))}
         </TableBody>
       </Table>
