@@ -2,7 +2,6 @@
 
 ## 待实施清单
 
-> 状态说明：N 待选 · Y 实施  
 > 请对每项标注状态，**N** 的项目不进行深入分析。
 
 ---
@@ -22,7 +21,7 @@
 | --- | ---- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2.1 | ✅   | `chat-storage.ts` 关注点分离            | API 调用（session CRUD）与 localStorage 操作混杂；拆成两个独立模块                                                                                                                           |
 | 2.2 | ✅   | `chat-storage.ts` localStorage 接口升级 | 当前只暴露 key 常量；改为提供对象级读写接口（`lastChat.get()` / `lastChat.set(id)`）                                                                                                         |
-| 2.3 | N    | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；可拆出 `SessionItem` / `SessionActions` 子组件                                                                                     |
+| 2.3 | ✅   | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；已拆出 `SessionItem` 组件和 `useChatSessions` hook |
 | 2.4 | N    | `DocumentTable.tsx`（298 行）拆分       | 文档列表、状态轮询、删除确认、reindex 操作在同一组件；可拆出 `DocumentRow` / `DocumentActions`                                                                                               |
 | 2.5 | N    | `DocumentTable.tsx` 上传后立即刷新      | 当前轮询只在**所有**文档 indexing 完成后才调用 `router.refresh()`；若有旧文档正在 indexing，新上传文档需等旧文档全部完成才触发 RSC 刷新。应改为：每当某个文档从 active → done 时立即刷新一次 |
 
@@ -41,14 +40,14 @@
 
 ### 四、架构设计
 
-| #   | 状态 | 项目                                   | 说明                                                                                                                                |
-| --- | ---- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 4.1 | ✅   | Supabase 浏览器客户端集中化            | `TopBar.tsx` 和 `signin/page.tsx` 各自内联 `createBrowserClient`；提取到 `src/lib/supabase/browser.ts`                              |
-| 4.2 | ✅   | `filePath` 字段二义性                  | 本地模式存 FS 路径，云模式存 Storage 对象路径，同字段两种语义；重命名为 `fileRef`（DB 列 `file_path` 不变，无需迁移）               |
-| 4.3 | ✅   | `retrieval/query.ts` provider 逻辑重复 | 将 `resolveClient()` 提取为 `resolveQueryClient()` 移至 `llm/clients.ts`，与客户端单例同处                                          |
-| 4.4 | ✅   | Rate limiting 删除                     | 进程内内存实现在多进程/云部署下无效；直接删除 `rate-limit.ts` 及 `/api/chat` 中的限速逻辑                                           |
-| 4.5 | N    | LLM provider 重复模式观察              | `claude.ts` / `deepseek.ts` / `openai.ts` 有相似的 token 流循环和错误处理；目前量少不急于抽象，随 provider 增加再评估               |
-| 4.6 | N    | `ingest/pipeline.ts` 扩展性            | parse/split/embed/store 目前逻辑清晰；若后续阶段变复杂（错误重试、多格式分支）再考虑引入 pipeline step 接口                         |
+| #   | 状态 | 项目                                   | 说明                                                                                                                  |
+| --- | ---- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 4.1 | ✅   | Supabase 浏览器客户端集中化            | `TopBar.tsx` 和 `signin/page.tsx` 各自内联 `createBrowserClient`；提取到 `src/lib/supabase/browser.ts`                |
+| 4.2 | ✅   | `filePath` 字段二义性                  | 本地模式存 FS 路径，云模式存 Storage 对象路径，同字段两种语义；重命名为 `fileRef`（DB 列 `file_path` 不变，无需迁移） |
+| 4.3 | ✅   | `retrieval/query.ts` provider 逻辑重复 | 将 `resolveClient()` 提取为 `resolveQueryClient()` 移至 `llm/clients.ts`，与客户端单例同处                            |
+| 4.4 | ✅   | Rate limiting 删除                     | 进程内内存实现在多进程/云部署下无效；直接删除 `rate-limit.ts` 及 `/api/chat` 中的限速逻辑                             |
+| 4.5 | N    | LLM provider 重复模式观察              | `claude.ts` / `deepseek.ts` / `openai.ts` 有相似的 token 流循环和错误处理；目前量少不急于抽象，随 provider 增加再评估 |
+| 4.6 | N    | `ingest/pipeline.ts` 扩展性            | parse/split/embed/store 目前逻辑清晰；若后续阶段变复杂（错误重试、多格式分支）再考虑引入 pipeline step 接口           |
 
 ---
 
