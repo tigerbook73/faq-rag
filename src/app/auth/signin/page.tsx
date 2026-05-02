@@ -23,7 +23,7 @@ export default function SignInPage() {
     lastChat.clear();
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
