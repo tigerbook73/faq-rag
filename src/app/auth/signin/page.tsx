@@ -41,6 +41,7 @@ export default function SignInPage() {
       return;
     }
 
+    router.refresh();
     router.replace(from);
   }
 
