@@ -32,9 +32,9 @@
 | #   | 状态 | 项目                            | 说明                                                                                                                           |
 | --- | ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | 3.1 | ✅   | Cross-encoder feature flag 化   | 已通过 `ENABLE_RERANKER` 环境变量控制 `rerankChunks` 的启用，代码路径已显式化 |
-| 3.2 | N    | `bodySchema` 默认 provider 对齐 | `/api/chat` 默认 `PROVIDER.DEEPSEEK`，而 `.env.example` 的 `NEXT_PUBLIC_DEFAULT_PROVIDER=claude`；边界情况下行为不一致，应对齐 |
-| 3.3 | N    | `SYSTEM_PROMPT` 提取            | 硬编码在路由处理器内；提取到 `src/lib/llm/prompts.ts`，便于复用和单独测试                                                      |
-| 3.4 | N    | `sanitizeChunkContent` 位置调整 | 工具函数内嵌于 `POST` handler；提升为模块级函数或移到 retrieval 层                                                             |
+| 3.2 | ✅   | `bodySchema` 默认 provider 对齐 | 已通过 `config.llm.defaultProvider` 对齐，优先读取 `NEXT_PUBLIC_DEFAULT_PROVIDER` |
+| 3.3 | ✅   | `SYSTEM_PROMPT` 提取            | 已提取至 `src/lib/llm/prompts.ts` |
+| 3.4 | ✅   | `sanitizeChunkContent` 位置调整 | 已提取至 `src/lib/retrieval/utils.ts` |
 
 ---
 

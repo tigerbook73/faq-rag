@@ -14,6 +14,7 @@ export const config = {
   llm: {
     maxTokens: 2048,
     historyTokenBudget: 6000,
+    defaultProvider: (process.env.NEXT_PUBLIC_DEFAULT_PROVIDER || "deepseek") as string,
   },
   chunking: {
     size: 800,

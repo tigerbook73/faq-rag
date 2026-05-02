@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PROVIDER } from "@/lib/llm/providers";
+import { config } from "@/lib/config";
 
 // ── Request input types ───────────────────────────────────────────────────────
 
@@ -12,7 +13,7 @@ export type ChatHistoryMessage = z.infer<typeof ChatHistoryMessageSchema>;
 
 export const ChatRequestInputSchema = z.object({
   question: z.string().min(1).max(4000),
-  provider: z.enum([PROVIDER.CLAUDE, PROVIDER.DEEPSEEK, PROVIDER.OPENAI]).default(PROVIDER.DEEPSEEK),
+  provider: z.enum([PROVIDER.CLAUDE, PROVIDER.DEEPSEEK, PROVIDER.OPENAI]).default(config.llm.defaultProvider as any),
   history: z.array(ChatHistoryMessageSchema).max(50).default([]),
 });
 export type ChatRequestInput = z.infer<typeof ChatRequestInputSchema>;
