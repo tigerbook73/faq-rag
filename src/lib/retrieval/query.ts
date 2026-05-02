@@ -1,7 +1,7 @@
 import { getEmbedding } from "../embeddings/router";
 import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
-// import { rerankChunks } from "./cross-encoder";
+import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
 import type OpenAI from "openai";
 import { resolveQueryClient } from "../llm/clients";
@@ -82,7 +82,9 @@ export async function retrieve(userQuery: string, traceId?: string, provider?: s
     "vector search done",
   );
 
-  return candidates.slice(0, config.retrieval.topFinal);
-  // For better relevance, we can rerank the candidates with a cross-encoder, but it adds latency. Uncomment to enable.
-  // return rerankChunks(userQuery, candidates, config.retrieval.topFinal, traceId);
+  if (!config.retrieval.enableReranker) {
+    return candidates.slice(0, config.retrieval.topFinal);
+  }
+
+  return rerankChunks(userQuery, candidates, config.retrieval.topFinal, traceId);
 }

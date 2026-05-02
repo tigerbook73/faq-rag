@@ -9,6 +9,7 @@ export const config = {
     topK: 10, // candidates per language from vector search
     topFinal: 6, // chunks sent to LLM after rerank
     queryMaxTokens: 200,
+    enableReranker: process.env.ENABLE_RERANKER === "true",
   },
   llm: {
     maxTokens: 2048,

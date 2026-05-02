@@ -31,7 +31,7 @@
 
 | #   | 状态 | 项目                            | 说明                                                                                                                           |
 | --- | ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 3.1 | N    | Cross-encoder feature flag 化   | `query.ts` 中 `rerankChunks` 调用被注释掉（僵尸代码）；改为 `ENABLE_RERANKER=true` env flag 控制，代码路径显式化               |
+| 3.1 | ✅   | Cross-encoder feature flag 化   | 已通过 `ENABLE_RERANKER` 环境变量控制 `rerankChunks` 的启用，代码路径已显式化 |
 | 3.2 | N    | `bodySchema` 默认 provider 对齐 | `/api/chat` 默认 `PROVIDER.DEEPSEEK`，而 `.env.example` 的 `NEXT_PUBLIC_DEFAULT_PROVIDER=claude`；边界情况下行为不一致，应对齐 |
 | 3.3 | N    | `SYSTEM_PROMPT` 提取            | 硬编码在路由处理器内；提取到 `src/lib/llm/prompts.ts`，便于复用和单独测试                                                      |
 | 3.4 | N    | `sanitizeChunkContent` 位置调整 | 工具函数内嵌于 `POST` handler；提升为模块级函数或移到 retrieval 层                                                             |
