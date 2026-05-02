@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { useDocumentManagement } from "@/hooks/use-document-management";
-import { DocumentRow, type Document } from "./DocumentRow";
-import { DeleteDialog, RebuildDialog } from "./DocumentDialogs";
+import { useDocumentManagement } from "./useDocumentManagement";
+import { DocumentRow, type Document } from "@/components/knowledge/DocumentRow";
+import { DeleteDialog, RebuildDialog } from "@/components/knowledge/DocumentDialogs";
 
 interface Props {
   initialDocuments: Document[];

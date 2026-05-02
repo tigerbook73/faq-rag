@@ -1,3 +1,5 @@
+import { type Provider } from "./llm/providers";
+
 export const config = {
   embedding: {
     provider: process.env.EMBEDDING_PROVIDER ?? "local", // "local" | "openai"
@@ -14,7 +16,7 @@ export const config = {
   llm: {
     maxTokens: 2048,
     historyTokenBudget: 6000,
-    defaultProvider: (process.env.NEXT_PUBLIC_DEFAULT_PROVIDER || "deepseek") as string,
+    defaultProvider: (process.env.NEXT_PUBLIC_DEFAULT_PROVIDER || "deepseek") as Provider,
   },
   chunking: {
     size: 800,

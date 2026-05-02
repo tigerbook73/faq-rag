@@ -24,17 +24,18 @@
 | 2.3 | ✅   | `ChatSidebar.tsx`（324 行）拆分         | Session CRUD、重命名、导出、删除确认、键盘事件集中在一处；已拆出 `SessionItem` 组件和 `useChatSessions` hook                   |
 | 2.4 | ✅   | `DocumentTable.tsx`（298 行）拆分       | 文档列表、状态轮询、删除确认、reindex 操作在同一组件；已拆出 `DocumentRow` / `DocumentDialogs` 及 `useDocumentManagement` hook |
 | 2.5 | ✅   | `DocumentTable.tsx` 上传后立即刷新      | 已优化轮询逻辑：每当有文档状态从 active 变为 terminal 时立即触发 `router.refresh()`；并增加了手动刷新按钮                      |
+| 2.6 | N    | 组件目录结构重构                        | 将已拆分的组件改为 `Component/index.tsx`, `useComponent.ts` 结构，提升内聚性                                                   |
 
 ---
 
 ### 三、代码质量
 
-| #   | 状态 | 项目                            | 说明                                                                                                                           |
-| --- | ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 3.1 | ✅   | Cross-encoder feature flag 化   | 已通过 `ENABLE_RERANKER` 环境变量控制 `rerankChunks` 的启用，代码路径已显式化 |
+| #   | 状态 | 项目                            | 说明                                                                              |
+| --- | ---- | ------------------------------- | --------------------------------------------------------------------------------- |
+| 3.1 | ✅   | Cross-encoder feature flag 化   | 已通过 `ENABLE_RERANKER` 环境变量控制 `rerankChunks` 的启用，代码路径已显式化     |
 | 3.2 | ✅   | `bodySchema` 默认 provider 对齐 | 已通过 `config.llm.defaultProvider` 对齐，优先读取 `NEXT_PUBLIC_DEFAULT_PROVIDER` |
-| 3.3 | ✅   | `SYSTEM_PROMPT` 提取            | 已提取至 `src/lib/llm/prompts.ts` |
-| 3.4 | ✅   | `sanitizeChunkContent` 位置调整 | 已提取至 `src/lib/retrieval/utils.ts` |
+| 3.3 | ✅   | `SYSTEM_PROMPT` 提取            | 已提取至 `src/lib/llm/prompts.ts`                                                 |
+| 3.4 | ✅   | `sanitizeChunkContent` 位置调整 | 已提取至 `src/lib/retrieval/utils.ts`                                             |
 
 ---
 
@@ -53,12 +54,12 @@
 
 ### 五、测试
 
-| #   | 状态 | 项目                 | 说明                                                           |
-| --- | ---- | -------------------- | -------------------------------------------------------------- |
-| 5.1 | N    | 测试策略评估         | 评估单元/集成/e2e 对本项目各自的必要性和性价比                 |
-| 5.2 | N    | 重构期测试优先级评估 | 项目经常重构，哪些部分测试应优先添加，哪些暂缓（等稳定后再补） |
-| 5.3 | N    | 脚本类测试评估       | 脚本命令（`scripts/`）是否需要测试，以及如何实施               |
-| 5.4 | N    | 测试代码实施         | 按评估结论逐步添加单元 / 集成 / e2e 测试                       |
+| #   | 状态 | 项目                 | 说明                                                                  |
+| --- | ---- | -------------------- | --------------------------------------------------------------------- |
+| 5.1 | ✅   | 测试策略评估         | 优先 Unit (算法/工具) & E2E (主路径 Smoke)，Integration 针对核心 Pipe |
+| 5.2 | ✅   | 重构期测试优先级评估 | 核心逻辑 Unit > 核心路径 E2E > 脚本验证 > UI 细节                     |
+| 5.3 | ✅   | 脚本类测试评估       | 脚本本身不测，测试抽离出的 lib 函数；CI 中运行一次脚本做冒烟          |
+| 5.4 | N    | 测试代码实施         | 针对每种类型至少实现一个简单实例（Unit/Integration/E2E）              |
 
 ---
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useChatSessions } from "@/hooks/use-chat-sessions";
-import { SessionItem } from "./SessionItem";
+import { useChatSessions } from "./useChatSessions";
+import { SessionItem } from "../SessionItem";
 import {
   SidebarContent,
   SidebarFooter,
