@@ -1,7 +1,6 @@
 import { getEmbedding } from "../embeddings/router";
 import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
-import { rerankChunks } from "./cross-encoder";
 import { detectLang } from "../lang/detect";
 import type OpenAI from "openai";
 import { resolveQueryClient } from "../llm/clients";
@@ -86,5 +85,6 @@ export async function retrieve(userQuery: string, traceId?: string, provider?: s
     return candidates.slice(0, config.retrieval.topFinal);
   }
 
+  const { rerankChunks } = await import("./cross-encoder");
   return rerankChunks(userQuery, candidates, config.retrieval.topFinal, traceId);
 }
