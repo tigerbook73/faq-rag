@@ -75,7 +75,13 @@ class WebhookConfig {
 }
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
-const cli = cac("hook");
+const cli = cac("npx tsx ./scripts/setup-webhook");
+
+cli.usage("<command> [options]");
+
+cli.command("").action(() => {
+  cli.outputHelp();
+});
 
 cli
   .command("query", "Show current hook settings in the database")

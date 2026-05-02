@@ -179,7 +179,13 @@ class VercelEnvManager {
 }
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
-const cli = cac("vercel-env");
+const cli = cac("npx tsx ./scripts/vercel-env");
+
+cli.usage("pull | push | delete");
+
+cli.command("").action(() => {
+  cli.outputHelp();
+});
 
 cli
   .command("pull", "Pull Vercel production vars → .env.vercel, then diff with .env + .env.cloud")
