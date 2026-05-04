@@ -41,7 +41,7 @@ function toSession(raw: z.infer<typeof SessionRawSchema>): ChatSession {
 
 export async function fetchSessions(): Promise<ChatSession[]> {
   const res = await fetch("/api/sessions");
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error(`Failed to fetch sessions: ${res.status}`);
   const data = z.array(SessionRawSchema).parse(await res.json());
   return data.map(toSession);
 }

@@ -12,6 +12,10 @@ export function useChatSessions() {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const mountedRef = useRef(false);
 
   const lastChatId = useSyncExternalStore(
     (onStoreChange) => {
@@ -30,12 +34,58 @@ export function useChatSessions() {
     if (isMobile) setOpenMobile(false);
   }, [isMobile, setOpenMobile]);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const loadSessions = useCallback(async (mode: "initial" | "refresh" = "refresh") => {
+    if (mode === "initial") {
+      setIsLoadingSessions(true);
+    } else {
+      setIsRefreshingSessions(true);
+    }
+    setSessionsError(null);
+
+    try {
+      const data = await fetchSessions();
+      if (!mountedRef.current) return;
+      setSessions(data);
+    } catch (error) {
+      if (!mountedRef.current) return;
+      console.error("[useChatSessions] Failed to load sessions", error);
+      setSessionsError("Unable to load chats");
+    } finally {
+      if (!mountedRef.current) return;
+      if (mode === "initial") {
+        setIsLoadingSessions(false);
+      } else {
+        setIsRefreshingSessions(false);
+      }
+    }
+  }, []);
+
   // Initial session fetch
   useEffect(() => {
     let active = true;
-    fetchSessions().then((data) => {
-      if (active) setSessions(data);
-    });
+
+    async function loadInitialSessions() {
+      try {
+        const data = await fetchSessions();
+        if (!active) return;
+        setSessions(data);
+      } catch (error) {
+        if (!active) return;
+        console.error("[useChatSessions] Failed to load sessions", error);
+        setSessionsError("Unable to load chats");
+      } finally {
+        if (active) setIsLoadingSessions(false);
+      }
+    }
+
+    void loadInitialSessions();
     return () => {
       active = false;
     };
@@ -44,11 +94,11 @@ export function useChatSessions() {
   // Re-fetch sessions when any component dispatches chat-session-updated
   useEffect(() => {
     function onUpdate() {
-      fetchSessions().then((data) => setSessions(data));
+      void loadSessions("refresh");
     }
     window.addEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
     return () => window.removeEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
-  }, []);
+  }, [loadSessions]);
 
   // Focus input when edit mode activates
   useEffect(() => {
@@ -134,6 +184,9 @@ export function useChatSessions() {
 
   return {
     sessions,
+    isLoadingSessions,
+    isRefreshingSessions,
+    sessionsError,
     lastChatId,
     editingId,
     editValue,
@@ -147,6 +200,7 @@ export function useChatSessions() {
     handleDelete,
     navigateToSession,
     closeOnMobile,
+    reloadSessions: loadSessions,
     pathname,
   };
 }

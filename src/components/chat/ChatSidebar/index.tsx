@@ -11,16 +11,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Info, BookOpen, MessageSquare } from "lucide-react";
+import { SquarePen, Info, BookOpen, MessageSquare, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { type ChatSession } from "@/lib/session-api";
 
 export function ChatSidebarContent() {
   const {
     sessions,
+    isLoadingSessions,
+    isRefreshingSessions,
+    sessionsError,
     lastChatId,
     editingId,
     editValue,
@@ -34,10 +38,14 @@ export function ChatSidebarContent() {
     handleDelete,
     navigateToSession,
     closeOnMobile,
+    reloadSessions,
     pathname,
   } = useChatSessions();
 
   const showBackToLast = !!(lastChatId && pathname !== `/chat/${lastChatId}`);
+  const showSessionSkeletons = isLoadingSessions && sessions.length === 0;
+  const showSessionError = !!sessionsError && sessions.length === 0;
+  const showEmptySessions = !isLoadingSessions && !sessionsError && sessions.length === 0;
 
   return (
     <>
@@ -64,7 +72,25 @@ export function ChatSidebarContent() {
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupContent>
             <SidebarMenu>
-              {sessions.length === 0 && <p className="text-muted-foreground px-2 py-1 text-xs">No chats yet</p>}
+              {showSessionSkeletons && <SessionListSkeleton />}
+              {showSessionError && (
+                <SidebarMenuItem>
+                  <div className="text-muted-foreground space-y-2 px-2 py-1 text-xs">
+                    <p>{sessionsError}</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      className="h-6 px-1.5"
+                      onClick={() => void reloadSessions("initial")}
+                    >
+                      <RefreshCw className="size-3" />
+                      Retry
+                    </Button>
+                  </div>
+                </SidebarMenuItem>
+              )}
+              {showEmptySessions && <p className="text-muted-foreground px-2 py-1 text-xs">No chats yet</p>}
               {sessions.map((s: ChatSession) => (
                 <SessionItem
                   key={s.id}
@@ -82,6 +108,7 @@ export function ChatSidebarContent() {
                   onDelete={(e) => handleDelete(e, s.id)}
                 />
               ))}
+              {isRefreshingSessions && sessions.length > 0 && <SidebarMenuSkeleton width="62%" />}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -133,6 +160,17 @@ export function ChatSidebarContent() {
           </Button>
         )}
       </SidebarFooter>
+    </>
+  );
+}
+
+function SessionListSkeleton() {
+  return (
+    <>
+      <SidebarMenuSkeleton width="72%" />
+      <SidebarMenuSkeleton width="86%" />
+      <SidebarMenuSkeleton width="64%" />
+      <SidebarMenuSkeleton width="78%" />
     </>
   );
 }
