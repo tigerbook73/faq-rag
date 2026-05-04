@@ -2,14 +2,21 @@ import { ChatWindow } from "@/components/chat/ChatWindow";
 import { prisma } from "@/lib/db/client";
 import type { ChatSession, Message } from "@/lib/session-api";
 import type { Citation } from "@/components/chat/CitationDrawer";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const raw = await prisma.session.findUnique({
-    where: { id },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-  });
+  const raw = user
+    ? await prisma.session.findFirst({
+        where: { id, userId: user.id },
+        include: { messages: { orderBy: { createdAt: "asc" } } },
+      })
+    : null;
 
   const initialSession: ChatSession | null = raw
     ? {

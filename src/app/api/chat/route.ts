@@ -7,8 +7,14 @@ import { SYSTEM_PROMPT } from "@/lib/llm/prompts";
 import { truncateHistory } from "@/lib/llm/truncate";
 import { logger } from "@/lib/logger";
 import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/schemas/chat";
+import { getApiUser } from "@/lib/auth/get-api-user";
 
 export async function POST(req: NextRequest) {
+  const user = await getApiUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: ChatRequestInput;
   try {
     body = ChatRequestInputSchema.parse(await req.json());
@@ -19,7 +25,7 @@ export async function POST(req: NextRequest) {
   const { question, provider: providerName, history } = body;
 
   const traceId = crypto.randomUUID();
-  const log = logger.child({ traceId, provider: providerName });
+  const log = logger.child({ traceId, provider: providerName, userId: user.id });
   log.info({ question: question.slice(0, 100) }, "chat request");
 
   const t0 = Date.now();

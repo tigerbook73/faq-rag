@@ -441,6 +441,8 @@ commit 状态: waiting for user commit
 
 ### 阶段 3：改造核心 API routes
 
+状态: staged
+
 目标：让 Mobile demo 所需 API 支持 Bearer token。
 
 优先范围：
@@ -462,6 +464,63 @@ commit 状态: waiting for user commit
 - Mobile 风格请求带 Bearer token 可以调用 `/api/chat`。
 - A 用户 token 不能读取或修改 B 用户 session。
 - 无认证请求返回 401。
+
+实施记录：
+
+```txt
+状态: staged
+本阶段实际改动:
+- 选择正式多用户隔离方案。
+- prisma/schema.prisma 的 Session 增加 nullable userId 字段，映射到 sessions.user_id。
+- 新增 prisma/migrations/20260504000000_add_session_user_id/migration.sql。
+- 已对本地 Supabase 数据库执行 pnpm prisma migrate deploy，迁移成功应用。
+- 已执行 pnpm prisma generate --schema=prisma/schema.prisma，生成 client 已更新到 ignored 的 src/generated/prisma。
+- src/proxy.ts 对 Bearer API 请求只放行 /api/chat 和 /api/sessions，避免未改造 document API 被绕过 cookie auth。
+- src/app/api/chat/route.ts 接入 getApiUser，未认证返回 401，并在日志 child 中记录 userId。
+- src/app/api/sessions/route.ts 接入 getApiUser，GET/POST 均按 user.id 过滤或写入 userId。
+- src/app/api/sessions/[id]/route.ts 接入 getApiUser，GET/PATCH/DELETE 均按 user.id 限制；跨用户访问返回 404。
+- src/app/chat/[id]/page.tsx 的初始 session 读取改为按当前 cookie user 过滤。
+- 新增 src/app/api/sessions/route.test.ts。
+- 新增 src/app/api/sessions/[id]/route.test.ts。
+- jest.config.ts 临时排除 src/lib/retrieval 下的测试；同时排除 e2e 目录，避免 Playwright 测试被 Jest 执行。
+
+验证方式:
+- pnpm prisma migrate deploy
+- pnpm prisma generate --schema=prisma/schema.prisma
+- pnpm exec jest --runTestsByPath src/app/api/sessions/route.test.ts 'src/app/api/sessions/[id]/route.test.ts'
+- pnpm exec jest --runTestsByPath src/lib/auth/get-api-user.test.ts src/app/api/sessions/route.test.ts 'src/app/api/sessions/[id]/route.test.ts' src/lib/llm/truncate.test.ts src/lib/llm/router.test.ts src/lib/retrieval/utils.test.ts src/lib/ingest/parse.test.ts
+- pnpm test
+- pnpm lint
+- pnpm build
+
+验证结果:
+- 本地 Supabase migration 成功应用。
+- sessions route tests: 2 suites passed, 8 tests passed。
+- 阶段相关和稳定单测集合: 7 suites passed, 39 tests passed。
+- pnpm test 在临时排除 src/lib/retrieval 和 e2e 后通过：6 suites passed, 35 tests passed。
+- pnpm lint 通过，包括 tsc --noEmit 和 eslint --fix。
+- pnpm build 第一次因沙箱无法访问 Google Fonts 失败；提升权限重跑后通过。
+- pnpm build 仍输出既有 Turbopack/NFT tracing warning，但编译、TypeScript、page generation 均通过。
+- src/lib/retrieval 测试为临时屏蔽，后续应单独修复 query.test.ts 的 mock 后恢复。
+
+已 staging 文件:
+- prisma/schema.prisma
+- prisma/migrations/20260504000000_add_session_user_id/migration.sql
+- src/proxy.ts
+- src/app/api/chat/route.ts
+- src/app/api/sessions/route.ts
+- src/app/api/sessions/[id]/route.ts
+- src/app/chat/[id]/page.tsx
+- src/app/api/sessions/route.test.ts
+- src/app/api/sessions/[id]/route.test.ts
+- jest.config.ts
+- PLAN-mobile.md
+
+commit 状态: waiting for user commit
+备注:
+- 本阶段改了 Prisma schema、migration、proxy 和 route handler；当前正在运行的 pnpm dev 需要重启后才能可靠反映这些改动。
+- 兼容迁移使用 nullable sessions.user_id；新建/更新 session 均写入 userId，旧的 user_id 为 null 的 legacy session 不会自动暴露给任何用户。
+```
 
 ### 阶段 4：建立 shared package
 

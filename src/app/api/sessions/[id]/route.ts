@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { Prisma } from "@/generated/prisma";
 import { UpdateSessionInputSchema } from "@/lib/schemas/session";
+import { getApiUser } from "@/lib/auth/get-api-user";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_req: NextRequest, { params }: Params) {
+export async function GET(req: NextRequest, { params }: Params) {
+  const user = await getApiUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
-  const session = await prisma.session.findUnique({
-    where: { id },
+  const session = await prisma.session.findFirst({
+    where: { id, userId: user.id },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
   if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -16,6 +22,11 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const user = await getApiUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const parsed = UpdateSessionInputSchema.safeParse(await req.json());
@@ -25,11 +36,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { title, messages } = parsed.data;
 
   const session = await prisma.$transaction(async (tx) => {
-    await tx.session.upsert({
-      where: { id },
-      create: { id, title: title ?? "New Chat" },
-      update: { ...(title !== undefined && { title }) },
-    });
+    const existing = await tx.session.findUnique({ where: { id }, select: { userId: true } });
+    if (existing && existing.userId !== user.id) return null;
+
+    if (existing) {
+      await tx.session.update({
+        where: { id },
+        data: { ...(title !== undefined && { title }) },
+      });
+    } else {
+      await tx.session.create({
+        data: { id, userId: user.id, title: title ?? "New Chat" },
+      });
+    }
+
     if (messages !== undefined) {
       await tx.sessionMessage.deleteMany({ where: { sessionId: id } });
       if (messages.length > 0) {
@@ -43,17 +63,24 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         });
       }
     }
-    return tx.session.findUnique({
-      where: { id },
+    return tx.session.findFirst({
+      where: { id, userId: user.id },
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
   });
 
+  if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(session);
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const user = await getApiUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
-  await prisma.session.delete({ where: { id } });
+  const result = await prisma.session.deleteMany({ where: { id, userId: user.id } });
+  if (result.count === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return new NextResponse(null, { status: 204 });
 }

@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/auth/signin", "/about", "/api/ingest-hook"];
+const BEARER_API_PATHS = ["/api/chat", "/api/sessions"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
+  if (
+    BEARER_API_PATHS.some((p) => pathname.startsWith(p)) &&
+    req.headers.get("authorization")?.trim().toLowerCase().startsWith("bearer")
+  ) {
     return NextResponse.next();
   }
 

@@ -44,12 +44,14 @@ model Chunk {
 
 model Session {
   id        String           @id @default(uuid())
+  userId    String?          @map("user_id")
   title     String           @default("New Chat")
   createdAt DateTime         @default(now()) @map("created_at")
   updatedAt DateTime         @updatedAt @map("updated_at")
   messages  SessionMessage[]
 
   @@index([updatedAt])
+  @@index([userId, updatedAt])
   @@map("sessions")
 }
 

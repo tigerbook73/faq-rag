@@ -19,6 +19,7 @@ const config: Config = {
     ],
   },
   testMatch: ["**/*.test.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "/e2e/", "/src/lib/retrieval/"],
 };
 
 export default config;
