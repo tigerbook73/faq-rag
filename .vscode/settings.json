@@ -6,7 +6,7 @@
       "server": "localhost",
       "driver": "PostgreSQL",
       "name": "FAQ",
-      "connectString": "postgresql://faq:faq@localhost:5432/faq"
+      "connectString": "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
     }
   ]
 }
