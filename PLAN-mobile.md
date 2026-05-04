@@ -524,6 +524,8 @@ commit 状态: waiting for user commit
 
 ### 阶段 4：建立 shared package
 
+状态: staged
+
 目标：减少 Web/Mobile API 类型漂移。
 
 建议结构：
@@ -552,6 +554,61 @@ packages/shared/
 - `pnpm lint` 或 `tsc --noEmit` 通过。
 - Web API route 和前端仍能正常编译。
 - shared package 不依赖 Next.js、React DOM、Prisma 或 Node-only API。
+
+实施记录：
+
+```txt
+状态: staged
+本阶段实际改动:
+- 新增 packages/shared workspace package。
+- packages/shared 导出 provider 常量、Provider 类型、provider label、默认 provider。
+- packages/shared 导出 chat request schema factory 和默认 chat request schema。
+- packages/shared 导出 session/message/citation schemas 和 create/update session input schemas。
+- root package.json 增加 @faq-rag/shared workspace dependency。
+- pnpm-workspace.yaml 增加 packages: ".", "packages/*", "mobile"。
+- next.config.ts 增加 transpilePackages: ["@faq-rag/shared"]。
+- jest.config.ts 增加 @faq-rag/shared moduleNameMapper。
+- src/lib/llm/providers.ts 改为从 @faq-rag/shared re-export。
+- src/lib/schemas/session.ts 改为从 @faq-rag/shared re-export。
+- src/lib/schemas/chat.ts 使用 shared 的 createChatRequestInputSchema，并继续注入 Web 后端 env default provider。
+- .gitignore 增加 **/node_modules，避免 workspace 子包 node_modules symlink 被提交。
+- pnpm-lock.yaml 已通过人工运行 pnpm install 更新。
+
+验证方式:
+- pnpm install（人工本地运行）
+- pnpm test
+- pnpm lint
+- pnpm build
+
+验证结果:
+- pnpm install 成功，pnpm-lock.yaml 已包含 @faq-rag/shared link:packages/shared。
+- pnpm test 通过：6 suites passed, 35 tests passed。
+- pnpm lint 通过，包括 tsc --noEmit 和 eslint --fix。
+- pnpm build 通过；仍输出既有 Turbopack/NFT tracing warning。
+
+已 staging 文件:
+- .gitignore
+- package.json
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- next.config.ts
+- jest.config.ts
+- packages/shared/package.json
+- packages/shared/tsconfig.json
+- packages/shared/src/index.ts
+- packages/shared/src/providers.ts
+- packages/shared/src/schemas/chat.ts
+- packages/shared/src/schemas/session.ts
+- src/lib/llm/providers.ts
+- src/lib/schemas/chat.ts
+- src/lib/schemas/session.ts
+- PLAN-mobile.md
+
+commit 状态: waiting for user commit
+备注:
+- 本阶段改了 workspace/package 结构和 next.config.ts；当前正在运行的 pnpm dev 需要重启后才能可靠解析 @faq-rag/shared。
+- shared package 当前保持无 Next.js、React DOM、Prisma 或 Node-only API 依赖。
+```
 
 ### 阶段 5：创建 Expo demo
 

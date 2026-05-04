@@ -1,0 +1,27 @@
+{
+  "name": "@faq-rag/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./providers": {
+      "types": "./src/providers.ts",
+      "import": "./src/providers.ts"
+    },
+    "./schemas/chat": {
+      "types": "./src/schemas/chat.ts",
+      "import": "./src/schemas/chat.ts"
+    },
+    "./schemas/session": {
+      "types": "./src/schemas/session.ts",
+      "import": "./src/schemas/session.ts"
+    }
+  },
+  "peerDependencies": {
+    "zod": "^4.3.6"
+  }
+}

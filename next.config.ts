@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@faq-rag/shared"],
   serverExternalPackages: [
     "@huggingface/transformers",
     "onnxruntime-node",

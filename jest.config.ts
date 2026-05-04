@@ -5,6 +5,8 @@ const config: Config = {
   testEnvironment: "node",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^@faq-rag/shared$": "<rootDir>/packages/shared/src/index.ts",
+    "^@faq-rag/shared/(.*)$": "<rootDir>/packages/shared/src/$1.ts",
   },
   transform: {
     "^.+\\.tsx?$": [

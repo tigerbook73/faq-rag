@@ -1,21 +1,14 @@
-import { z } from "zod";
-import { PROVIDER, type Provider } from "@/lib/llm/providers";
+import {
+  ChatHistoryMessageSchema,
+  createChatRequestInputSchema,
+  type ChatHistoryMessage,
+  type ChatRequestInput,
+} from "@faq-rag/shared";
 import { config } from "@/lib/config";
 
 // ── Request input types ───────────────────────────────────────────────────────
 
 // History item sent to /api/chat — role + content only, no citations
-export const ChatHistoryMessageSchema = z.object({
-  role: z.enum(["user", "assistant"]),
-  content: z.string().max(8000),
-});
-export type ChatHistoryMessage = z.infer<typeof ChatHistoryMessageSchema>;
+export { ChatHistoryMessageSchema, type ChatHistoryMessage, type ChatRequestInput };
 
-export const ChatRequestInputSchema = z.object({
-  question: z.string().min(1).max(4000),
-  provider: z
-    .enum([PROVIDER.CLAUDE, PROVIDER.DEEPSEEK, PROVIDER.OPENAI])
-    .default(config.llm.defaultProvider as Provider),
-  history: z.array(ChatHistoryMessageSchema).max(50).default([]),
-});
-export type ChatRequestInput = z.infer<typeof ChatRequestInputSchema>;
+export const ChatRequestInputSchema = createChatRequestInputSchema(config.llm.defaultProvider);
