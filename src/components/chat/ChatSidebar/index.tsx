@@ -36,6 +36,7 @@ export function ChatSidebarContent() {
     handleExport,
     handleDelete,
     navigateToSession,
+    navigateToLastChat,
     closeOnMobile,
     reloadSessions,
     pathname,
@@ -118,7 +119,15 @@ export function ChatSidebarContent() {
             <SidebarMenuButton
               isActive={pathname.startsWith("/chat")}
               tooltip="Chat"
-              render={<Link href="/chat/last" onClick={closeOnMobile} />}
+              render={
+                <Link
+                  href="/chat/last"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigateToLastChat();
+                  }}
+                />
+              }
             >
               <MessageSquare />
               <span>Chat</span>

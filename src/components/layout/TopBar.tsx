@@ -12,6 +12,7 @@ import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { useAuth } from "@/context/auth-context";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { getLastChatHref } from "@/lib/last-chat";
 
 export function TopBar() {
   const { isAuthenticated } = useAuth();
@@ -75,7 +76,14 @@ export function TopBar() {
             <nav className="mr-2 hidden items-center gap-3 text-sm md:flex">
               {isAuthenticated && (
                 <>
-                  <Link href="/chat/last" className={isChat ? "font-medium" : "text-muted-foreground"}>
+                  <Link
+                    href="/chat/last"
+                    className={isChat ? "font-medium" : "text-muted-foreground"}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      router.push(getLastChatHref());
+                    }}
+                  >
                     Chat
                   </Link>
                   <Link

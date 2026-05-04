@@ -18,3 +18,8 @@ export const lastChat = {
     sessionStorage.removeItem(STORAGE_KEYS.LAST_CHAT);
   },
 };
+
+export function getLastChatHref(): string {
+  const lastId = lastChat.get();
+  return lastId ? `/chat/${lastId}` : "/chat/new";
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Sidebar,
@@ -17,9 +17,11 @@ import {
 import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
 import { Info, MessageSquare, BookOpen } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { getLastChatHref } from "@/lib/last-chat";
 
 export function AppSidebar() {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
   const isChat = pathname.startsWith("/chat");
   const { isMobile, setOpenMobile } = useSidebar();
@@ -27,6 +29,11 @@ export function AppSidebar() {
   const closeOnMobile = useCallback(() => {
     if (isMobile) setOpenMobile(false);
   }, [isMobile, setOpenMobile]);
+
+  const navigateToLastChat = useCallback(() => {
+    router.push(getLastChatHref());
+    closeOnMobile();
+  }, [router, closeOnMobile]);
 
   return (
     <Sidebar collapsible="icon">
@@ -48,7 +55,15 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       isActive={pathname.startsWith("/chat")}
                       tooltip="Chat"
-                      render={<Link href="/chat/last" onClick={closeOnMobile} />}
+                      render={
+                        <Link
+                          href="/chat/last"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            navigateToLastChat();
+                          }}
+                        />
+                      }
                     >
                       <MessageSquare />
                       <span>Chat</span>

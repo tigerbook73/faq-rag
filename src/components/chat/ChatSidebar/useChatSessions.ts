@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchSessions, apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/session-api";
+import { getLastChatHref } from "@/lib/last-chat";
 import { CHAT_EVENTS } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -172,6 +173,11 @@ export function useChatSessions() {
     [router, closeOnMobile],
   );
 
+  const navigateToLastChat = useCallback(() => {
+    router.push(getLastChatHref());
+    closeOnMobile();
+  }, [router, closeOnMobile]);
+
   return {
     sessions,
     isLoadingSessions,
@@ -188,6 +194,7 @@ export function useChatSessions() {
     handleExport,
     handleDelete,
     navigateToSession,
+    navigateToLastChat,
     closeOnMobile,
     reloadSessions: loadSessions,
     pathname,
