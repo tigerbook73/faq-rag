@@ -1,0 +1,640 @@
+# FAQ-RAG Mobile Demo Plan
+
+本文档记录在现有 FAQ-RAG 项目中加入 Expo React Native demo 前端的实施计划、认证设计、项目组织方式和验证清单。
+
+## 目标
+
+- 保持现有 Next.js Web 部署稳定，Web 继续部署在 Vercel。
+- Expo Mobile 作为第二个前端客户端，通过 HTTPS 调用现有 Next.js API routes。
+- 后端 API 同时支持 Web cookie session 和 Mobile Bearer token。
+- 先做低风险 demo，不立即重构现有 Web 目录到 `apps/web`。
+- 所有 Mobile 相关改动先在独立 `mobile` 分支开发，完整验证后再合并回 `main`。
+
+## 分支策略
+
+Mobile demo 涉及认证 helper、API route、workspace 配置、shared package 和 Expo app。即使这些改动可以做到兼容 Web，也应先全部隔离在独立分支中完成。
+
+推荐流程：
+
+```bash
+git switch main
+git pull
+git switch -c mobile
+```
+
+所有阶段 1 到阶段 6 的改动都在 `mobile` 分支进行：
+
+```txt
+mobile branch:
+- Bearer token API auth
+- API route 改造
+- packages/shared
+- mobile/ Expo app
+- pnpm workspace 更新
+- Web 回归验证
+- Mobile demo 验证
+```
+
+`main` 分支在 Mobile 开发期间保持现状，只接受和 Mobile 无关的正常 Web 修复。合并前从 `main` 同步最新改动到 `mobile`：
+
+```bash
+git switch mobile
+git fetch
+git merge origin/main
+```
+
+合并回 `main` 的条件：
+
+- Web 登录、聊天、Knowledge、登出全部通过。
+- Cookie auth API 路径通过。
+- Bearer token API 路径通过。
+- 无认证、无效 token、跨用户访问均失败。
+- Expo demo 可以登录、调用 chat API、刷新 token、登出。
+- Vercel preview 部署验证通过。
+
+如果 Mobile 开发过程中发现需要较大 Web 架构调整，先继续留在 `mobile` 分支评估，不直接把中间状态合并到 `main`。
+
+## 实施协议
+
+Mobile demo 按阶段实施。每个阶段都必须有明确的验证方式、文档记录和 Git 暂存边界。
+
+### 阶段状态
+
+每个阶段使用以下状态之一：
+
+```txt
+planned
+in_progress
+verified
+staged
+awaiting-manual-verification
+blocked
+```
+
+状态含义：
+
+- `planned`：阶段尚未开始。
+- `in_progress`：阶段正在实施。
+- `verified`：自动验证或可执行验证已通过，但尚未暂存。
+- `staged`：阶段文件已暂存，等待人工 commit 命令。
+- `awaiting-manual-verification`：代码和文档已暂存，但仍需人工操作验证后再 commit。
+- `blocked`：阶段无法继续，文档需记录阻塞原因和下一步选择。
+
+### 阶段记录格式
+
+每个阶段完成时，在对应阶段下补充实施记录：
+
+```txt
+状态:
+本阶段实际改动:
+验证方式:
+验证结果:
+已 staging 文件:
+commit 状态:
+备注:
+```
+
+`commit 状态` 使用：
+
+```txt
+waiting for user commit
+waiting for manual verification, then user commit
+blocked
+```
+
+### 阶段执行规则
+
+每个阶段开始前先检查工作区：
+
+```bash
+git status --short
+```
+
+如果存在非本阶段改动：
+
+- 与本阶段无关：不修改、不暂存。
+- 影响本阶段：先记录风险；如果无法安全推进，再询问人工选择。
+
+每个阶段完成后必须满足以下三种结果之一：
+
+```txt
+自动验证通过 -> 更新 PLAN-mobile.md -> stage 本阶段文件 -> 等待用户 commit
+人工验证待执行 -> 更新 PLAN-mobile.md -> stage 本阶段文件 -> 等待人工验证，再等待用户 commit
+阻塞 -> 更新 PLAN-mobile.md 说明原因 -> 不 stage 未完成改动，除非已有可保留的阶段性成果
+```
+
+暂存规则：
+
+- 只暂存当前阶段相关文件。
+- 不使用 `git add .`。
+- 暂存前查看 `git diff --stat`。
+- 暂存后查看 `git diff --staged --stat`。
+- 不 revert 用户或其他任务已有改动，除非人工明确要求。
+
+### 验证规则
+
+优先使用自动验证。根据阶段选择：
+
+```bash
+pnpm lint
+pnpm test
+pnpm build
+pnpm e2e
+```
+
+阶段 1 到阶段 4 应尽量用自动验证覆盖：
+
+- API auth helper 单元测试。
+- API route cookie auth 回归。
+- Bearer token 成功和失败路径。
+- shared package TypeScript 编译。
+
+阶段 5 和阶段 6 允许人工验证，因为 Expo 登录、扫码、真机或模拟器、token refresh、Vercel preview 可能需要人工操作。人工验证阶段仍需记录：
+
+- 需要验证的环境。
+- 操作步骤。
+- 预期结果。
+- 当前代码是否已暂存。
+
+### 授权与确认规则
+
+实施过程中，普通本地修改、检查、测试、格式化和文档更新不需要额外确认。
+
+仍需人工确认的情况：
+
+- 方案不确定，需要产品或架构选择。
+- 修改项目目录之外的文件。
+- 执行可能破坏数据或历史的命令。
+- 需要远程资源或网络访问，例如创建 Expo app、安装新依赖、访问 package registry、拉取 template。
+- 工具层要求 approval 的命令。
+
+Vercel preview 或部署验证属于本计划的一部分，不需要额外方案确认；但实际远程命令如果需要工具授权，仍按工具 approval 流程执行。
+
+### Secrets 规则
+
+Mobile 端和文档禁止写入：
+
+```txt
+SUPABASE_SERVICE_ROLE_KEY
+DATABASE_URL
+DIRECT_URL
+LLM provider API keys
+INGEST_HOOK_SECRET
+真实 access token
+```
+
+Bearer token 验证只记录状态码、通过/失败和必要的错误类别，不记录真实 token。
+
+## 推荐项目组织
+
+当前仓库已经是一个 Next.js 应用，建议先采用渐进式 monorepo：
+
+```txt
+faq-rag/
+  src/                    # 现有 Next.js Web + API，暂时保持不动
+  mobile/                 # 新建 Expo React Native demo
+  packages/
+    shared/               # 共享类型、schema、API client、纯函数
+  prisma/
+  supabase/
+  docs/
+  pnpm-workspace.yaml
+  package.json
+```
+
+后续如果 Mobile 成为长期维护的正式 App，再迁移到更标准的结构：
+
+```txt
+faq-rag/
+  apps/
+    web/
+    mobile/
+  packages/
+    shared/
+    config/
+```
+
+短期不建议一开始就把现有 Web 移到 `apps/web`，因为这会同时影响 Next.js 路径、部署配置、脚本、Prisma/Supabase 约定和测试路径，风险会叠加。
+
+## 可共享内容
+
+适合放入 `packages/shared`：
+
+- API request/response 类型。
+- Zod schema。
+- `Message`、`ChatSession`、`Citation`、`Provider` 等领域类型。
+- provider 列表和常量。
+- citation marker 解析、日期格式化等纯函数。
+- 面向 Web/Mobile 都可用的 API client 类型或轻量 fetch 封装。
+
+不建议共享：
+
+- shadcn UI 组件。
+- Tailwind class 和 Web layout 组件。
+- React Native UI 组件。
+- Next.js server actions。
+- Prisma client。
+- Web cookie/session 专用逻辑。
+
+## 目标架构
+
+```txt
+Web Browser
+  -> Next.js pages/components
+  -> Next.js API routes
+  -> Supabase Auth / PostgreSQL / Storage / pgvector
+  -> LLM providers
+
+Expo Mobile
+  -> Supabase Auth client
+  -> Next.js API routes with Authorization: Bearer <access_token>
+  -> Supabase Auth / PostgreSQL / Storage / pgvector
+  -> LLM providers
+```
+
+Mobile 不直接连接数据库，不直接执行 RAG，不持有 service role key。所有用户权限、数据过滤、RAG 执行仍由后端 API 控制。
+
+## 认证设计
+
+后端 API routes 需要统一支持两种认证来源：
+
+```txt
+Web:
+  Cookie-based Supabase session
+
+Mobile:
+  Authorization: Bearer <Supabase access_token>
+```
+
+建议新增统一 helper：
+
+```txt
+src/lib/auth/get-api-user.ts
+```
+
+逻辑：
+
+```txt
+1. 读取 request.headers.authorization。
+2. 如果存在 Bearer token：
+   - 提取 access token。
+   - 调用 supabase.auth.getUser(token) 校验。
+   - 校验成功后返回 user。
+   - 校验失败返回 null 或抛出 401。
+3. 如果没有 Bearer token：
+   - 走现有 cookie-based Supabase server client。
+   - 调用 supabase.auth.getUser()。
+4. 两者都没有有效用户时，API 返回 401。
+```
+
+API route 只信任 helper 返回的 user，不信任客户端传入的 `userId`。
+
+建议优先级：
+
+```txt
+Bearer token present -> validate Bearer token
+Bearer token absent  -> fallback to cookie auth
+No valid user        -> 401
+```
+
+这样不会破坏现有 Web cookie 登录态，同时 Mobile 可以用 Supabase session 的 `access_token` 调 API。
+
+## Mobile 环境变量
+
+Expo app 使用公开客户端配置：
+
+```txt
+EXPO_PUBLIC_API_BASE_URL=https://your-vercel-app.vercel.app
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+禁止放入 Mobile 的值：
+
+```txt
+SUPABASE_SERVICE_ROLE_KEY
+DATABASE_URL
+DIRECT_URL
+LLM provider API keys
+INGEST_HOOK_SECRET
+```
+
+## 分阶段实施计划
+
+### 阶段 1：梳理现有认证入口
+
+状态: staged
+
+目标：确认哪些 API routes 和后端逻辑依赖当前 Web cookie session。
+
+任务：
+
+- 列出受保护 API routes，例如 `/api/chat`、`/api/sessions/[id]`、knowledge/document 相关接口。
+- 找出现有 Supabase server client 封装。
+- 确认 Web 页面、API route、server action 各自如何获取 user。
+- 标记第一批需要支持 Bearer token 的 API routes。
+
+验证：
+
+- Web 登录后可以正常聊天。
+- Web 可以查看历史会话。
+- Web 可以访问 Knowledge 页面。
+- 未登录访问受保护 API 返回 401 或进入既有未授权流程。
+
+实施记录：
+
+```txt
+状态: staged
+本阶段实际改动:
+- 已创建并切换到 mobile 分支。
+- 已梳理 Supabase server/browser client、proxy、API routes、server components、server actions 和 Prisma 数据模型。
+- 确认当前 Web auth 主要由 src/proxy.ts 的 cookie-based Supabase session 保护。
+- 确认 API routes 内部目前基本不独立读取 user，依赖 proxy 拦截未登录请求。
+- 确认 /api/ingest-hook 是公开路径中的 webhook 例外，使用 x-webhook-secret 认证。
+- 确认 /auth/signin 和 /about 是公开路径，/api/health 当前会经过 proxy。
+
+第一批需要支持 Bearer token 的 API routes:
+- src/app/api/chat/route.ts
+- src/app/api/sessions/route.ts
+- src/app/api/sessions/[id]/route.ts
+
+后续 Mobile 如果需要 Knowledge 功能，再纳入:
+- src/app/api/documents/route.ts
+- src/app/api/documents/prepare/route.ts
+- src/app/api/documents/[id]/route.ts
+- src/app/api/documents/[id]/index/route.ts
+- src/app/api/documents/[id]/reindex/route.ts
+
+当前风险/差异:
+- prisma/schema.prisma 中 Session、Document 当前没有 userId/owner 字段；阶段 3 如果要满足“A 用户 token 不能读取或修改 B 用户 session”，需要增加所有权建模和数据迁移策略，或先把 demo 明确限制为单用户/全局知识库。
+- src/app/chat/[id]/page.tsx 直接按 session id 查询，没有 user 过滤；如果引入用户所有权，页面读取也需要同步改造。
+- knowledge server action src/app/knowledge/actions.ts 走 Web server action，不是 Mobile API 首批需求。
+
+验证方式:
+- git status --short --untracked-files=all
+- 静态检查 src/proxy.ts、src/lib/supabase/server.ts、src/app/api/*/route.ts、src/app/chat/[id]/page.tsx、src/app/knowledge/actions.ts、prisma/schema.prisma
+
+验证结果:
+- 工作区起始状态干净。
+- 已切换到 mobile 分支。
+- 已确认当前认证入口和首批 Bearer token 改造范围。
+- 本阶段未修改业务代码，不需要运行 Web 回归测试。
+
+已 staging 文件:
+- PLAN-mobile.md
+
+commit 状态: waiting for user commit
+备注:
+- PLAN-mobile.md 被 .gitignore 的 /PLAN*.md 忽略，阶段文档需要使用 git add -f 暂存。
+```
+
+### 阶段 2：新增统一 API 认证 helper
+
+目标：在不改变业务逻辑的前提下，让 API 可以解析 Bearer token。
+
+任务：
+
+- 新增 `src/lib/auth/get-api-user.ts`。
+- 支持 `Authorization: Bearer <access_token>`。
+- 保留 cookie session fallback。
+- 为无效 token、缺失 token、cookie auth 成功等场景写最小测试，或至少准备手动验证脚本。
+
+验证：
+
+- Web cookie 请求仍然成功。
+- 带有效 Supabase access token 的请求成功。
+- 不带 cookie 且不带 Bearer token 的请求失败。
+- 无效 Bearer token 请求失败。
+
+### 阶段 3：改造核心 API routes
+
+目标：让 Mobile demo 所需 API 支持 Bearer token。
+
+优先范围：
+
+- `/api/chat`
+- `/api/sessions/[id]`
+- 如 Mobile demo 需要历史列表，再补充 session list API。
+
+任务：
+
+- API route 从统一 helper 获取 user。
+- 所有 DB 查询继续按 `user.id` 过滤。
+- 写操作禁止使用客户端传入的 user id。
+- 保留 Web cookie 请求路径。
+
+验证：
+
+- Web 新建聊天、继续聊天、查看历史正常。
+- Mobile 风格请求带 Bearer token 可以调用 `/api/chat`。
+- A 用户 token 不能读取或修改 B 用户 session。
+- 无认证请求返回 401。
+
+### 阶段 4：建立 shared package
+
+目标：减少 Web/Mobile API 类型漂移。
+
+建议结构：
+
+```txt
+packages/shared/
+  package.json
+  tsconfig.json
+  src/
+    index.ts
+    types.ts
+    schemas.ts
+    constants.ts
+    api-client.ts
+```
+
+任务：
+
+- 抽出 chat request/response schema。
+- 抽出 session/message/citation/provider 类型。
+- 确认 Web 可以引用 `@faq-rag/shared`。
+- 更新 `pnpm-workspace.yaml`，纳入 `packages/*` 和后续 `mobile`。
+
+验证：
+
+- `pnpm lint` 或 `tsc --noEmit` 通过。
+- Web API route 和前端仍能正常编译。
+- shared package 不依赖 Next.js、React DOM、Prisma 或 Node-only API。
+
+### 阶段 5：创建 Expo demo
+
+目标：实现最小可用 Mobile 前端。
+
+建议位置：
+
+```txt
+mobile/
+```
+
+最小功能：
+
+- Sign in 页面。
+- Supabase session 保存和恢复。
+- Chat 页面。
+- Provider 选择可先固定，后续再做 UI。
+- 发送消息到 Next.js API。
+- 展示 streamed 或非 streamed 响应。Demo 阶段可以先用非 streamed fallback，降低 React Native streaming 复杂度。
+
+API 调用约定：
+
+```ts
+fetch(`${apiBaseUrl}/api/chat`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${session.access_token}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(payload),
+});
+```
+
+验证：
+
+- Expo 可以登录 Supabase。
+- Expo 能拿到 session access token。
+- Expo 能调用本地或 Vercel API。
+- token 过期后可以 refresh session。
+- 登出后 API 请求失败。
+
+### 阶段 6：部署与集成验证
+
+目标：确认 Mobile 接入不影响现有 Web 生产部署。
+
+Vercel：
+
+- 保持现有 Next.js Web + API 部署。
+- 不需要为 Mobile 单独部署后端。
+- 确认生产环境变量不泄露到 Mobile。
+
+Supabase：
+
+- Email/password 登录通常不需要额外配置。
+- OAuth 登录需要配置 Expo deep link redirect URL。
+- RLS 策略通常不用因为 Mobile 改动，前提是数据库仍由后端访问。
+
+验证清单：
+
+```txt
+Web:
+- 登录成功
+- 新建聊天成功
+- 历史聊天读取成功
+- Knowledge 页面正常
+- 登出成功
+
+API:
+- cookie auth 成功
+- Bearer token auth 成功
+- 无认证失败
+- 无效 token 失败
+- 跨用户访问失败
+
+Mobile:
+- 登录成功
+- session 恢复成功
+- chat API 调用成功
+- token refresh 成功
+- 登出后 API 拒绝请求
+```
+
+## Mobile Demo UI 设计
+
+目标是做一个工作型 demo，而不是完整营销页或复杂客户端。
+
+### 信息架构
+
+建议先做 3 个主要界面：
+
+```txt
+AuthScreen
+ChatScreen
+SettingsScreen
+```
+
+后续再加入：
+
+```txt
+SessionListScreen
+KnowledgeScreen
+CitationDetailScreen
+```
+
+### AuthScreen
+
+内容：
+
+- Email 输入框。
+- Password 输入框。
+- Sign in 按钮。
+- 错误提示。
+- Loading 状态。
+
+设计原则：
+
+- 不做复杂品牌页。
+- 表单居中但不要过度留白。
+- 保持移动端输入框高度足够，建议 44px 以上。
+
+### ChatScreen
+
+内容：
+
+- 顶部栏：标题、provider 状态、设置入口。
+- 消息列表：user bubble 右对齐，assistant bubble 左对齐。
+- Composer：多行输入、发送按钮、loading 状态。
+- Citation：先以内联标记展示，点击后可以用 bottom sheet 或独立详情页展示。
+
+设计原则：
+
+- 正文字号至少 16px。
+- composer 输入区不要低于 44px。
+- 避免把所有功能放在首版；先保证登录、发送、响应展示稳定。
+- streamed response 如果实现复杂，第一版可以先等完整响应返回。
+
+### SettingsScreen
+
+内容：
+
+- 当前用户 email。
+- API base URL 显示或 dev-only 编辑。
+- Provider 选择。
+- Sign out。
+
+设计原则：
+
+- demo 阶段可以保留 dev-only 配置入口。
+- 不在客户端暴露任何 server secret。
+
+## 技术注意事项
+
+- Expo 端使用 `@supabase/supabase-js` 和安全存储适配器保存 session。
+- API client 需要在 401 后尝试 refresh session，再重试一次。
+- React Native 对 streaming fetch 的支持需要单独验证；不要把 streaming 作为第一阶段阻塞项。
+- 如果后续支持 Expo Web，需要再考虑 CORS。
+- 如果使用 OAuth，需要配置 deep link scheme 和 Supabase redirect URL。
+
+## 不做事项
+
+第一阶段不做：
+
+- 不迁移现有 Web 到 `apps/web`。
+- 不让 Mobile 直连数据库。
+- 不在 Mobile 中保存 service role key。
+- 不把 Web UI 组件抽给 Mobile 复用。
+- 不一次性重写 API 响应协议。
+- 不把所有 server actions 立即改成 API routes，除非 Mobile demo 需要。
+
+## 推荐实施顺序
+
+1. 完成阶段 1 到阶段 3，先打通后端 Bearer token 认证。
+2. Web 回归验证通过后，再创建 `packages/shared`。
+3. shared package 稳定后，再创建 `mobile/` Expo app。
+4. Mobile 先接登录和单轮 chat API。
+5. 再补 session list、citation detail、provider select。
+
+这条路径的核心原则是：先让后端认证兼容 Mobile，再做共享类型，最后创建 Expo 前端；不要把认证改造、目录迁移和移动端 UI 同时推进。
