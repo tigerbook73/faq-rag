@@ -390,6 +390,8 @@ commit 状态: waiting for user commit
 
 ### 阶段 2：新增统一 API 认证 helper
 
+状态: staged
+
 目标：在不改变业务逻辑的前提下，让 API 可以解析 Bearer token。
 
 任务：
@@ -405,6 +407,37 @@ commit 状态: waiting for user commit
 - 带有效 Supabase access token 的请求成功。
 - 不带 cookie 且不带 Bearer token 的请求失败。
 - 无效 Bearer token 请求失败。
+
+实施记录：
+
+```txt
+状态: staged
+本阶段实际改动:
+- 新增 src/lib/auth/get-api-user.ts。
+- 新增 getApiUser(request)，统一解析 API user。
+- 支持 Authorization: Bearer <access_token>，并调用 supabase.auth.getUser(token) 验证。
+- 没有 Bearer token 时保留 cookie session fallback，调用 supabase.auth.getUser()。
+- Bearer header 一旦出现但无效或格式不完整，直接返回 null，不回退 cookie auth。
+- 新增 src/lib/auth/get-api-user.test.ts，覆盖 token 提取、Bearer 检测、有效 Bearer、cookie fallback、无效 Bearer、格式错误 Bearer、cookie auth 失败。
+
+验证方式:
+- pnpm test -- src/lib/auth/get-api-user.test.ts
+- pnpm lint
+
+验证结果:
+- get-api-user.test.ts: 1 suite passed, 8 tests passed。
+- pnpm lint 通过，包括 tsc --noEmit 和 eslint --fix。
+- 本阶段 helper 尚未接入 API routes，因此不需要重启当前 pnpm dev。
+
+已 staging 文件:
+- src/lib/auth/get-api-user.ts
+- src/lib/auth/get-api-user.test.ts
+- PLAN-mobile.md
+
+commit 状态: waiting for user commit
+备注:
+- 阶段 3 接入 API routes 时，仍需同步处理 proxy 对 Bearer API 请求的放行，否则无 cookie 的 Mobile 请求会在到达 route 前被 redirect。
+```
 
 ### 阶段 3：改造核心 API routes
 
