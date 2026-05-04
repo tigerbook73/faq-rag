@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchSessions, apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/session-api";
-import { lastChat } from "@/lib/last-chat";
 import { CHAT_EVENTS } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -16,15 +15,6 @@ export function useChatSessions() {
   const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
   const mountedRef = useRef(false);
-
-  const lastChatId = useSyncExternalStore(
-    (onStoreChange) => {
-      window.addEventListener(CHAT_EVENTS.LAST_CHANGED, onStoreChange);
-      return () => window.removeEventListener(CHAT_EVENTS.LAST_CHANGED, onStoreChange);
-    },
-    () => lastChat.get(),
-    () => null,
-  );
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -187,7 +177,6 @@ export function useChatSessions() {
     isLoadingSessions,
     isRefreshingSessions,
     sessionsError,
-    lastChatId,
     editingId,
     editValue,
     inputRef,

@@ -25,7 +25,6 @@ export function ChatSidebarContent() {
     isLoadingSessions,
     isRefreshingSessions,
     sessionsError,
-    lastChatId,
     editingId,
     editValue,
     inputRef,
@@ -42,7 +41,6 @@ export function ChatSidebarContent() {
     pathname,
   } = useChatSessions();
 
-  const showBackToLast = !!(lastChatId && pathname !== `/chat/${lastChatId}`);
   const showSessionSkeletons = isLoadingSessions && sessions.length === 0;
   const showSessionError = !!sessionsError && sessions.length === 0;
   const showEmptySessions = !isLoadingSessions && !sessionsError && sessions.length === 0;
@@ -147,18 +145,6 @@ export function ChatSidebarContent() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        {showBackToLast && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground w-full justify-start group-data-[collapsible=icon]:hidden"
-            onClick={() => {
-              navigateToSession("last"); // Note: /chat/last is handled by a page redirect
-            }}
-          >
-            ↩ Back to last chat
-          </Button>
-        )}
       </SidebarFooter>
     </>
   );

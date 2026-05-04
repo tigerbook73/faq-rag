@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { type Message, type ChatSession } from "@/lib/session-api";
 import { lastChat } from "@/lib/last-chat";
-import { CHAT_EVENTS } from "@/lib/constants";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { useDraftPersistence, useChatScroll, useStreamingChat } from "./useChatWindow";
@@ -44,7 +43,6 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
       return;
     }
     lastChat.set(chatId);
-    window.dispatchEvent(new CustomEvent(CHAT_EVENTS.LAST_CHANGED));
   }, [chatId, initialSession, router]);
 
   useEffect(() => {

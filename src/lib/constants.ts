@@ -6,5 +6,4 @@ export const STORAGE_KEYS = {
 
 export const CHAT_EVENTS = {
   SESSION_UPDATED: "chat-session-updated",
-  LAST_CHANGED: "chat-last-changed",
 } as const;
