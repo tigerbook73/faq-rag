@@ -612,6 +612,8 @@ commit 状态: waiting for user commit
 
 ### 阶段 5：创建 Expo demo
 
+状态: awaiting-manual-verification
+
 目标：实现最小可用 Mobile 前端。
 
 建议位置：
@@ -649,6 +651,80 @@ fetch(`${apiBaseUrl}/api/chat`, {
 - Expo 能调用本地或 Vercel API。
 - token 过期后可以 refresh session。
 - 登出后 API 请求失败。
+
+实施记录：
+
+```txt
+状态: awaiting-manual-verification
+本阶段实际改动:
+- 使用 Expo blank TypeScript template 创建 mobile/。
+- mobile/package.json 增加 @faq-rag/shared、@supabase/supabase-js、expo-secure-store、react-native-url-polyfill。
+- mobile/package.json 增加 Expo Web 运行依赖 react-dom、react-native-web、@expo/metro-runtime，用于支持 Expo Web bundling。
+- mobile/App.tsx 实现最小 demo：Supabase email/password 登录、SecureStore session persistence、API base URL 输入、provider 选择、chat 消息列表、composer、sign out。
+- Mobile chat 请求调用 `${EXPO_PUBLIC_API_BASE_URL}/api/chat`，使用 Authorization: Bearer <access_token>。
+- Mobile 先用 response.text() 解析 SSE data 行，避免第一版阻塞在 React Native streaming 兼容性上。
+- 新增 mobile/metro.config.js，配置 monorepo watchFolders 和 nodeModulesPaths，确保 Metro 解析 @faq-rag/shared。
+- mobile/metro.config.js 增加精确 resolveRequest：仅强制 react 和 react-dom 从 mobile/node_modules 解析，避免 Expo Web 在 monorepo/hoisted 依赖下混用多份 React；其它依赖仍走 Metro 默认解析，避免影响 Expo dev runtime / HMR。
+- 新增 mobile/.env.example 和 mobile/README.md。
+- Mobile env 约定改为 local = .env + .env.development.local；remote = .env + .env.production；真实 env 文件忽略提交，只提交 .env.example。
+- mobile/app.json 名称和 slug 改为 FAQ-RAG Demo / faq-rag-demo。
+- pnpm-workspace.yaml 由 Expo/pnpm 调整为 unquoted packages，并增加 nodeLinker: hoisted。
+- 保持 Expo mobile 的 react 运行时版本为 19.1.0；root Web 的 @types/react 显式固定为 19.2.14，并将 src/app/auth/signin/page.tsx 恢复为 React.SubmitEvent<HTMLFormElement>。
+- mobile/App.tsx 将 Supabase auth storage 按平台拆分：Native 使用 expo-secure-store，Web 使用 localStorage fallback，避免 Expo Web 调用 SecureStore native module 失败。
+- src/lib/http/cors.ts 增加 Bearer API CORS helper；proxy.ts 对 /api/chat 和 /api/sessions 的 OPTIONS preflight 直接返回 204，避免未登录 preflight 被重定向到 /auth/signin。
+- /api/chat、/api/sessions、/api/sessions/[id] 的实际响应补充 CORS headers，支持 Expo Web 从 localhost:8081 调用本地 Next API；额外允许 origin 可通过 API_CORS_ORIGINS 配置。
+
+验证方式:
+- pnpm --filter mobile exec tsc --noEmit
+- pnpm test
+- pnpm lint
+- pnpm --filter mobile exec expo export --platform android --output-dir /tmp/faq-rag-mobile-export
+- pnpm --filter mobile exec expo export --platform web --output-dir /tmp/faq-rag-mobile-web-export
+- pnpm why @types/react
+- pnpm build
+
+验证结果:
+- pnpm why @types/react 显示 root/Web 使用 @types/react 19.2.14，mobile/React Native 依赖链仍使用 @types/react 19.1.17。
+- mobile TypeScript 通过。
+- pnpm test 通过：6 suites passed, 35 tests passed。
+- pnpm lint 通过，包括 tsc --noEmit 和 eslint --fix。
+- Expo android export 通过，Metro 成功 bundle mobile/index.ts，输出到 /tmp/faq-rag-mobile-export。
+- Expo web export 通过，Metro 成功 bundle mobile/index.ts，输出到 /tmp/faq-rag-mobile-web-export。
+- pnpm build 通过；仍输出既有 Turbopack/NFT tracing warning。
+- 2026-05-04 runtime 修复后重新验证：pnpm --filter mobile exec tsc --noEmit 通过。
+- 2026-05-04 runtime 修复后重新验证：pnpm --filter mobile exec expo export --platform web --output-dir /tmp/faq-rag-mobile-web-export 通过。
+- 2026-05-04 继续修复 Metro React resolver 后重新验证：pnpm --filter mobile exec tsc --noEmit 通过。
+- 2026-05-04 继续修复 Metro React resolver 后重新验证：pnpm --filter mobile exec expo export --platform web --output-dir /tmp/faq-rag-mobile-web-export 通过。
+- 2026-05-04 继续修复 Metro React resolver 后新增 dev export 验证：pnpm --filter mobile exec expo export --platform web --dev --output-dir /tmp/faq-rag-mobile-web-dev-export 通过；dev bundle 中只检测到 mobile React/React DOM 19.1.0，未检测到 root React/React DOM 19.2.x。
+- 2026-05-04 CORS 修复后验证：pnpm jest src/lib/http/cors.test.ts src/app/api/sessions/route.test.ts --runInBand 通过。
+- 2026-05-04 CORS 修复后验证：pnpm test 通过，7 suites passed, 38 tests passed。
+- 2026-05-04 CORS 修复后验证：pnpm lint 通过，包括 tsc --noEmit 和 eslint --fix。
+
+需要人工验证:
+- 按 local 约定写入 mobile/.env 和 mobile/.env.development.local，或按 remote 约定写入 mobile/.env 和 mobile/.env.production。
+- 运行 pnpm --filter mobile start。
+- 如果已打开 Expo Web dev server，重启并清缓存后再验证：pnpm --filter mobile exec expo start --web --clear。
+- Expo Web 打开后不再出现 invalid hook call 或 ExpoSecureStore.default.getValueWithKeyAsync is not a function。
+- Expo Web 从 http://localhost:8081 调用 http://127.0.0.1:3000/api/chat 时，preflight 不再被 Redirect is not allowed for a preflight request 拦截。
+- 使用 Expo Go 或模拟器打开 App。
+- 登录 Supabase 测试账号。
+- 发送 chat 问题，确认 Next API 返回 answer。
+- 关闭并重新打开 App，确认 session 恢复。
+- Sign out 后确认回到登录页；未登录状态无法调用 chat。
+
+已 staging 文件:
+- mobile/**
+- package.json
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- src/app/auth/signin/page.tsx
+- PLAN-mobile.md
+
+commit 状态: waiting for manual verification, then user commit
+备注:
+- 本阶段创建了 Expo app 和 workspace 依赖；如果 pnpm dev 或 Expo start 已运行，需要重启以加载 workspace/package 变化。
+- 真机测试本地 API 时，EXPO_PUBLIC_API_BASE_URL 需要使用电脑局域网 IP，而不是 localhost。
+```
 
 ### 阶段 6：部署与集成验证
 

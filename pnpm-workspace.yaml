@@ -1,8 +1,8 @@
 packages:
-  - "."
-  - "packages/*"
-  - "mobile"
-
+  - .
+  - packages/*
+  - mobile
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+nodeLinker: hoisted

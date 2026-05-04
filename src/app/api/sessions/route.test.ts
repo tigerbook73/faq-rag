@@ -16,13 +16,13 @@ jest.mock("@/lib/db/client", () => ({
   },
 }));
 
-import { GET, POST } from "./route";
+import { GET, OPTIONS, POST } from "./route";
 import type { NextRequest } from "next/server";
 
 function request(body?: unknown): NextRequest {
   return new Request("http://localhost/api/sessions", {
     method: body ? "POST" : "GET",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers: body ? { "Content-Type": "application/json", Origin: "http://localhost:8081" } : { Origin: "http://localhost:8081" },
     body: body ? JSON.stringify(body) : undefined,
   }) as NextRequest;
 }
@@ -41,6 +41,14 @@ describe("/api/sessions", () => {
     expect(mockFindMany).not.toHaveBeenCalled();
   });
 
+  it("responds to CORS preflight without authentication", () => {
+    const res = OPTIONS(request());
+
+    expect(res.status).toBe(204);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:8081");
+    expect(mockGetApiUser).not.toHaveBeenCalled();
+  });
+
   it("lists only sessions owned by the API user", async () => {
     mockGetApiUser.mockResolvedValue({ id: "user-a" });
     mockFindMany.mockResolvedValue([]);
@@ -48,6 +56,7 @@ describe("/api/sessions", () => {
     const res = await GET(request());
 
     expect(res.status).toBe(200);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:8081");
     expect(mockFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: "user-a" },

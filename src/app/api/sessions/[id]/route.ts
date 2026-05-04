@@ -3,13 +3,18 @@ import { prisma } from "@/lib/db/client";
 import { Prisma } from "@/generated/prisma";
 import { UpdateSessionInputSchema } from "@/lib/schemas/session";
 import { getApiUser } from "@/lib/auth/get-api-user";
+import { corsPreflightResponse, withCors } from "@/lib/http/cors";
 
 type Params = { params: Promise<{ id: string }> };
+
+export function OPTIONS(req: NextRequest) {
+  return corsPreflightResponse(req);
+}
 
 export async function GET(req: NextRequest, { params }: Params) {
   const user = await getApiUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), req);
   }
 
   const { id } = await params;
@@ -17,21 +22,21 @@ export async function GET(req: NextRequest, { params }: Params) {
     where: { id, userId: user.id },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
-  if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(session);
+  if (!session) return withCors(NextResponse.json({ error: "Not found" }, { status: 404 }), req);
+  return withCors(NextResponse.json(session), req);
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const user = await getApiUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), req);
   }
 
   const { id } = await params;
 
   const parsed = UpdateSessionInputSchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return withCors(NextResponse.json({ error: parsed.error.flatten() }, { status: 400 }), req);
   }
   const { title, messages } = parsed.data;
 
@@ -69,18 +74,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     });
   });
 
-  if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(session);
+  if (!session) return withCors(NextResponse.json({ error: "Not found" }, { status: 404 }), req);
+  return withCors(NextResponse.json(session), req);
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
   const user = await getApiUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), req);
   }
 
   const { id } = await params;
   const result = await prisma.session.deleteMany({ where: { id, userId: user.id } });
-  if (result.count === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return new NextResponse(null, { status: 204 });
+  if (result.count === 0) return withCors(NextResponse.json({ error: "Not found" }, { status: 404 }), req);
+  return withCors(new NextResponse(null, { status: 204 }), req);
 }

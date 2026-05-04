@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { corsPreflightResponse } from "@/lib/http/cors";
 
 const PUBLIC_PATHS = ["/auth/signin", "/about", "/api/ingest-hook"];
 const BEARER_API_PATHS = ["/api/chat", "/api/sessions"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (req.method === "OPTIONS" && BEARER_API_PATHS.some((p) => pathname.startsWith(p))) {
+    return corsPreflightResponse(req);
+  }
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();

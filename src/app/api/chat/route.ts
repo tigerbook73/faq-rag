@@ -8,18 +8,23 @@ import { truncateHistory } from "@/lib/llm/truncate";
 import { logger } from "@/lib/logger";
 import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/schemas/chat";
 import { getApiUser } from "@/lib/auth/get-api-user";
+import { corsPreflightResponse, withCors } from "@/lib/http/cors";
+
+export function OPTIONS(req: NextRequest) {
+  return corsPreflightResponse(req);
+}
 
 export async function POST(req: NextRequest) {
   const user = await getApiUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), req);
   }
 
   let body: ChatRequestInput;
   try {
     body = ChatRequestInputSchema.parse(await req.json());
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
+    return withCors(NextResponse.json({ error: String(err) }, { status: 400 }), req);
   }
 
   const { question, provider: providerName, history } = body;
@@ -89,11 +94,14 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+  return withCors(
+    new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    }),
+    req,
+  );
 }
