@@ -47,9 +47,9 @@ export default function SignInPage() {
 
   return (
     <div className="bg-background flex h-full items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-(--container-app-form)">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-2xl">FAQ RAG</CardTitle>
+          <CardTitle className="text-app-title text-center">FAQ RAG</CardTitle>
           <p className="text-muted-foreground text-center text-sm">Sign in to continue</p>
         </CardHeader>
         <CardContent>

@@ -9,11 +9,29 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* App-level UI size tokens. Full rules live in docs/ui-system.md. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --text-app-title: clamp(1.375rem, 1.25rem + 0.5vw, 1.75rem);
+  --text-app-title--line-height: 2rem;
+  --text-app-section: 1.125rem;
+  --text-app-section--line-height: 1.75rem;
+  --text-app-body: 0.875rem;
+  --text-app-body--line-height: 1.25rem;
+  --text-app-muted: 0.8125rem;
+  --text-app-muted--line-height: 1.125rem;
+  --text-app-caption: 0.75rem;
+  --text-app-caption--line-height: 1rem;
+  --container-app-chat: 48rem;
+  --container-app-readable: 48rem;
+  --container-app-workspace: 64rem;
+  --container-app-form: 24rem;
+  --spacing-app-page-x: clamp(1rem, 0.75rem + 1vw, 2rem);
+  --spacing-app-page-y: clamp(1.5rem, 1rem + 1vw, 2.5rem);
+  --spacing-app-composer: 3.75rem;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

@@ -10,7 +10,7 @@ export default async function KnowledgePage() {
   });
 
   return (
-    <PageShell className="max-w-5xl space-y-8">
+    <PageShell className="max-w-(--container-app-workspace) space-y-8">
       <UploadZone />
       <DocumentTable initialDocuments={documents} />
     </PageShell>

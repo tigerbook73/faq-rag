@@ -31,19 +31,19 @@ export function TopBar() {
   const isChat = pathname.startsWith("/chat");
 
   return (
-    <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-4">
-      <div className="flex items-center gap-2">
+    <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-3 sm:px-4">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         {isSignIn ? (
-          <LibraryBig className="size-6" />
+          <LibraryBig className="size-6 shrink-0" />
         ) : (
           <>
-            <SidebarTrigger className="md:hidden">
+            <SidebarTrigger className="size-10 shrink-0 md:hidden">
               <LibraryBig className="size-6" />
             </SidebarTrigger>
-            <LibraryBig className="hidden size-6 md:block" />
+            <LibraryBig className="hidden size-6 shrink-0 md:block" />
           </>
         )}
-        <Link href="/chat/new" className="text-base font-bold">
+        <Link href="/chat/new" className="truncate text-base font-bold">
           FAQ-RAG
         </Link>
         {isChat && subtitle && (
@@ -56,12 +56,12 @@ export function TopBar() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {isChat && (
           <>
             <span className="text-muted-foreground hidden text-sm sm:inline">Provider:</span>
-            <ProviderSelect value={provider} onChange={setProvider} />
-            <Separator orientation="vertical" className="my-2 self-stretch" />
+            <ProviderSelect value={provider} onChange={setProvider} className="w-28 sm:w-36" />
+            <Separator orientation="vertical" className="my-2 hidden self-stretch sm:block" />
           </>
         )}
         {isSignIn ? (

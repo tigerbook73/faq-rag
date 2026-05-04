@@ -10,15 +10,15 @@ export default async function AboutPage() {
   } = await supabase.auth.getUser();
   const isAuthenticated = !!user;
   return (
-    <PageShell className="max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">About FAQ-RAG</h1>
+    <PageShell className="max-w-(--container-app-readable) space-y-6">
+      <h1 className="text-app-title font-bold">About FAQ-RAG</h1>
       <p className="text-muted-foreground">
         FAQ-RAG is a local knowledge base Q&amp;A system powered by Retrieval-Augmented Generation. Upload documents in
         English or Chinese, then ask questions in either language and receive streamed answers with cited source chunks.
       </p>
 
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold">How it works</h2>
+        <h2 className="text-app-section font-semibold">How it works</h2>
         <ol className="text-muted-foreground list-inside list-decimal space-y-1">
           <li>Upload documents (PDF, DOCX, Markdown, or plain text) to the Knowledge Base</li>
           <li>Documents are chunked via semantic splitting and embedded with BGE-M3 (1024-dim)</li>
@@ -29,7 +29,7 @@ export default async function AboutPage() {
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Tech stack</h2>
+        <h2 className="text-app-section font-semibold">Tech stack</h2>
         <ul className="text-muted-foreground list-inside list-disc space-y-1">
           <li>Next.js 16 · React 19 · TypeScript · Tailwind CSS</li>
           <li>PostgreSQL + pgvector · Prisma ORM</li>
