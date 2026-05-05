@@ -1,60 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/client";
-import { Prisma } from "@/generated/prisma";
 import { UpdateSessionInputSchema } from "@/lib/schemas/session";
-import { DEFAULT_ADMIN_USER_ID } from "@/lib/default-users";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireUser } from "@/lib/auth/require-user";
+import { deleteSessionForUser, getSessionForUser, upsertSessionForUser } from "@/lib/data/sessions";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const session = await prisma.session.findUnique({
-    where: { id },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-  });
-  if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(session);
+  try {
+    const actor = await requireUser();
+    const { id } = await params;
+    const session = await getSessionForUser(actor.id, id);
+    if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(session);
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const { id } = await params;
+  try {
+    const actor = await requireUser();
+    const { id } = await params;
 
-  const parsed = UpdateSessionInputSchema.safeParse(await req.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-  const { title, messages } = parsed.data;
-
-  const session = await prisma.$transaction(async (tx) => {
-    await tx.session.upsert({
-      where: { id },
-      create: { id, userId: DEFAULT_ADMIN_USER_ID, title: title ?? "New Chat" },
-      update: { ...(title !== undefined && { title }) },
-    });
-    if (messages !== undefined) {
-      await tx.sessionMessage.deleteMany({ where: { sessionId: id } });
-      if (messages.length > 0) {
-        await tx.sessionMessage.createMany({
-          data: messages.map((m) => ({
-            sessionId: id,
-            role: m.role,
-            content: m.content,
-            citations: m.citations ? (m.citations as Prisma.InputJsonValue) : Prisma.JsonNull,
-          })),
-        });
-      }
+    const parsed = UpdateSessionInputSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-    return tx.session.findUnique({
-      where: { id },
-      include: { messages: { orderBy: { createdAt: "asc" } } },
-    });
-  });
 
-  return NextResponse.json(session);
+    const session = await upsertSessionForUser(actor.id, id, parsed.data);
+    if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    return NextResponse.json(session);
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { id } = await params;
-  await prisma.session.delete({ where: { id } });
-  return new NextResponse(null, { status: 204 });
+  try {
+    const actor = await requireUser();
+    const { id } = await params;
+    await deleteSessionForUser(actor.id, id);
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }
