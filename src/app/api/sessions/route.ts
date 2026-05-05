@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { CreateSessionInputSchema } from "@/lib/schemas/session";
+import { DEFAULT_ADMIN_USER_ID } from "@/lib/default-users";
 
 export async function GET() {
   const sessions = await prisma.session.findMany({
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   }
   const { id, title } = parsed.data;
   const session = await prisma.session.create({
-    data: { id, title: title ?? "New Chat" },
+    data: { id, userId: DEFAULT_ADMIN_USER_ID, title: title ?? "New Chat" },
   });
   return NextResponse.json(session, { status: 201 });
 }

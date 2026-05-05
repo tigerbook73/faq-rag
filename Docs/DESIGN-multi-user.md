@@ -39,6 +39,7 @@
     - [2.15.1 单元/接口测试](#2151-单元接口测试)
     - [2.15.2 E2E 验收](#2152-e2e-验收)
   - [2.16 风险和注意事项](#216-风险和注意事项)
+  - [2.17 生产发布策略](#217-生产发布策略)
 
 ### 2.2 对应需求
 
@@ -569,6 +570,20 @@ AND (
 - 默认用户 seed 脚本
 - Prisma client 生成结果
 
+临时兼容实现：
+
+- 阶段一只完成数据模型和默认用户基础，尚未完成 `requireUser()`、数据访问层和业务 API 权限改造。
+- 为了让阶段一完成后项目仍可编译、可运行、可执行基础验证，现有创建路径可以临时把新数据归属到默认 admin。
+- 涉及路径：
+  - `src/app/api/documents/prepare/route.ts`
+  - `src/app/api/sessions/route.ts`
+  - `src/app/api/sessions/[id]/route.ts`
+  - `src/lib/ingest/pipeline.ts`
+- 该兼容只服务于开发阶段验证，不是最终权限设计。
+- 阶段二、三、四引入 `requireUser()` 和数据访问层后，session/document 创建必须使用当前登录用户。
+- `ingest` CLI 如果后续仍保留，应明确为 admin-only/system-owned，或要求调用方显式传入 owner。
+- 最终生产发布前，除 seed、migration 和明确的 admin/system 工具外，业务写入路径不得继续硬编码 `DEFAULT_ADMIN_USER_ID`。
+
 自动化测试：
 
 - 如果本地数据库可用，运行迁移和 seed，验证默认用户资料存在且角色正确。
@@ -829,3 +844,55 @@ AND (
 - Supabase service role client 绕过 RLS，所有 admin 和 storage 操作必须在应用层显式校验。
 - 删除用户涉及 Supabase Auth、业务数据库和 storage 三处状态，失败处理需要日志和可重试思路。
 - 需求明确不做审计日志，因此设计不引入审计表。
+- 阶段一的 `DEFAULT_ADMIN_USER_ID` 业务写入兼容是开发期过渡方案，不能作为最终生产逻辑保留。
+
+### 2.17 生产发布策略
+
+阶段拆分只用于开发、验证和代码 review。生产环境不允许发布中间阶段，尤其不能只发布阶段一的数据模型和临时默认 admin 归属逻辑。
+
+#### 2.17.1 发布原则
+
+- 生产发布必须在阶段一到阶段八全部完成后进行。
+- 生产发布包必须包含完整的数据模型、授权、数据访问层、聊天隔离、文档隔离、检索隔离、公开文档选择、管理员能力和 UI 验收。
+- 开发阶段允许的临时兼容逻辑不得进入最终生产业务路径。
+- 数据库迁移是前向变更，代码回滚不能自动回滚 schema；发布前必须有数据库备份和恢复策略。
+
+#### 2.17.2 发布前检查清单
+
+发布前必须确认：
+
+- `POST /api/chat` 已从服务端获取当前用户，并把 `userId` 传入 retrieval。
+- `retrieve()` / `vectorSearch()` 已按当前用户可用文档范围过滤。
+- session API 已按当前用户过滤，管理员也不能通过普通 session API 访问其他用户聊天。
+- document API 已按 owner/admin 权限过滤。
+- public document selection API 已限制只能选择其他用户 public indexed 文档。
+- admin API 已全部调用 `requireAdmin()`。
+- Server Component/page 不再直接散写权限敏感 Prisma 查询。
+- 除 seed、migration 和明确的 admin/system 工具外，没有业务写入路径硬编码 `DEFAULT_ADMIN_USER_ID`。
+- `pnpm exec tsc --noEmit` 通过。
+- `pnpm test` 通过。
+- 关键 E2E 验收通过。
+
+#### 2.17.3 生产部署顺序
+
+建议生产部署顺序：
+
+1. 备份生产数据库。
+2. 部署完整多用户代码。
+3. 执行 `pnpm prisma migrate deploy --schema=prisma/schema.prisma`。
+4. 执行 `pnpm users:seed:prod`。
+5. 执行 smoke test：
+   - `admin@test.com` 可以登录。
+   - `user1@test.com` 和 `user2@test.com` 可以登录。
+   - `user1` 与 `user2` 聊天列表互不可见。
+   - `user1` private 文档不会被 `user2` 检索。
+   - public 文档勾选前不检索、勾选后检索、取消后不检索。
+   - admin 不能删除自己，可以管理普通用户和全站文档。
+6. 观察日志和错误率，确认无权限异常和检索泄露。
+
+#### 2.17.4 回滚注意事项
+
+- 如果迁移已经执行，不能只回滚应用代码到旧版本；旧版本不理解新 schema 和 owner 字段。
+- 严重故障时优先使用数据库备份恢复到发布前状态。
+- 如果只需要应用层回滚，必须保证回滚版本兼容新 schema，否则需要专门准备兼容分支。
+- 删除用户或文档操作涉及 storage 和 auth 状态，发布窗口内应避免并发执行高风险管理操作。

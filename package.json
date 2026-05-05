@@ -13,6 +13,8 @@
     "e2e:ui": "playwright test --ui",
     "ingest": "tsx --env-file=.env scripts/ingest.ts",
     "eval": "tsx --env-file=.env scripts/eval-retrieval.ts",
+    "users:seed": "tsx scripts/seed-users.ts",
+    "users:seed:prod": "tsx scripts/seed-users.ts --prod",
     "vercel:env:pull": "tsx scripts/vercel-env.ts pull",
     "vercel:env:push": "tsx scripts/vercel-env.ts push",
     "vercel:env:delete": "tsx scripts/vercel-env.ts delete",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { Prisma } from "@/generated/prisma";
 import { UpdateSessionInputSchema } from "@/lib/schemas/session";
+import { DEFAULT_ADMIN_USER_ID } from "@/lib/default-users";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -27,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const session = await prisma.$transaction(async (tx) => {
     await tx.session.upsert({
       where: { id },
-      create: { id, title: title ?? "New Chat" },
+      create: { id, userId: DEFAULT_ADMIN_USER_ID, title: title ?? "New Chat" },
       update: { ...(title !== undefined && { title }) },
     });
     if (messages !== undefined) {

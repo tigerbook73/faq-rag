@@ -9,20 +9,50 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserRole {
+  user
+  admin
+}
+
+enum DocumentVisibility {
+  private
+  public
+}
+
+model UserProfile {
+  id                       String                    @id
+  email                    String                    @unique
+  role                     UserRole                  @default(user)
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  updatedAt                DateTime                  @updatedAt @map("updated_at")
+  documents                Document[]
+  sessions                 Session[]
+  publicDocumentSelections PublicDocumentSelection[]
+
+  @@map("user_profiles")
+}
+
 model Document {
-  id          String   @id @default(uuid())
+  id          String                    @id @default(uuid())
+  ownerUserId String                    @map("owner_user_id")
   name        String
   mime        String
-  contentHash String   @unique @map("content_hash")
-  lang        String   @default("unknown")
-  sizeBytes   Int      @map("size_bytes")
-  status      String   @default("pending") // pending | uploaded | indexing | indexed | failed
-  errorMsg    String?  @map("error_msg")
-  totalChunks Int?     @map("total_chunks")
-  fileRef     String?  @map("file_path")
-  createdAt   DateTime @default(now()) @map("created_at")
+  contentHash String                    @map("content_hash")
+  visibility  DocumentVisibility        @default(private)
+  lang        String                    @default("unknown")
+  sizeBytes   Int                       @map("size_bytes")
+  status      String                    @default("pending") // pending | uploaded | indexing | indexed | failed
+  errorMsg    String?                   @map("error_msg")
+  totalChunks Int?                      @map("total_chunks")
+  fileRef     String?                   @map("file_path")
+  createdAt   DateTime                  @default(now()) @map("created_at")
+  owner       UserProfile               @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   chunks      Chunk[]
+  selections  PublicDocumentSelection[]
 
+  @@unique([ownerUserId, contentHash])
+  @@index([ownerUserId, createdAt])
+  @@index([visibility, status])
   @@index([status])
   @@map("documents")
 }
@@ -44,12 +74,14 @@ model Chunk {
 
 model Session {
   id        String           @id @default(uuid())
+  userId    String           @map("user_id")
   title     String           @default("New Chat")
   createdAt DateTime         @default(now()) @map("created_at")
   updatedAt DateTime         @updatedAt @map("updated_at")
+  user      UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  SessionMessage[]
 
-  @@index([updatedAt])
+  @@index([userId, updatedAt])
   @@map("sessions")
 }
 
@@ -63,4 +95,17 @@ model SessionMessage {
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("session_messages")
+}
+
+model PublicDocumentSelection {
+  id         String      @id @default(uuid())
+  userId     String      @map("user_id")
+  documentId String      @map("document_id")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@index([documentId])
+  @@map("public_document_selections")
 }

@@ -6,6 +6,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/storage";
 import { mimeFromExt } from "@/lib/ingest/parse";
 import { config } from "@/lib/config";
+import { DEFAULT_ADMIN_USER_ID } from "@/lib/default-users";
 
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
 const ALLOWED_MIME_TYPES = new Set([
@@ -45,7 +46,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "File exceeds 50 KB limit" }, { status: 413 });
   }
 
-  const existing = await prisma.document.findUnique({ where: { contentHash: hash } });
+  const existing = await prisma.document.findUnique({
+    where: { ownerUserId_contentHash: { ownerUserId: DEFAULT_ADMIN_USER_ID, contentHash: hash } },
+  });
   if (existing) {
     return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
   }
@@ -55,6 +58,7 @@ export async function POST(req: NextRequest) {
       name,
       mime: mimeFromExt(ext),
       contentHash: hash,
+      ownerUserId: DEFAULT_ADMIN_USER_ID,
       sizeBytes: size,
       status: "pending",
     },
