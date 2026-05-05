@@ -1,15 +1,14 @@
 import { ChatWindow } from "@/components/chat/ChatWindow";
-import { prisma } from "@/lib/db/client";
 import type { ChatSession, Message } from "@/lib/session-api";
 import type { Citation } from "@/components/chat/CitationDrawer";
+import { requireUser } from "@/lib/auth/require-user";
+import { getSessionForUser } from "@/lib/data/sessions";
 
 export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const actor = await requireUser();
 
-  const raw = await prisma.session.findUnique({
-    where: { id },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-  });
+  const raw = await getSessionForUser(actor.id, id);
 
   const initialSession: ChatSession | null = raw
     ? {
