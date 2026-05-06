@@ -3,10 +3,10 @@
 ## 当前状态
 
 - 当前阶段：`2.14.7` 管理员能力和清理流程
-- 状态：已完成 / 待提交
-- 最后确认的实现提交：`b3c0ee1`（`multi-user phase 2.14.6: add public document selection`）
+- 状态：已完成
+- 最后确认的实现提交：`845d97d`（`multi-user phase 2.14.7: add admin management APIs`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.7` 已完成，等待提交成为新的实现基线
+- 进度文档状态：阶段 `2.14.7` 已完成，当前文档已记录新的实现基线
 - 下一步入口：阶段 `2.14.8` UI 整合和端到端验收
 
 当前 feature 文档结构为：
@@ -37,6 +37,8 @@
   - 实施阶段 `2.14.5`：chat API 从当前用户推导 retrieval 权限上下文，vector search 只检索 owner 文档和已选择的 public 文档。
 - `b3c0ee1` `multi-user phase 2.14.6: add public document selection`
   - 实施阶段 `2.14.6`：公开文档列表、选择/取消选择 API、文档 visibility 更新，以及 Knowledge 页面公开文档选择交互。
+- `845d97d` `multi-user phase 2.14.7: add admin management APIs`
+  - 实施阶段 `2.14.7`：管理员用户/文档 API、共享删除 service、用户删除清理流程，以及只读 Admin 页面入口。
 
 历史 commit message 不做 rewrite。本映射作为既往 multi-user 工作的恢复来源。
 
