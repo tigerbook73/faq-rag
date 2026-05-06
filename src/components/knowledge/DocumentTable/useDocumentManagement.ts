@@ -15,6 +15,7 @@ export function useDocumentManagement(initialDocuments: Document[]) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
+  const [visibilityUpdatingId, setVisibilityUpdatingId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [rebuildProgress, setRebuildProgress] = useState<{
@@ -129,6 +130,33 @@ export function useDocumentManagement(initialDocuments: Document[]) {
     }
   }
 
+  async function handleVisibilityChange(id: string, visibility: "private" | "public") {
+    const prev = polledDocuments ?? initialDocuments;
+    const target = prev.find((d) => d.id === id);
+    if (!target || target.visibility === visibility) return;
+
+    setPolledDocuments(prev.map((d) => (d.id === id ? { ...d, visibility } : d)));
+    setVisibilityUpdatingId(id);
+    try {
+      const res = await fetch(`/api/documents/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visibility }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `Visibility update failed (${res.status})`);
+      }
+      router.refresh();
+      toast.success(`Document is now ${visibility}`);
+    } catch (err) {
+      setPolledDocuments(prev);
+      toast.error(err instanceof Error ? err.message : "Visibility update failed");
+    } finally {
+      setVisibilityUpdatingId(null);
+    }
+  }
+
   async function handleRebuildAll() {
     setRebuilding(true);
     setRebuildProgress({ done: 0, total: documents.length });
@@ -160,6 +188,7 @@ export function useDocumentManagement(initialDocuments: Document[]) {
     deleteTarget,
     setDeleteTarget,
     reindexingId,
+    visibilityUpdatingId,
     rebuilding,
     rebuildProgress,
     rebuildDialogOpen,
@@ -167,6 +196,7 @@ export function useDocumentManagement(initialDocuments: Document[]) {
     isManualRefreshing,
     handleDelete,
     handleReindex,
+    handleVisibilityChange,
     handleRebuildAll,
     handleManualRefresh,
   };

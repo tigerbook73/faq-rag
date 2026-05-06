@@ -2,12 +2,12 @@
 
 ## 当前状态
 
-- 当前阶段：`2.14.5` 问答检索权限过滤
-- 状态：已完成
+- 当前阶段：`2.14.6` 公开文档选择
+- 状态：已完成 / 待提交
 - 最后确认的实现提交：`6e084db`（`multi-user phase 2.14.5: filter retrieval by user`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.5` 已完成，当前文档已记录新的实现基线
-- 下一步入口：阶段 `2.14.6` 公开文档选择
+- 进度文档状态：阶段 `2.14.6` 已完成，等待提交成为新的实现基线
+- 下一步入口：阶段 `2.14.7` 管理员能力和清理流程
 
 当前 feature 文档结构为：
 
@@ -15,7 +15,7 @@
 - `DESIGN.md`
 - `PROGRESS.md`
 
-当前工作区应保持干净后再进入阶段 `2.14.6` 实施。
+当前工作区应保持干净后再进入阶段 `2.14.7` 实施。
 
 ## 历史提交映射
 
@@ -45,7 +45,7 @@
 - [x] `2.14.3` 聊天记录隔离
 - [x] `2.14.4` 文档归属和私有隔离
 - [x] `2.14.5` 问答检索权限过滤
-- [ ] `2.14.6` 公开文档选择
+- [x] `2.14.6` 公开文档选择
 - [ ] `2.14.7` 管理员能力和清理流程
 - [ ] `2.14.8` UI 整合和端到端验收
 
@@ -67,31 +67,36 @@
 - 更新 vector search SQL，只允许当前用户自己的 indexed 文档，以及当前用户已选择且仍为 public 的 indexed 文档进入检索。
 - 将 `src/lib/retrieval/*` 测试纳入 Jest，并增加 retrieval 权限传参和 SQL 过滤测试。
 - 更新 retrieval eval 脚本，默认使用演示 admin 用户，也支持通过 `EVAL_USER_ID` 指定评测用户。
+- 增加 `src/lib/data/public-documents.ts`，封装公开文档列表、选择和取消选择逻辑。
+- 增加 `GET /api/public-documents`，返回其他用户 public indexed 文档，并标记当前用户是否已选择。
+- 增加 `POST/DELETE /api/public-documents/[id]/selection`，支持选择和取消选择公开文档。
+- 增加 `PATCH /api/documents/[id]`，允许文档 owner 修改自己的 visibility；改为 private 时删除该文档 selection。
+- 更新 Knowledge 页面，展示自己的文档 visibility 控件和其他用户公开文档选择表。
+- 增加聚焦测试，覆盖公开文档列表过滤、选择约束、取消选择和 public 改 private 清理 selection。
 
 ## 已知不一致
 
 - CLI/API ingest helper 路径仍使用 `DEFAULT_ADMIN_USER_ID`。
-- Knowledge UI 还没有暴露 visibility 选择和公开文档选择。
-- 公开文档选择 API 和管理员 API 尚未实现。
+- 管理员 API 尚未实现。
 
 ## 下一步
 
-继续阶段 `2.14.6`：
+继续阶段 `2.14.7`：
 
-1. 增加公开文档列表 API，返回其他用户 public indexed 文档，并标记当前用户是否已选择。
-2. 增加公开文档选择和取消选择 API。
-3. 增加文档可见性更新 API，owner 可将自己的文档设为 private/public。
-4. 处理 public 改 private 后的选择关系清理或失效。
-5. 增加聚焦测试，覆盖不能选择自己的文档、不能选择 private/未 indexed 文档、选择后进入 retrieval 范围。
+1. 增加管理员用户列表、创建用户和删除用户 API。
+2. 增加管理员全站文档列表和删除文档 API。
+3. 提取或复用文档删除服务，确保删除文档时清理 storage、chunks 和 selections。
+4. 增加删除用户清理流程，清理用户资料、聊天、文档、索引、storage 和 selection 关系。
+5. 增加聚焦测试，覆盖 requireAdmin、管理员不能删除自己、删除文档/用户后的级联清理边界。
 
 ## 验证状态
 
 - `pnpm exec tsc --noEmit`：通过。
-- `pnpm exec jest --runInBand`：通过，15 个测试套件 / 47 个测试。
+- `pnpm exec jest --runInBand`：通过，19 个测试套件 / 62 个测试。
 - `pnpm test -- --runInBand`：未执行测试；该项目脚本会把 `--runInBand` 当作 Jest pattern，返回 No tests found。
 - E2E：未运行。
 
-继续阶段 `2.14.6` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
+继续阶段 `2.14.7` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
 
 ## 恢复协议
 

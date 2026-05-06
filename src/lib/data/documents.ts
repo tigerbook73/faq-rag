@@ -5,6 +5,8 @@ type DocumentActor = {
   role: "user" | "admin";
 };
 
+type DocumentVisibility = "private" | "public";
+
 export async function listDocumentsForOwner(ownerUserId: string) {
   return prisma.document.findMany({
     where: { ownerUserId },
@@ -71,4 +73,30 @@ export async function getDocumentForWrite(actor: DocumentActor, documentId: stri
   if (!doc) return null;
   if (actor.role !== "admin" && doc.ownerUserId !== actor.id) return null;
   return doc;
+}
+
+export async function updateDocumentVisibilityForOwner(
+  ownerUserId: string,
+  documentId: string,
+  visibility: DocumentVisibility,
+) {
+  const doc = await prisma.document.findUnique({
+    where: { id: documentId },
+    select: { ownerUserId: true },
+  });
+  if (!doc || doc.ownerUserId !== ownerUserId) return null;
+
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.document.update({
+      where: { id: documentId },
+      data: { visibility },
+      include: { _count: { select: { chunks: true } } },
+    });
+
+    if (visibility === "private") {
+      await tx.publicDocumentSelection.deleteMany({ where: { documentId } });
+    }
+
+    return updated;
+  });
 }

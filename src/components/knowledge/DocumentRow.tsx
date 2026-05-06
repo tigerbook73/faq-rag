@@ -3,12 +3,14 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 export interface Document {
   id: string;
   name: string;
   lang: string | null;
   status: string;
+  visibility: "private" | "public";
   sizeBytes: number;
   errorMsg: string | null;
   totalChunks: number | null;
@@ -29,11 +31,21 @@ interface DocumentRowProps {
   doc: Document;
   isDeleting: boolean;
   isReindexing: boolean;
+  isUpdatingVisibility: boolean;
   onReindex: (id: string) => void;
   onDelete: (id: string) => void;
+  onVisibilityChange: (id: string, visibility: "private" | "public") => void;
 }
 
-export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete }: DocumentRowProps) {
+export function DocumentRow({
+  doc,
+  isDeleting,
+  isReindexing,
+  isUpdatingVisibility,
+  onReindex,
+  onDelete,
+  onVisibilityChange,
+}: DocumentRowProps) {
   return (
     <TableRow key={doc.id}>
       <TableCell className="max-w-32 truncate font-medium sm:max-w-50">{doc.name}</TableCell>
@@ -46,6 +58,36 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
         {doc.status === "failed" && doc.errorMsg && (
           <p className="text-destructive mt-1 max-w-48 text-xs break-words">{doc.errorMsg}</p>
         )}
+        <div className="mt-2 md:hidden">
+          <Select
+            value={doc.visibility}
+            onValueChange={(value) => onVisibilityChange(doc.id, value as "private" | "public")}
+            disabled={isUpdatingVisibility}
+          >
+            <SelectTrigger size="sm" className="w-24">
+              {doc.visibility}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="private">private</SelectItem>
+              <SelectItem value="public">public</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        <Select
+          value={doc.visibility}
+          onValueChange={(value) => onVisibilityChange(doc.id, value as "private" | "public")}
+          disabled={isUpdatingVisibility}
+        >
+          <SelectTrigger size="sm" className="w-24">
+            {doc.visibility}
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="private">private</SelectItem>
+            <SelectItem value="public">public</SelectItem>
+          </SelectContent>
+        </Select>
       </TableCell>
       <TableCell className="text-muted-foreground hidden text-xs lg:table-cell">
         {new Date(doc.createdAt).toLocaleDateString()}
