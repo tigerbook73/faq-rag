@@ -3,10 +3,10 @@
 ## 当前状态
 
 - 当前阶段：`2.14.6` 公开文档选择
-- 状态：已完成 / 待提交
-- 最后确认的实现提交：`6e084db`（`multi-user phase 2.14.5: filter retrieval by user`）
+- 状态：已完成
+- 最后确认的实现提交：`b3c0ee1`（`multi-user phase 2.14.6: add public document selection`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.6` 已完成，等待提交成为新的实现基线
+- 进度文档状态：阶段 `2.14.6` 已完成，当前文档已记录新的实现基线
 - 下一步入口：阶段 `2.14.7` 管理员能力和清理流程
 
 当前 feature 文档结构为：
@@ -35,6 +35,8 @@
   - 实施阶段 `2.14.4`：文档上传、列表、删除、index、reindex API 按当前用户归属隔离，并允许管理员写入全站文档。
 - `6e084db` `multi-user phase 2.14.5: filter retrieval by user`
   - 实施阶段 `2.14.5`：chat API 从当前用户推导 retrieval 权限上下文，vector search 只检索 owner 文档和已选择的 public 文档。
+- `b3c0ee1` `multi-user phase 2.14.6: add public document selection`
+  - 实施阶段 `2.14.6`：公开文档列表、选择/取消选择 API、文档 visibility 更新，以及 Knowledge 页面公开文档选择交互。
 
 历史 commit message 不做 rewrite。本映射作为既往 multi-user 工作的恢复来源。
 
