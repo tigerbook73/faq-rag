@@ -6,21 +6,23 @@
 - 状态：未开始 / 下一步
 - 最后确认的实现提交：`80e4ce7`（`feat: isolate chat sessions by user`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：从 Git 历史重新整理
+- 进度文档状态：已迁移到轻量三文档结构，等待提交成为新的恢复基线
 - 下一步入口：统一文档 API 与当前用户归属
 
-当前还有本进度文件之外的未提交文档变更：
+当前 feature 文档结构为：
 
-- `Docs/DESIGN-multi-user.md`：远端发布策略已调整为允许丢弃旧业务数据
+- `REQUIREMENTS.md`
+- `DESIGN.md`
+- `PROGRESS.md`
 
-这些是文档和流程类变更。在把本进度文件作为下一次恢复基线前，应先 review 并提交这些文档变更。
+当前工作区应保持干净后再进入阶段 `2.14.4` 实施。
 
 ## 历史提交映射
 
 - `e1f82da` `docs: add multi-user feature requirements`
-  - 新增产品需求来源：`Docs/FEATURE-multi-user.md`。
+  - 新增产品需求来源：`Docs/FEATURE-multi-user.md`，现已迁移为 `Docs/features/multi-user/REQUIREMENTS.md`。
 - `8d1d620` `docs: add multi-user design`
-  - 新增初版技术设计：`Docs/DESIGN-multi-user.md`。
+  - 新增初版技术设计：`Docs/DESIGN-multi-user.md`，现已迁移为 `Docs/features/multi-user/DESIGN.md`。
 - `d072122` `docs: phase multi-user implementation plan`
   - 增加分阶段实施、迁移、测试、风险和发布策略。
 - `97a561f` `feat: add multi-user data foundation`
@@ -88,7 +90,7 @@
 1. 从最新提交读取本文件。
 2. 检查 `git status`。
 3. 检查 `Last confirmed implementation commit` 之后的提交。
-4. 检查旧版文档 `../../DESIGN-multi-user.md` 或 `../../FEATURE-multi-user.md` 是否在最后确认进度之后发生变化。
+4. 检查 `DESIGN.md` 或 `REQUIREMENTS.md` 是否在最后确认进度之后发生变化。
 5. 如果影响流程的文档变化没有反映到本文件，暂停实施，先刷新 feature 文档。
 6. 只检查当前阶段或不一致点所必需的代码路径。
 7. 每次阶段或子阶段提交前更新本文件。
@@ -104,4 +106,3 @@
 - 需求或设计变化影响实施流程。
 
 无关变更不更新本文件。只有技术设计变化时才更新设计文档，只有产品需求变化时才更新需求文档。
-

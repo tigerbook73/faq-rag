@@ -43,7 +43,7 @@
 
 ### 2.2 对应需求
 
-本设计对应 [FEATURE-multi-user.md](./FEATURE-multi-user.md)。
+本设计对应 [REQUIREMENTS.md](./REQUIREMENTS.md)。
 
 目标是在现有 Supabase Auth 登录能力基础上，为聊天、文档、公开文档选择、问答检索和管理员操作增加明确的用户边界。
 
@@ -801,7 +801,7 @@ AND (
 
 人工验证：
 
-- 按 [FEATURE-multi-user.md](./FEATURE-multi-user.md) 的验收标准逐条走查。
+- 按 [REQUIREMENTS.md](./REQUIREMENTS.md) 的验收标准逐条走查。
 - 使用三个默认账号完成普通用户和管理员主流程。
 - 检查移动端和桌面端核心入口可用。
 

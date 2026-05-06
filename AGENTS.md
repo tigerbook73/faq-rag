@@ -12,20 +12,15 @@ Before changing typography, spacing, layout widths, mobile sidebar/header behavi
 
 ## Feature Documentation System
 
-Feature work should use a discoverable documentation bundle under `Docs/features/<feature-id>/`.
+Feature work should use a discoverable lightweight documentation bundle under `Docs/features/<feature-id>/`.
 
-Recommended structure:
+Required structure:
 
-- `README.md`: feature entry point and recovery instructions.
 - `REQUIREMENTS.md`: product goals, roles, use cases, business rules, and acceptance criteria.
 - `DESIGN.md`: technical design, data model, API contracts, implementation phases, tests, and release strategy.
 - `PROGRESS.md`: current implementation phase, last confirmed commit, completed work, known mismatches, verification status, and next entry point.
-- `DECISIONS.md`: durable product or technical decisions that should not be rediscovered from chat history.
-- `TASKS.md`: detailed implementation checklist when a phase needs finer breakdown.
 
-For small features, `README.md`, `REQUIREMENTS.md`, `DESIGN.md`, and `PROGRESS.md` are enough. Add `DECISIONS.md` and `TASKS.md` when the feature grows.
-
-When the user says "继续 <feature-id> 的开发" or "continue <feature-id>", first open `Docs/features/<feature-id>/README.md` and follow its recovery order. If the bundle does not exist yet, look for legacy docs matching the feature name under `Docs/`, then propose or perform a migration into the feature bundle before continuing substantial implementation.
+When the user says "继续 <feature-id> 的开发" or "continue <feature-id>", first open `Docs/features/<feature-id>/PROGRESS.md`, then `DESIGN.md`, then `REQUIREMENTS.md`. If any of the three required files is missing, stop and report the missing file instead of continuing implementation.
 
 Use `PROGRESS.md` as the implementation state source, `DESIGN.md` as the technical plan, and `REQUIREMENTS.md` as the product source of truth. Do not start by scanning the whole codebase. Recover state from feature docs, recent commits, and `git status` first; inspect code only when needed to resolve inconsistencies or implement the next task.
 
@@ -33,9 +28,10 @@ Before continuing feature implementation, apply a docs consistency gate:
 
 - Check `git status`.
 - Check commits after the `Last confirmed commit` recorded in `PROGRESS.md`.
-- Detect whether `REQUIREMENTS.md`, `DESIGN.md`, `DECISIONS.md`, `TASKS.md`, or legacy feature docs changed after the last confirmed progress point.
+- Detect whether `REQUIREMENTS.md`, `DESIGN.md`, or `PROGRESS.md` changed after the last confirmed progress point.
 - Treat changes to requirements, data model, API contracts, permissions, phase order, acceptance criteria, release strategy, or next task as flow-impacting.
-- If flow-impacting docs changed and `PROGRESS.md` does not reflect them, pause implementation and ask to refresh the feature docs first.
+- If docs are inconsistent in a simple mechanical way, refresh the affected feature docs before implementation.
+- If docs are inconsistent in a way that changes requirements, design, scope, phase order, data compatibility, or implementation tradeoffs, stop and explain the inconsistency so the user can decide.
 
 Before a phase or subphase commit, update `PROGRESS.md` when the commit changes implementation status, next steps, known mismatches, or verification results. Do not update feature docs for unrelated changes. Update `DESIGN.md` only when the design changes, and update `REQUIREMENTS.md` only when product requirements change.
 
