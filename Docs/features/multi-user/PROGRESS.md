@@ -3,10 +3,10 @@
 ## 当前状态
 
 - 当前阶段：`2.14.8` UI 整合和端到端验收
-- 状态：已完成 / 待提交
-- 最后确认的实现提交：`845d97d`（`multi-user phase 2.14.7: add admin management APIs`）
+- 状态：已完成
+- 最后确认的实现提交：`9662d42`（`multi-user phase 2.14.8: complete UI integration`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.8` 已完成，等待提交成为最终实现基线
+- 进度文档状态：阶段 `2.14.8` 已完成，当前文档已记录最终实现基线
 - 下一步入口：多用户功能最终验收 / 残留风险确认
 
 当前 feature 文档结构为：
@@ -39,6 +39,8 @@
   - 实施阶段 `2.14.6`：公开文档列表、选择/取消选择 API、文档 visibility 更新，以及 Knowledge 页面公开文档选择交互。
 - `845d97d` `multi-user phase 2.14.7: add admin management APIs`
   - 实施阶段 `2.14.7`：管理员用户/文档 API、共享删除 service、用户删除清理流程，以及只读 Admin 页面入口。
+- `9662d42` `multi-user phase 2.14.8: complete UI integration`
+  - 实施阶段 `2.14.8`：管理员导航、Admin 创建/删除确认 UI、登录页默认账号选择、Knowledge 分区标题和基础 Playwright 验收。
 
 历史 commit message 不做 rewrite。本映射作为既往 multi-user 工作的恢复来源。
 
