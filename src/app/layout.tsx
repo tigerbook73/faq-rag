@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/db/client";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,6 +29,12 @@ export default async function RootLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const profile = user
+    ? await prisma.userProfile.findUnique({
+        where: { id: user.id },
+        select: { role: true },
+      })
+    : null;
   return (
     <html
       lang="en"
@@ -35,7 +42,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        <Providers isAuthenticated={!!user}>{children}</Providers>
+        <Providers isAuthenticated={!!user} role={profile?.role ?? null}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

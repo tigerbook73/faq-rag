@@ -10,10 +10,18 @@ import { PageTitleProvider } from "@/context/page-title-context";
 import { ProviderContextProvider } from "@/context/provider-context";
 import { AuthContextProvider } from "@/context/auth-context";
 
-export function Providers({ children, isAuthenticated }: { children: React.ReactNode; isAuthenticated: boolean }) {
+export function Providers({
+  children,
+  isAuthenticated,
+  role,
+}: {
+  children: React.ReactNode;
+  isAuthenticated: boolean;
+  role: "user" | "admin" | null;
+}) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <AuthContextProvider initialAuth={isAuthenticated}>
+      <AuthContextProvider initialAuth={isAuthenticated} initialRole={role}>
         <PageTitleProvider>
           <ProviderContextProvider>
             <TooltipProvider>

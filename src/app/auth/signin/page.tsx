@@ -10,6 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 
+const DEMO_ACCOUNTS = [
+  { label: "Admin", email: "admin@test.com", password: "admin@123" },
+  { label: "User 1", email: "user1@test.com", password: "user1@123" },
+  { label: "User 2", email: "user2@test.com", password: "user2@123" },
+];
+
 export default function SignInPage() {
   const router = useRouter();
   const from = useSearchParams().get("from") ?? "/chat/new";
@@ -92,6 +98,29 @@ export default function SignInPage() {
               {pending ? "Signing in…" : "Sign in"}
             </Button>
           </form>
+          <div className="mt-6 space-y-2">
+            <p className="text-app-caption text-muted-foreground">Demo accounts</p>
+            <div className="grid gap-2">
+              {DEMO_ACCOUNTS.map((account) => (
+                <Button
+                  key={account.email}
+                  type="button"
+                  variant="outline"
+                  className="h-auto justify-between gap-3 py-2"
+                  disabled={pending}
+                  onClick={() => {
+                    setEmail(account.email);
+                    setPassword(account.password);
+                  }}
+                >
+                  <span>{account.label}</span>
+                  <span className="text-muted-foreground truncate font-mono text-xs">
+                    {account.email} / {account.password}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

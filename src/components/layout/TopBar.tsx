@@ -15,7 +15,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 
 export function TopBar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role } = useAuth();
   const router = useRouter();
 
   async function handleSignOut() {
@@ -92,6 +92,11 @@ export function TopBar() {
                   >
                     Knowledge
                   </Link>
+                  {role === "admin" && (
+                    <Link href="/admin" className={pathname === "/admin" ? "font-medium" : "text-muted-foreground"}>
+                      Admin
+                    </Link>
+                  )}
                 </>
               )}
               <Link href="/about" className={pathname === "/about" ? "font-medium" : "text-muted-foreground"}>

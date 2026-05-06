@@ -37,12 +37,22 @@ export function DocumentTable({ initialDocuments }: Props) {
 
   if (allDocuments.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center text-sm">No documents yet. Upload some files above.</div>
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-app-section">My documents</h2>
+          <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
+        </div>
+        <div className="text-muted-foreground py-12 text-center text-sm">No documents yet. Upload some files above.</div>
+      </section>
     );
   }
 
   return (
-    <>
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-app-section">My documents</h2>
+        <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
+      </div>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Search documents…"
@@ -124,6 +134,6 @@ export function DocumentTable({ initialDocuments }: Props) {
         }}
         rebuilding={rebuilding}
       />
-    </>
+    </section>
   );
 }

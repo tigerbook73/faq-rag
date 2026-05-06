@@ -2,12 +2,12 @@
 
 ## 当前状态
 
-- 当前阶段：`2.14.7` 管理员能力和清理流程
-- 状态：已完成
+- 当前阶段：`2.14.8` UI 整合和端到端验收
+- 状态：已完成 / 待提交
 - 最后确认的实现提交：`845d97d`（`multi-user phase 2.14.7: add admin management APIs`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.7` 已完成，当前文档已记录新的实现基线
-- 下一步入口：阶段 `2.14.8` UI 整合和端到端验收
+- 进度文档状态：阶段 `2.14.8` 已完成，等待提交成为最终实现基线
+- 下一步入口：多用户功能最终验收 / 残留风险确认
 
 当前 feature 文档结构为：
 
@@ -15,7 +15,7 @@
 - `DESIGN.md`
 - `PROGRESS.md`
 
-当前工作区应保持干净后再进入阶段 `2.14.8` 实施。
+当前工作区应保持干净后再做后续维护。
 
 ## 历史提交映射
 
@@ -51,7 +51,7 @@
 - [x] `2.14.5` 问答检索权限过滤
 - [x] `2.14.6` 公开文档选择
 - [x] `2.14.7` 管理员能力和清理流程
-- [ ] `2.14.8` UI 整合和端到端验收
+- [x] `2.14.8` UI 整合和端到端验收
 
 ## 已实施内容
 
@@ -83,30 +83,35 @@
 - 增加 `/api/admin/users`、`/api/admin/users/[id]`、`/api/admin/documents` 和 `/api/admin/documents/[id]`。
 - 增加只读 `/admin` 页面入口，管理员可查看用户和全站文档概览。
 - 增加管理员 API 和清理 service 测试，覆盖 requireAdmin、禁止删除自己、storage 删除失败时继续删除数据库记录。
+- 更新 auth context、TopBar 和 Sidebar，管理员登录后展示 Admin 入口。
+- 更新登录页，展示并可一键填入 `admin@test.com`、`user1@test.com`、`user2@test.com` 三个默认账号。
+- 更新 `/admin` 页面，支持创建普通用户、删除用户确认和删除全站文档确认。
+- 更新 Knowledge 页面文档区标题，明确区分 My documents 和 Public documents。
+- 增加登录页默认账号 E2E 覆盖，并运行基础 Playwright 验证。
 
 ## 已知不一致
 
-- CLI/API ingest helper 路径仍使用 `DEFAULT_ADMIN_USER_ID`。
-- Admin 页面仍是只读概览；创建/删除操作的可视化确认流程留到 UI 整合阶段。
+- CLI/API ingest helper 路径仍使用 `DEFAULT_ADMIN_USER_ID`，当前保留为本地/脚本导入工具边界，不作为用户上传路径。
+- 完整三账号端到端业务验收未自动化运行；当前覆盖为 API/Jest、基础 Playwright 和人工验收清单。
 
 ## 下一步
 
-继续阶段 `2.14.8`：
+后续维护入口：
 
-1. 整合 Admin UI 的创建用户、删除用户、删除文档确认流程。
-2. 检查 Knowledge 页面移动端可见性控件和公开文档选择体验。
-3. 运行或补充端到端验收，覆盖 user1/user2/admin 的关键隔离场景。
-4. 处理剩余 CLI/API ingest helper 默认 admin 兼容问题，或明确保留为本地导入工具边界。
-5. 更新最终验收状态和已知残留风险。
+1. 如需要发布前更强保证，补充需要真实 Supabase/LLM/Storage 环境的三账号 Playwright 流程。
+2. 如 CLI ingest 需要面向多用户开放，将脚本参数化为显式 `userId`，并禁止默认 admin 隐式写入。
+3. 根据实际演示反馈微调 Admin 和 Knowledge 移动端表格密度。
 
 ## 验证状态
 
 - `pnpm exec tsc --noEmit`：通过。
 - `pnpm exec jest --runInBand`：通过，25 个测试套件 / 77 个测试。
+- `pnpm exec playwright test e2e/basic.test.ts --project=chromium`：通过，2 个测试。
+- `pnpm build`：通过；Turbopack 输出 Prisma/NFT tracing warning，不阻塞构建。
 - `pnpm test -- --runInBand`：未执行测试；该项目脚本会把 `--runInBand` 当作 Jest pattern，返回 No tests found。
-- E2E：未运行。
+- 完整三账号 E2E：未运行。
 
-继续阶段 `2.14.8` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
+后续维护前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
 
 ## 恢复协议
 
