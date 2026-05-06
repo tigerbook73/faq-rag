@@ -2,12 +2,12 @@
 
 ## 当前状态
 
-- 当前阶段：`2.14.8` UI 整合和端到端验收
+- 当前阶段：`2.14.9` post-review 修复
 - 状态：已完成
 - 最后确认的实现提交：`9662d42`（`multi-user phase 2.14.8: complete UI integration`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.8` 已完成，当前文档已记录最终实现基线
-- 下一步入口：多用户功能最终验收 / 残留风险确认
+- 进度文档状态：阶段 `2.14.8` 已完成；`2.14.9` 根据 REVIEW.md 代码评审结果新增，修复架构合规和权限安全问题
+- 下一步入口：完整三账号 Playwright E2E（见"下一步"节）/ 需求类改进按产品决策另行处理
 
 当前 feature 文档结构为：
 
@@ -54,6 +54,7 @@
 - [x] `2.14.6` 公开文档选择
 - [x] `2.14.7` 管理员能力和清理流程
 - [x] `2.14.8` UI 整合和端到端验收
+- [x] `2.14.9` post-review 修复（delete-user 顺序、layout.tsx data 层、index/reindex data 层、守卫测试扩展）
 
 ## 已实施内容
 
@@ -95,6 +96,9 @@
 
 - CLI/API ingest helper 路径仍使用 `DEFAULT_ADMIN_USER_ID`，当前保留为本地/脚本导入工具边界，不作为用户上传路径。
 - 完整三账号端到端业务验收未自动化运行；当前覆盖为 API/Jest、基础 Playwright 和人工验收清单。
+- `delete-user.ts` 操作顺序已在 `2.14.9` 修正为 storage → auth → db，与 DESIGN.md 2.10.2 一致。
+- `src/app/layout.tsx` 已在 `2.14.9` 改用 `getCurrentUser()`，移除直接 Prisma 调用。`page-db-access.test.ts` 已扩展覆盖 `layout.tsx`。
+- `src/app/api/documents/[id]/index/route.ts` 和 `reindex/route.ts` 已在 `2.14.9` 改用 data 层函数 `setDocumentUploaded` / `resetDocumentForReindex`。
 
 ## 下一步
 

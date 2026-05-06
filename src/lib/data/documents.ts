@@ -92,6 +92,20 @@ export async function getDocumentForWrite(actor: DocumentActor, documentId: stri
   return doc;
 }
 
+export async function resetDocumentForReindex(documentId: string) {
+  return prisma.document.update({
+    where: { id: documentId },
+    data: { status: "pending", errorMsg: null },
+  });
+}
+
+export async function setDocumentUploaded(documentId: string) {
+  return prisma.document.updateMany({
+    where: { id: documentId, status: "pending" },
+    data: { status: "uploaded" },
+  });
+}
+
 export async function updateDocumentVisibilityForOwner(
   ownerUserId: string,
   documentId: string,

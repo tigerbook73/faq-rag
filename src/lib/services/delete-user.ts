@@ -12,8 +12,7 @@ export async function deleteUserAccount(userId: string) {
   });
   if (!user) return null;
 
-  await prisma.userProfile.delete({ where: { id: userId } });
-
+  // 1. Delete storage files first — continue even if some fail
   await Promise.all(
     user.documents
       .filter((document) => !!document.fileRef)
@@ -24,11 +23,15 @@ export async function deleteUserAccount(userId: string) {
       ),
   );
 
+  // 2. Delete Supabase Auth user — log but continue so DB is always cleaned up
   const supabase = createSupabaseServiceClient();
   const { error } = await supabase.auth.admin.deleteUser(userId);
   if (error) {
     logger.warn({ error, userId }, "supabase auth user delete failed");
   }
+
+  // 3. Delete UserProfile last — cascades to sessions, documents, chunks, selections
+  await prisma.userProfile.delete({ where: { id: userId } });
 
   return user;
 }

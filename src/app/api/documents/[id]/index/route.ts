@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/client";
 import { authErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { config } from "@/lib/config";
-import { getDocumentForWrite } from "@/lib/data/documents";
+import { getDocumentForWrite, setDocumentUploaded } from "@/lib/data/documents";
 import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
 import { processDocument } from "@/lib/ingest/pipeline";
 
@@ -22,10 +21,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     }
 
     // Idempotent: only one of A-path or B-path (webhook) wins this update
-    const result = await prisma.document.updateMany({
-      where: { id, status: "pending" },
-      data: { status: "uploaded" },
-    });
+    const result = await setDocumentUploaded(id);
 
     if (result.count === 0) {
       return NextResponse.json({ status: "already_processing" });
