@@ -1,8 +1,7 @@
 const mockRequireUser = jest.fn();
 const mockGetDocumentForWrite = jest.fn();
-const mockDeleteDocumentById = jest.fn();
 const mockUpdateDocumentVisibilityForOwner = jest.fn();
-const mockDeleteUploadedFile = jest.fn();
+const mockDeleteDocument = jest.fn();
 
 jest.mock("@/lib/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
@@ -10,12 +9,11 @@ jest.mock("@/lib/auth/require-user", () => ({
 
 jest.mock("@/lib/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
-  deleteDocumentById: (...args: unknown[]) => mockDeleteDocumentById(...args),
   updateDocumentVisibilityForOwner: (...args: unknown[]) => mockUpdateDocumentVisibilityForOwner(...args),
 }));
 
-jest.mock("@/lib/storage", () => ({
-  deleteUploadedFile: (...args: unknown[]) => mockDeleteUploadedFile(...args),
+jest.mock("@/lib/services/delete-document", () => ({
+  deleteDocument: (...args: unknown[]) => mockDeleteDocument(...args),
 }));
 
 import { DELETE, PATCH } from "./route";
@@ -34,8 +32,7 @@ describe("/api/documents/[id]", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireUser.mockResolvedValue({ id: "user-1", role: "user" });
-    mockDeleteUploadedFile.mockResolvedValue(undefined);
-    mockDeleteDocumentById.mockResolvedValue({});
+    mockDeleteDocument.mockResolvedValue({});
   });
 
   it("updates visibility only for the current owner", async () => {
@@ -64,8 +61,7 @@ describe("/api/documents/[id]", () => {
 
     expect(res.status).toBe(204);
     expect(mockGetDocumentForWrite).toHaveBeenCalledWith({ id: "user-1", role: "user" }, "doc-1");
-    expect(mockDeleteUploadedFile).toHaveBeenCalledWith("embed/doc-1/faq.md");
-    expect(mockDeleteDocumentById).toHaveBeenCalledWith("doc-1");
+    expect(mockDeleteDocument).toHaveBeenCalledWith("doc-1");
   });
 
   it("returns 404 when the actor cannot write the document", async () => {
@@ -74,7 +70,7 @@ describe("/api/documents/[id]", () => {
     const res = await DELETE(new Request("http://localhost/api/documents/doc-1") as never, params);
 
     expect(res.status).toBe(404);
-    expect(mockDeleteDocumentById).not.toHaveBeenCalled();
+    expect(mockDeleteDocument).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ error: "Not found" });
   });
 });

@@ -2,12 +2,12 @@
 
 ## 当前状态
 
-- 当前阶段：`2.14.6` 公开文档选择
-- 状态：已完成
+- 当前阶段：`2.14.7` 管理员能力和清理流程
+- 状态：已完成 / 待提交
 - 最后确认的实现提交：`b3c0ee1`（`multi-user phase 2.14.6: add public document selection`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：阶段 `2.14.6` 已完成，当前文档已记录新的实现基线
-- 下一步入口：阶段 `2.14.7` 管理员能力和清理流程
+- 进度文档状态：阶段 `2.14.7` 已完成，等待提交成为新的实现基线
+- 下一步入口：阶段 `2.14.8` UI 整合和端到端验收
 
 当前 feature 文档结构为：
 
@@ -15,7 +15,7 @@
 - `DESIGN.md`
 - `PROGRESS.md`
 
-当前工作区应保持干净后再进入阶段 `2.14.7` 实施。
+当前工作区应保持干净后再进入阶段 `2.14.8` 实施。
 
 ## 历史提交映射
 
@@ -48,7 +48,7 @@
 - [x] `2.14.4` 文档归属和私有隔离
 - [x] `2.14.5` 问答检索权限过滤
 - [x] `2.14.6` 公开文档选择
-- [ ] `2.14.7` 管理员能力和清理流程
+- [x] `2.14.7` 管理员能力和清理流程
 - [ ] `2.14.8` UI 整合和端到端验收
 
 ## 已实施内容
@@ -75,30 +75,36 @@
 - 增加 `PATCH /api/documents/[id]`，允许文档 owner 修改自己的 visibility；改为 private 时删除该文档 selection。
 - 更新 Knowledge 页面，展示自己的文档 visibility 控件和其他用户公开文档选择表。
 - 增加聚焦测试，覆盖公开文档列表过滤、选择约束、取消选择和 public 改 private 清理 selection。
+- 增加 `src/lib/data/users.ts`，封装用户列表和业务资料创建查询。
+- 增加 `src/lib/services/create-user.ts`、`delete-user.ts` 和 `delete-document.ts`，集中处理 Supabase Auth、业务数据和 storage 清理。
+- 更新普通文档删除 API，复用共享文档删除 service。
+- 增加 `/api/admin/users`、`/api/admin/users/[id]`、`/api/admin/documents` 和 `/api/admin/documents/[id]`。
+- 增加只读 `/admin` 页面入口，管理员可查看用户和全站文档概览。
+- 增加管理员 API 和清理 service 测试，覆盖 requireAdmin、禁止删除自己、storage 删除失败时继续删除数据库记录。
 
 ## 已知不一致
 
 - CLI/API ingest helper 路径仍使用 `DEFAULT_ADMIN_USER_ID`。
-- 管理员 API 尚未实现。
+- Admin 页面仍是只读概览；创建/删除操作的可视化确认流程留到 UI 整合阶段。
 
 ## 下一步
 
-继续阶段 `2.14.7`：
+继续阶段 `2.14.8`：
 
-1. 增加管理员用户列表、创建用户和删除用户 API。
-2. 增加管理员全站文档列表和删除文档 API。
-3. 提取或复用文档删除服务，确保删除文档时清理 storage、chunks 和 selections。
-4. 增加删除用户清理流程，清理用户资料、聊天、文档、索引、storage 和 selection 关系。
-5. 增加聚焦测试，覆盖 requireAdmin、管理员不能删除自己、删除文档/用户后的级联清理边界。
+1. 整合 Admin UI 的创建用户、删除用户、删除文档确认流程。
+2. 检查 Knowledge 页面移动端可见性控件和公开文档选择体验。
+3. 运行或补充端到端验收，覆盖 user1/user2/admin 的关键隔离场景。
+4. 处理剩余 CLI/API ingest helper 默认 admin 兼容问题，或明确保留为本地导入工具边界。
+5. 更新最终验收状态和已知残留风险。
 
 ## 验证状态
 
 - `pnpm exec tsc --noEmit`：通过。
-- `pnpm exec jest --runInBand`：通过，19 个测试套件 / 62 个测试。
+- `pnpm exec jest --runInBand`：通过，25 个测试套件 / 77 个测试。
 - `pnpm test -- --runInBand`：未执行测试；该项目脚本会把 `--runInBand` 当作 Jest pattern，返回 No tests found。
 - E2E：未运行。
 
-继续阶段 `2.14.7` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
+继续阶段 `2.14.8` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
 
 ## 恢复协议
 

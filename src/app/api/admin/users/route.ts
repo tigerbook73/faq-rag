@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireAdmin } from "@/lib/auth/require-admin";
+import { listUsers } from "@/lib/data/users";
+import { createUserAccount } from "@/lib/services/create-user";
+
+const createUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(["user", "admin"]).default("user"),
+});
+
+export async function GET() {
+  try {
+    await requireAdmin();
+    const users = await listUsers();
+    return NextResponse.json({ items: users });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    await requireAdmin();
+    const parsed = createUserSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const user = await createUserAccount(parsed.data);
+    return NextResponse.json(user, { status: 201 });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}

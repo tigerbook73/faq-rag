@@ -31,6 +31,23 @@ export async function listDocumentsPageForOwner(ownerUserId: string, input: { sk
   return { items, total };
 }
 
+export async function listAdminDocuments(input: { skip: number; take: number }) {
+  const [items, total] = await Promise.all([
+    prisma.document.findMany({
+      skip: input.skip,
+      take: input.take,
+      orderBy: { createdAt: "desc" },
+      include: {
+        owner: { select: { email: true } },
+        _count: { select: { chunks: true, selections: true } },
+      },
+    }),
+    prisma.document.count(),
+  ]);
+
+  return { items, total };
+}
+
 export async function findDuplicateDocumentForOwner(ownerUserId: string, contentHash: string) {
   return prisma.document.findUnique({
     where: { ownerUserId_contentHash: { ownerUserId, contentHash } },

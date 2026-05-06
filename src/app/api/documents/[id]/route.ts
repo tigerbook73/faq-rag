@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { authErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
-import { deleteDocumentById, getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/data/documents";
-import { deleteUploadedFile } from "@/lib/storage";
+import { getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/data/documents";
+import { deleteDocument } from "@/lib/services/delete-document";
 
 const updateDocumentSchema = z.object({
   visibility: z.enum(["private", "public"]),
@@ -41,11 +41,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    if (doc.fileRef) {
-      await deleteUploadedFile(doc.fileRef).catch(() => {});
-    }
-
-    await deleteDocumentById(id);
+    await deleteDocument(id);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return authErrorResponse(error);
