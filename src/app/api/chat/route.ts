@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireUser } from "@/lib/auth/require-user";
 import { retrieve } from "@/lib/retrieval/query";
 import { sanitizeChunkContent } from "@/lib/retrieval/utils";
 import { getProvider } from "@/lib/llm/router";
@@ -9,6 +11,13 @@ import { logger } from "@/lib/logger";
 import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/schemas/chat";
 
 export async function POST(req: NextRequest) {
+  let actor: Awaited<ReturnType<typeof requireUser>>;
+  try {
+    actor = await requireUser();
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+
   let body: ChatRequestInput;
   try {
     body = ChatRequestInputSchema.parse(await req.json());
@@ -23,7 +32,7 @@ export async function POST(req: NextRequest) {
   log.info({ question: question.slice(0, 100) }, "chat request");
 
   const t0 = Date.now();
-  const chunks = await retrieve(question, traceId, providerName);
+  const chunks = await retrieve(question, { userId: actor.id, traceId, provider: providerName });
   log.info({ retrieval_total_ms: Date.now() - t0, chunks: chunks.length }, "retrieval complete");
 
   const citations = chunks.map((c, i) => ({

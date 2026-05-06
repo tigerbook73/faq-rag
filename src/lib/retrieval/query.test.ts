@@ -19,16 +19,24 @@ jest.mock("@/lib/retrieval/cross-encoder", () => ({
 jest.mock("@/lib/lang/detect", () => ({
   detectLang: (...args: unknown[]) => mockDetectLang(...args),
 }));
+jest.mock("@/lib/config", () => ({
+  config: {
+    retrieval: {
+      queryMaxTokens: 128,
+      topK: 3,
+      topFinal: 2,
+      enableReranker: true,
+    },
+  },
+}));
 jest.mock("@/lib/llm/clients", () => ({
-  getDeepseekClient: () => ({
-    chat: {
-      completions: { create: (...args: unknown[]) => mockCreate(...args) },
+  resolveQueryClient: () => ({
+    client: {
+      chat: {
+        completions: { create: (...args: unknown[]) => mockCreate(...args) },
+      },
     },
-  }),
-  getOpenaiClient: () => ({
-    chat: {
-      completions: { create: (...args: unknown[]) => mockCreate(...args) },
-    },
+    model: "test-query-model",
   }),
 }));
 
@@ -53,6 +61,8 @@ function mockLLMResponse(text: string) {
 
 // ── tests ──────────────────────────────────────────────────────────────────
 describe("retrieve()", () => {
+  const options = { userId: "user-1", traceId: "trace-1", provider: "openai" };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockDetectLang.mockReturnValue("en");
@@ -64,14 +74,23 @@ describe("retrieve()", () => {
   });
 
   it("returns chunks from cross-encoder reranker", async () => {
-    const chunks = await retrieve("What is RAG?");
+    const chunks = await retrieve("What is RAG?", options);
     expect(mockRerankChunks).toHaveBeenCalledTimes(1);
     expect(chunks.length).toBeGreaterThan(0);
   });
 
   it("calls getEmbedding 3 times (original + translation + HyDE)", async () => {
-    await retrieve("What is RAG?");
+    await retrieve("What is RAG?", options);
     expect(mockGetEmbedding).toHaveBeenCalledTimes(3);
+  });
+
+  it("passes the current user to all vector searches", async () => {
+    await retrieve("What is RAG?", options);
+
+    expect(mockVectorSearch).toHaveBeenCalledTimes(3);
+    for (const call of mockVectorSearch.mock.calls) {
+      expect(call[2]).toBe("user-1");
+    }
   });
 
   it("falls back to original query when translation fails", async () => {
@@ -80,7 +99,7 @@ describe("retrieve()", () => {
       .mockResolvedValueOnce({
         choices: [{ message: { content: "hypothetical answer" } }],
       }); // HyDE succeeds
-    await retrieve("What is RAG?");
+    await retrieve("What is RAG?", options);
     // Should still complete without throwing
     expect(mockRerankChunks).toHaveBeenCalledTimes(1);
   });
@@ -91,7 +110,7 @@ describe("retrieve()", () => {
         choices: [{ message: { content: "translated" } }],
       }) // translation ok
       .mockRejectedValueOnce(new Error("HyDE error")); // HyDE fails
-    const chunks = await retrieve("What is RAG?");
+    const chunks = await retrieve("What is RAG?", options);
     // HyDE vector search is skipped but bi-encoder results still returned
     expect(chunks).toBeDefined();
     expect(mockRerankChunks).toHaveBeenCalledTimes(1);
@@ -104,7 +123,7 @@ describe("retrieve()", () => {
     mockRerankChunks.mockImplementation((_q: string, chunks: ChunkRow[], n: number) =>
       Promise.resolve(chunks.slice(0, n)),
     );
-    await retrieve("test query");
+    await retrieve("test query", options);
     const [, candidates] = mockRerankChunks.mock.calls[0] as [string, ChunkRow[], number];
     const ids = candidates.map((c: ChunkRow) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
