@@ -1,36 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireUser } from "@/lib/auth/require-user";
 import { config } from "@/lib/config";
+import { getDocumentForWrite } from "@/lib/data/documents";
 import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
 import { processDocument } from "@/lib/ingest/pipeline";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  try {
+    const actor = await requireUser();
+    const { id } = await params;
 
-  const doc = await prisma.document.findUnique({ where: { id } });
-  if (!doc) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const doc = await getDocumentForWrite(actor, id);
+    if (!doc) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (!doc.fileRef) {
+      return NextResponse.json({ error: "File not yet uploaded" }, { status: 422 });
+    }
+
+    // Idempotent: only one of A-path or B-path (webhook) wins this update
+    const result = await prisma.document.updateMany({
+      where: { id, status: "pending" },
+      data: { status: "uploaded" },
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json({ status: "already_processing" });
+    }
+
+    if (config.embedding.useOpenAI) {
+      await processDocument(id, doc.fileRef);
+    } else {
+      enqueueIndexing(id, doc.fileRef);
+    }
+
+    return NextResponse.json({ status: "queued" });
+  } catch (error) {
+    return authErrorResponse(error);
   }
-
-  if (!doc.fileRef) {
-    return NextResponse.json({ error: "File not yet uploaded" }, { status: 422 });
-  }
-
-  // Idempotent: only one of A-path or B-path (webhook) wins this update
-  const result = await prisma.document.updateMany({
-    where: { id, status: "pending" },
-    data: { status: "uploaded" },
-  });
-
-  if (result.count === 0) {
-    return NextResponse.json({ status: "already_processing" });
-  }
-
-  if (config.embedding.useOpenAI) {
-    await processDocument(id, doc.fileRef);
-  } else {
-    enqueueIndexing(id, doc.fileRef);
-  }
-
-  return NextResponse.json({ status: "queued" });
 }

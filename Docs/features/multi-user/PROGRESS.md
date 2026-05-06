@@ -3,11 +3,11 @@
 ## 当前状态
 
 - 当前阶段：`2.14.4` 文档归属和私有隔离
-- 状态：未开始 / 下一步
+- 状态：已完成 / 待提交
 - 最后确认的实现提交：`80e4ce7`（`feat: isolate chat sessions by user`）
 - 最后确认的设计提交：`d072122`（`docs: phase multi-user implementation plan`）
-- 进度文档状态：已迁移到轻量三文档结构，等待提交成为新的恢复基线
-- 下一步入口：统一文档 API 与当前用户归属
+- 进度文档状态：阶段 `2.14.4` 已完成，等待提交成为新的实现基线
+- 下一步入口：阶段 `2.14.5` 问答检索权限过滤
 
 当前 feature 文档结构为：
 
@@ -15,7 +15,7 @@
 - `DESIGN.md`
 - `PROGRESS.md`
 
-当前工作区应保持干净后再进入阶段 `2.14.4` 实施。
+当前工作区应保持干净后再进入阶段 `2.14.5` 实施。
 
 ## 历史提交映射
 
@@ -39,7 +39,7 @@
 - [x] `2.14.1` 数据模型和默认用户基础
 - [x] `2.14.2` 认证授权和数据访问层
 - [x] `2.14.3` 聊天记录隔离
-- [ ] `2.14.4` 文档归属和私有隔离
+- [x] `2.14.4` 文档归属和私有隔离
 - [ ] `2.14.5` 问答检索权限过滤
 - [ ] `2.14.6` 公开文档选择
 - [ ] `2.14.7` 管理员能力和清理流程
@@ -54,34 +54,35 @@
 - 更新 chat 和 knowledge server page，改为使用当前用户的数据访问 helper。
 - 更新 session API routes，要求当前用户，并按 `userId` 隔离 list/get/create/update/delete。
 - 增加 session API 隔离测试。
+- 更新文档上传准备接口，要求当前用户，并把新文档归属写入当前用户。
+- 更新文档列表接口，默认只分页返回当前用户自己的文档。
+- 为文档 delete、index、reindex API 增加 owner/admin 写权限检查。
+- 增加文档 API 聚焦测试，覆盖当前用户归属、同用户重复 hash、列表隔离、删除和索引授权路径。
 
 ## 已知不一致
 
-- 文档上传准备接口仍把新文档写到 `DEFAULT_ADMIN_USER_ID`，而不是当前用户。
 - CLI/API ingest helper 路径仍使用 `DEFAULT_ADMIN_USER_ID`。
-- `GET /api/documents` 仍然全局列出文档。
-- 文档删除、index、reindex API 还没有强制 owner/admin 授权。
 - Knowledge UI 还没有暴露 visibility 选择和公开文档选择。
 - Retrieval 仍然全局搜索所有 indexed 文档，且没有接收 `userId`。
 - 公开文档选择 API 和管理员 API 尚未实现。
 
 ## 下一步
 
-继续阶段 `2.14.4`：
+继续阶段 `2.14.5`：
 
-1. 将 `/api/documents/prepare` 的文档归属从默认 admin 改为当前认证用户。
-2. 让 `/api/documents` 默认只列出当前用户自己的文档。
-3. 为文档 delete、index、reindex 增加 owner/admin 权限检查。
-4. 上传 visibility 先保持默认 `private`；显式 UI 控件可在同阶段后续补齐。
-5. 增加聚焦测试，覆盖文档归属和重复 hash 行为。
+1. 将问答检索入口改为从当前用户推导可用文档范围。
+2. 更新 vector search SQL，限制为当前用户自己的 indexed 文档，以及当前用户已选择的其他用户 public indexed 文档。
+3. 确保 chat API 调用 retrieval 时传入当前用户身份。
+4. 增加聚焦测试，覆盖私有文档隔离、未选择公开文档隔离、已选择公开文档可检索。
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：本次重建进度文档未运行。
-- `pnpm test`：本次重建进度文档未运行。
+- `pnpm exec tsc --noEmit`：通过。
+- `pnpm exec jest --runInBand`：通过，11 个测试套件 / 35 个测试。
+- `pnpm test -- --runInBand`：未执行测试；该项目脚本会把 `--runInBand` 当作 Jest pattern，返回 No tests found。
 - E2E：未运行。
 
-继续阶段 `2.14.4` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
+继续阶段 `2.14.5` 前，如需确认实现基线，应从相关提交恢复验证结果，或重新运行必要测试。
 
 ## 恢复协议
 
