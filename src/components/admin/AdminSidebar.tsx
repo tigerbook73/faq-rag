@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, Files } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "仪表板", href: "/admin", icon: LayoutDashboard, exact: true },
-  { label: "用户管理", href: "/admin/users", icon: Users, exact: false },
-  { label: "文档管理", href: "/admin/documents", icon: Files, exact: false },
+  { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
+  { label: "Users", href: "/admin/users", icon: Users, exact: false },
+  { label: "Documents", href: "/admin/documents", icon: Files, exact: false },
 ] as const;
 
 export function AdminSidebar() {

@@ -32,7 +32,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        <Providers isAuthenticated={!!profile} role={profile?.role ?? null}>
+        <Providers isAuthenticated={!!profile} role={profile?.role ?? null} email={profile?.email ?? null}>
           {children}
         </Providers>
       </body>

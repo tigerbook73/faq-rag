@@ -19,42 +19,46 @@ export default async function AdminDashboardPage() {
 
   return (
     <PageShell className="max-w-(--container-app-workspace) space-y-6">
-      <h1 className="text-app-title">仪表板</h1>
+      <h1 className="text-app-title">Dashboard</h1>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard title="总用户数" value={users.length} />
-        <StatCard title="管理员" value={adminCount} />
-        <StatCard title="普通用户" value={userCount} />
-        <StatCard title="总文档数" value={documents.total} />
+        <StatCard title="Total Users" value={users.length} />
+        <StatCard title="Admins" value={adminCount} />
+        <StatCard title="Users" value={userCount} />
+        <StatCard title="Total Documents" value={documents.total} />
       </div>
 
       <div className="flex gap-3">
         <Button render={<Link href="/admin/users" />}>
           <Users className="h-4 w-4" />
-          管理用户
+          Manage Users
         </Button>
         <Button variant="outline" render={<Link href="/admin/documents" />}>
           <Files className="h-4 w-4" />
-          管理文档
+          Manage Documents
         </Button>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-app-section">最近文档</h2>
-        {documents.items.length === 0 ? (
-          <p className="text-muted-foreground text-sm">暂无文档</p>
-        ) : (
-          <Table>
-            <TableHeader>
+        <h2 className="text-app-section">Recent Documents</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Filename</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Visibility</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.items.length === 0 ? (
               <TableRow>
-                <TableHead>文件名</TableHead>
-                <TableHead>所有者</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>可见性</TableHead>
+                <TableCell colSpan={4} className="text-muted-foreground text-center text-sm">
+                  No documents found.
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.items.map((doc) => (
+            ) : (
+              documents.items.map((doc) => (
                 <TableRow key={doc.id}>
                   <TableCell className="font-medium">{doc.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{doc.owner.email}</TableCell>
@@ -65,14 +69,14 @@ export default async function AdminDashboardPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>
-                      {doc.visibility === "public" ? "公开" : "私有"}
+                      {doc.visibility}
                     </Badge>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            )}
+          </TableBody>
+        </Table>
       </section>
     </PageShell>
   );

@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 
-export function AdminTopBar() {
+export function AdminTopBar({ email }: { email: string | null }) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -27,7 +27,7 @@ export function AdminTopBar() {
       <div className="flex items-center gap-1 sm:gap-2">
         <Button variant="outline" size="sm" onClick={() => router.push(getLastChatHref())}>
           <ArrowLeft className="h-4 w-4" />
-          回到 FAQ
+          Back to FAQ
         </Button>
         <Separator orientation="vertical" className="my-2 self-stretch" />
         <Button
@@ -38,7 +38,15 @@ export function AdminTopBar() {
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
-        <Button variant="ghost" size="icon" title="Sign out" onClick={handleSignOut}>
+        {email && (
+          <span className="text-muted-foreground hidden text-sm sm:inline">{email}</span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          title={email ? `Sign out (${email})` : "Sign out"}
+          onClick={handleSignOut}
+        >
           <LogOut className="h-4 w-4" />
         </Button>
       </div>

@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
 
   return (
     <PageShell className="max-w-(--container-app-workspace) space-y-6">
-      <h1 className="text-app-title">用户管理</h1>
+      <h1 className="text-app-title">Users</h1>
       <AdminUsersWorkspace actorId={actor.id} initialUsers={initialUsers} />
     </PageShell>
   );

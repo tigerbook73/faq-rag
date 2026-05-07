@@ -17,7 +17,7 @@ export default async function AdminDocumentsPage() {
 
   return (
     <PageShell className="max-w-(--container-app-workspace) space-y-4">
-      <h1 className="text-app-title">文档管理</h1>
+      <h1 className="text-app-title">Documents</h1>
       <AdminDocumentsWorkspace initialDocuments={initialDocuments} />
     </PageShell>
   );

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { authErrorResponse } from "@/lib/auth/api";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { listUsers } from "@/lib/data/users";
 import { createUserAccount } from "@/lib/services/create-user";
-
-const createUserSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import { createUserSchema } from "@/lib/validations/admin";
 
 export async function GET() {
   try {

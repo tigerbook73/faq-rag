@@ -82,7 +82,7 @@ export function AppSidebar() {
                   {role === "admin" && (
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={pathname === "/admin"}
+                        isActive={pathname.startsWith("/admin")}
                         tooltip="Admin"
                         render={<Link href="/admin" onClick={closeOnMobile} />}
                       >

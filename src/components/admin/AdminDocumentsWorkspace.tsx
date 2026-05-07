@@ -42,21 +42,17 @@ export function AdminDocumentsWorkspace({ initialDocuments }: AdminDocumentsWork
       const res = await fetch(`/api/admin/documents/${deleteTarget.id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `删除文档失败 (${res.status})`);
+        throw new Error(data.error ?? `Failed to delete document (${res.status})`);
       }
       setDocuments((curr) => curr.filter((d) => d.id !== deleteTarget.id));
       setDeleteTarget(null);
       router.refresh();
-      toast.success("文档已删除");
+      toast.success("Document deleted");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除文档失败");
+      toast.error(error instanceof Error ? error.message : "Failed to delete document");
     } finally {
       setDeletingId(null);
     }
-  }
-
-  if (documents.length === 0) {
-    return <p className="text-muted-foreground text-sm">暂无文档</p>;
   }
 
   return (
@@ -64,69 +60,78 @@ export function AdminDocumentsWorkspace({ initialDocuments }: AdminDocumentsWork
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>文件名</TableHead>
-            <TableHead className="hidden sm:table-cell">所有者</TableHead>
-            <TableHead>状态</TableHead>
-            <TableHead className="hidden md:table-cell">可见性</TableHead>
-            <TableHead className="hidden md:table-cell text-right">选择数</TableHead>
-            <TableHead className="text-right">操作</TableHead>
+            <TableHead>Filename</TableHead>
+            <TableHead className="hidden sm:table-cell">Owner</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Visibility</TableHead>
+            <TableHead className="hidden md:table-cell text-right">Selections</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {documents.map((doc) => (
-            <TableRow key={doc.id}>
-              <TableCell className="max-w-48 truncate font-medium sm:max-w-72">{doc.name}</TableCell>
-              <TableCell className="text-muted-foreground hidden text-sm sm:table-cell">{doc.owner.email}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    doc.status === "indexed"
-                      ? "default"
-                      : doc.status === "failed"
-                        ? "destructive"
-                        : "secondary"
-                  }
-                >
-                  {doc.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>
-                  {doc.visibility === "public" ? "公开" : "私有"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground hidden text-right text-sm md:table-cell">
-                {doc._count.selections}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={deletingId === doc.id}
-                  onClick={() => setDeleteTarget(doc)}
-                >
-                  删除
-                </Button>
+          {documents.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-muted-foreground text-center text-sm">
+                No documents found.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            documents.map((doc) => (
+              <TableRow key={doc.id}>
+                <TableCell className="max-w-48 truncate font-medium sm:max-w-72">{doc.name}</TableCell>
+                <TableCell className="text-muted-foreground hidden text-sm sm:table-cell">{doc.owner.email}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      doc.status === "indexed"
+                        ? "default"
+                        : doc.status === "failed"
+                          ? "destructive"
+                          : "secondary"
+                    }
+                  >
+                    {doc.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>
+                    {doc.visibility}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground hidden text-right text-sm md:table-cell">
+                  {doc._count.selections}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={deletingId === doc.id}
+                    onClick={() => setDeleteTarget(doc)}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
 
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>删除文档？</DialogTitle>
+            <DialogTitle>Delete Document?</DialogTitle>
             <DialogDescription>
-              将删除文档 <strong>{deleteTarget?.name}</strong> 的索引块、存储文件及所有公开选择记录，此操作不可恢复。
+              This will permanently delete <strong>{deleteTarget?.name}</strong> including its index chunks, stored
+              file, and all public selection records. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              取消
+              Cancel
             </Button>
             <Button variant="destructive" disabled={!!deletingId} onClick={handleDeleteDocument}>
-              删除
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

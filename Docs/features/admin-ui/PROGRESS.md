@@ -2,9 +2,9 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 1–5 已完成，阶段 6（补充修复）待实施
-- 状态：发现 7 处实现问题，需修复后再进行人工验收
-- 最后确认的实现提交：`c6b6f17`（admin-ui phase 5: 清理与验收）
+- 当前阶段：阶段 1–6 全部完成
+- 状态：全功能实现，TypeScript 通过，已知预存失败测试 2 个（与本 feature 无关），待人工验收
+- 最后确认的实现提交：`（见阶段 6 提交 SHA）`
 - 最后确认的设计提交：`35ae5a3`（codex-version）
 - 下一步入口：实施阶段 6（见阶段清单）
 
@@ -30,7 +30,7 @@
 - [x] 阶段 3：文档管理页迁移
 - [x] 阶段 4：登录落点与主界面入口
 - [x] 阶段 5：清理与验收
-- [ ] 阶段 6：UI 完善与缺陷修复
+- [x] 阶段 6：UI 完善与缺陷修复
 
 ## 已完成工作
 
@@ -84,11 +84,30 @@
 | 6 | AdminDocumentsWorkspace 文档为空时不渲染表格，直接返回段落文本 | 实现 BUG | AdminDocumentsWorkspace.tsx |
 | 7 | AppSidebar Admin isActive 判断为精确匹配 `/admin`，子页时不激活 | minor bug | AppSidebar.tsx |
 
+### 阶段 6：UI 完善与缺陷修复
+- 新增 `src/lib/validations/admin.ts`：前后端共享 Zod schema（`createUserSchema`）。
+- `auth-context.tsx`：新增 `email` 字段；`AuthContextProvider` 接收 `initialEmail` prop；`onAuthStateChange` 同步 email。
+- `providers.tsx`：新增 `email` prop，传入 `AuthContextProvider`。
+- `src/app/layout.tsx`：传入 `email={profile?.email ?? null}` 到 Providers。
+- `AdminShell.tsx`：接收 `email` prop 并传入 `AdminTopBar`。
+- `admin/layout.tsx`：捕获 `requireAdmin()` 返回值，传 `email` 给 AdminShell。
+- `AdminTopBar.tsx`：接收 `email` prop，"回到 FAQ" → "Back to FAQ"，SignOut 左侧显示 email（小屏隐藏），tooltip 含 email。
+- `AdminSidebar.tsx`：导航标签全部英文化（Dashboard / Users / Documents）。
+- `TopBar.tsx`：Admin 按钮移至右侧常驻操作区（移出 `hidden md:flex` nav）；SignOut 左侧显示 email（小屏隐藏）；SignOut tooltip 含 email。
+- `ChatSidebar/index.tsx`：引入 `useAuth`，SidebarFooter 末尾添加 Admin 项（仅 admin 可见）。
+- `AppSidebar.tsx`：Admin isActive 修正为 `pathname.startsWith("/admin")`。
+- `AdminUsersWorkspace.tsx`：创建用户改为 Dialog 弹窗，前端 Zod 校验并显示具体错误；全部 UI 文本英文化。
+- `AdminDocumentsWorkspace.tsx`：移除空状态 early return，改为表格占位行 "No documents found."；全部 UI 文本英文化。
+- `admin/page.tsx`：全部 UI 文本英文化，空状态改为表格占位行。
+- `admin/users/page.tsx`：页面标题英文化（Users）。
+- `admin/documents/page.tsx`：页面标题英文化（Documents）。
+- `api/admin/users/route.ts`：改为从 `@/lib/validations/admin` 引入共享 schema。
+
 ## 验证状态
 
 - `pnpm exec tsc --noEmit`：通过（0 错误）。
 - `pnpm exec jest`：81/83 通过；2 个预存失败（reindex/index API tests，与本 feature 无关）。
-- 人工验证：待阶段 6 修复完成后进行。
+- 人工验证：待进行（见验收清单）。
 
 ## 验收清单（待阶段 6 修复后验证）
 

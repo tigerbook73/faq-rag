@@ -15,17 +15,19 @@ export function Providers({
   children,
   isAuthenticated,
   role,
+  email,
 }: {
   children: React.ReactNode;
   isAuthenticated: boolean;
   role: "user" | "admin" | null;
+  email: string | null;
 }) {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <AuthContextProvider initialAuth={isAuthenticated} initialRole={role}>
+      <AuthContextProvider initialAuth={isAuthenticated} initialRole={role} initialEmail={email}>
         <PageTitleProvider>
           <ProviderContextProvider>
             <TooltipProvider>
