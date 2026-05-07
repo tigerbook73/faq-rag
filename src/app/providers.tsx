@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -19,20 +20,30 @@ export function Providers({
   isAuthenticated: boolean;
   role: "user" | "admin" | null;
 }) {
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith("/admin");
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <AuthContextProvider initialAuth={isAuthenticated} initialRole={role}>
         <PageTitleProvider>
           <ProviderContextProvider>
             <TooltipProvider>
-              <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-                <AppSidebar />
-                <SidebarInset className="flex flex-col overflow-hidden">
-                  <TopBar />
+              {isAdmin ? (
+                <>
                   {children}
-                </SidebarInset>
-              </SidebarProvider>
-              <Toaster />
+                  <Toaster />
+                </>
+              ) : (
+                <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
+                  <AppSidebar />
+                  <SidebarInset className="flex flex-col overflow-hidden">
+                    <TopBar />
+                    {children}
+                  </SidebarInset>
+                  <Toaster />
+                </SidebarProvider>
+              )}
             </TooltipProvider>
           </ProviderContextProvider>
         </PageTitleProvider>

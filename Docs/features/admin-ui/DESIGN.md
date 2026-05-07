@@ -4,7 +4,7 @@
 
 本设计对应 [REQUIREMENTS.md](./REQUIREMENTS.md)。
 
-需求当前状态为草稿，功能范围已从原 `admin-pagination` 扩大为独立管理界面 `admin-ui`。
+需求已随提交 `35ae5a3`（codex-version）纳入版本控制，文件头标注状态为**草稿，待确认**。设计范围已从原 `admin-pagination` 扩大为独立管理界面 `admin-ui`，与需求文档保持一致。
 
 ---
 
