@@ -102,11 +102,24 @@ export function TopBar() {
         )}
         {!isSignIn && <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />}
         {!isSignIn && role === "admin" && (
-          <Button variant="ghost" size="icon" title="Admin Portal" aria-label="Admin Portal" nativeButton={false} render={<Link href="/admin" />}>
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Admin Portal"
+            aria-label="Admin Portal"
+            nativeButton={false}
+            render={<Link href="/admin" />}
+          >
             <ShieldCog className="h-4 w-4" />
           </Button>
         )}
-        <Button variant="ghost" size="icon" aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Toggle theme"
+          aria-label="Toggle theme"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        >
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>

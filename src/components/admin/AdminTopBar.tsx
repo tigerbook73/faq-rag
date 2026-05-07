@@ -38,7 +38,8 @@ export function AdminTopBar({ email }: { email: string | null }) {
         <Button
           variant="ghost"
           size="icon"
-          aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title="Toggle theme"
+          aria-label="Toggle theme"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
         >
           <Sun className="h-4 w-4 dark:hidden" />
