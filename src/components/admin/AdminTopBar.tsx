@@ -30,23 +30,11 @@ export function AdminTopBar({ email }: { email: string | null }) {
           Back to FAQ
         </Button>
         <Separator orientation="vertical" className="my-2 self-stretch" />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-        >
+        <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
-        {email && (
-          <span className="text-muted-foreground hidden text-sm sm:inline">{email}</span>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          title={email ? `Sign out (${email})` : "Sign out"}
-          onClick={handleSignOut}
-        >
+        <Button variant="ghost" size="icon" title={email ? `Sign out (${email})` : "Sign out"} onClick={handleSignOut}>
           <LogOut className="h-4 w-4" />
         </Button>
       </div>

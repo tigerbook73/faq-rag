@@ -102,13 +102,10 @@ export function TopBar() {
           </>
         )}
         {!isSignIn && role === "admin" && (
-          <Link
-            href="/admin"
-            className="flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:bg-muted"
-          >
-            <Shield className="size-3" />
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/admin" />}>
+            <Shield className="h-4 w-4" />
             Admin
-          </Link>
+          </Button>
         )}
         <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
           <Sun className="h-4 w-4 dark:hidden" />
@@ -116,19 +113,14 @@ export function TopBar() {
         </Button>
         {!isSignIn &&
           (isAuthenticated ? (
-            <>
-              {email && (
-                <span className="text-muted-foreground hidden text-sm sm:inline">{email}</span>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                title={email ? `Sign out (${email})` : "Sign out"}
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
+            <Button
+              variant="ghost"
+              size="icon"
+              title={email ? `Sign out (${email})` : "Sign out"}
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           ) : (
             <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/signin" />}>
               <LogIn className="h-4 w-4" />

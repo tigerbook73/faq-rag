@@ -29,11 +29,11 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="flex gap-3">
-        <Button render={<Link href="/admin/users" />}>
+        <Button nativeButton={false} render={<Link href="/admin/users" />}>
           <Users className="h-4 w-4" />
           Manage Users
         </Button>
-        <Button variant="outline" render={<Link href="/admin/documents" />}>
+        <Button nativeButton={false} variant="outline" render={<Link href="/admin/documents" />}>
           <Files className="h-4 w-4" />
           Manage Documents
         </Button>
