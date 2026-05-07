@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, LogOut, LogIn, LibraryBig } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, LibraryBig, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -93,7 +93,11 @@ export function TopBar() {
                     Knowledge
                   </Link>
                   {role === "admin" && (
-                    <Link href="/admin" className={pathname === "/admin" ? "font-medium" : "text-muted-foreground"}>
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:bg-muted"
+                    >
+                      <Shield className="size-3" />
                       Admin
                     </Link>
                   )}

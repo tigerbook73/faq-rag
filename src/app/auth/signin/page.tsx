@@ -18,7 +18,7 @@ const DEMO_ACCOUNTS = [
 
 export default function SignInPage() {
   const router = useRouter();
-  const from = useSearchParams().get("from") ?? "/chat/new";
+  const explicitFrom = useSearchParams().get("from");
   const [email, setEmail] = useState("admin@test.com");
   const [password, setPassword] = useState("admin@123");
   const [showPassword, setShowPassword] = useState(false);
@@ -47,8 +47,22 @@ export default function SignInPage() {
       return;
     }
 
-    router.refresh();
-    router.replace(from);
+    if (explicitFrom) {
+      router.refresh();
+      router.replace(explicitFrom);
+      return;
+    }
+
+    // No explicit redirect target — check business role to determine landing page
+    try {
+      const res = await fetch("/api/auth/me");
+      const profile = await res.json().catch(() => ({}));
+      router.refresh();
+      router.replace(profile.role === "admin" ? "/admin" : "/chat/new");
+    } catch {
+      router.refresh();
+      router.replace("/chat/new");
+    }
   }
 
   return (
