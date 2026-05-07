@@ -2,11 +2,11 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 1 已完成
-- 状态：Admin Shell 与路由拆分完成，TypeScript 通过，待人工验证
-- 最后确认的实现提交：（见本次提交 SHA）
+- 当前阶段：阶段 1–5 全部完成
+- 状态：全功能实现，TypeScript 通过，已知预存失败测试 2 个（与本 feature 无关），待人工验收
+- 最后确认的实现提交：`（见阶段 5 提交 SHA）`
 - 最后确认的设计提交：`35ae5a3`（codex-version）
-- 下一步入口：阶段 2 — 用户管理页完善（见 [DESIGN.md](./DESIGN.md) 第 13 节）
+- 下一步入口：人工验收（见验收清单）
 
 当前 feature 文档结构为：
 
@@ -27,10 +27,10 @@
 ## 阶段清单
 
 - [x] 阶段 1：Admin Shell 与路由拆分
-- [ ] 阶段 2：用户管理页完善
-- [ ] 阶段 3：文档管理页迁移
-- [ ] 阶段 4：登录落点与主界面入口
-- [ ] 阶段 5：清理与验收
+- [x] 阶段 2：用户管理页完善
+- [x] 阶段 3：文档管理页迁移
+- [x] 阶段 4：登录落点与主界面入口
+- [x] 阶段 5：清理与验收
 
 ## 已完成工作
 
@@ -49,12 +49,26 @@
 - `src/app/admin/documents/page.tsx`：只读文档表（文件名、所有者、状态、可见性、选择数），阶段 3 补删除。
 - `pnpm exec tsc --noEmit`：通过，0 错误。
 
-### 待实施缺口（阶段 2–5）
-- 用户管理操作（创建/删除/改密码）→ 阶段 2
-- 后端创建用户 schema 仍允许 `role: "admin"` → 阶段 2 收紧
-- 文档删除操作 → 阶段 3
-- 登录页无 `from` 时按 role 跳转 → 阶段 4
-- `AdminWorkspace.tsx` 删除（已无引用）→ 阶段 5
+### 阶段 2：用户管理页完善
+- `POST /api/admin/users` schema 收紧，移除 role 字段，始终 `role: "user"`。
+- `PATCH /api/admin/users/[id]/password` + `update-user-password` 服务新增。
+- `AdminUsersWorkspace`：创建/删除/改密码，含二次确认弹窗，前端校验与后端一致。
+- Jest 测试：role 固定为 user、密码校验、改密码 404/403/400，共 12 个全通过。
+
+### 阶段 3：文档管理页迁移
+- `AdminDocumentsWorkspace`：文档表格（文件名/所有者/状态/可见性/选择数）+ 删除确认弹窗。
+- `/admin/documents` 接入 `AdminDocumentsWorkspace`。
+
+### 阶段 4：登录落点与主界面入口
+- 新增 `GET /api/auth/me`，返回 `{ id, email, role }`。
+- 登录页无 `from` 参数时调用 `/api/auth/me`：admin → `/admin`，user → `/chat/new`。
+- 有 `from` 参数时保持原目标不变。
+- TopBar Admin 入口改为 Shield 图标 + 边框 badge 样式。
+
+### 阶段 5：清理与验收
+- 删除 `src/components/admin/AdminWorkspace.tsx`（已确认无引用）。
+- `pnpm exec tsc --noEmit`：通过，0 错误。
+- `pnpm exec jest`：83 个测试，81 个通过；2 个预存失败（`documents/[id]/reindex` 和 `documents/[id]/index`），与本 feature 无关。
 
 ## 已知不一致
 
@@ -64,19 +78,27 @@
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：通过（阶段 1 完成后）。
-- `pnpm exec jest`：未运行（阶段 1 无新 API，既有测试预计无影响）。
-- 人工验证：待进行（需验证 /admin、/admin/users、/admin/documents 及主界面不回归）。
+- `pnpm exec tsc --noEmit`：通过（0 错误）。
+- `pnpm exec jest`：81/83 通过；2 个预存失败（reindex/index API tests，与本 feature 无关）。
+- 人工验证：待进行（见验收清单）。
+
+## 验收清单（待人工验证）
+
+- [ ] admin 访问 `/admin` 显示 Dashboard（统计卡片 + 最近文档），管理界面专属 shell，无主应用 TopBar/AppSidebar
+- [ ] admin 访问 `/admin/users` 可创建、删除、改密码
+- [ ] admin 访问 `/admin/documents` 可删除文档
+- [ ] 管理界面"回到 FAQ"按钮跳转到主界面
+- [ ] 管理界面顶部显示"FAQ-RAG Admin"标题
+- [ ] 普通用户直接访问 `/admin`、`/admin/users`、`/admin/documents` 被重定向到 `/chat/new`
+- [ ] admin 普通登录（无 from 参数）后跳转到 `/admin`
+- [ ] 普通用户登录（无 from 参数）后跳转到 `/chat/new`
+- [ ] 带 `from=/knowledge` 登录后回到 `/knowledge`
+- [ ] 主界面 admin 可见 Shield 图标 Admin 入口，普通用户不可见
+- [ ] 主界面 Chat / Knowledge / About 及 Sign In 页正常渲染（无回归）
 
 ## 下一步
 
-启动阶段 2：用户管理页完善
-
-1. 从 `AdminWorkspace.tsx` 提取创建/删除用户逻辑，移入 `AdminUsersWorkspace`。
-2. 收紧 `POST /api/admin/users` schema，移除 `role` 字段（固定为 `"user"`）。
-3. 新增 `PATCH /api/admin/users/[id]/password` API 和 `update-user-password` 服务。
-4. `AdminUsersWorkspace` 接入修改密码弹窗。
-5. 运行 Jest API 测试 + `pnpm exec tsc --noEmit`，人工验证创建/删除/改密码。
+全部验收通过后，此 feature 可合并到 main。
 
 ## 恢复协议
 
