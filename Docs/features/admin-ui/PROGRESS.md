@@ -2,11 +2,11 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 1–5 全部完成
-- 状态：全功能实现，TypeScript 通过，已知预存失败测试 2 个（与本 feature 无关），待人工验收
-- 最后确认的实现提交：`（见阶段 5 提交 SHA）`
+- 当前阶段：阶段 1–5 已完成，阶段 6（补充修复）待实施
+- 状态：发现 7 处实现问题，需修复后再进行人工验收
+- 最后确认的实现提交：`c6b6f17`（admin-ui phase 5: 清理与验收）
 - 最后确认的设计提交：`35ae5a3`（codex-version）
-- 下一步入口：人工验收（见验收清单）
+- 下一步入口：实施阶段 6（见阶段清单）
 
 当前 feature 文档结构为：
 
@@ -18,11 +18,10 @@
 
 ## 文档一致性检查
 
-- `git status`（2026-05-07）：`DESIGN.md`、`PROGRESS.md` 为 untracked（未追踪）；`REQUIREMENTS.md`、`DESIGN-codex.md`、`PROGRESS-codex.md`、`Docs/features/multi-user-e2e/*` 均已在提交 `35ae5a3`（codex-version）中提交。
-- `REQUIREMENTS.md` 当前状态：草稿，待确认（文件头部标注）；已纳入版本控制，内容稳定。
-- `DESIGN.md` 与 `DESIGN-codex.md` 内容一致（仅 Section 1 措辞有微调），已与 REQUIREMENTS.md 逐项核对，无结构性缺口。
-- `PROGRESS.md` 与 `PROGRESS-codex.md` 内容一致（当前状态字段已更新）。
-- 最后确认提交之后的 feature 相关实现提交：无（admin-ui 实现尚未开始）。
+- `git status`（2026-05-07）：`DESIGN.md`、`PROGRESS.md` 为 untracked（未追踪）；`REQUIREMENTS.md`、`DESIGN-codex.md`、`PROGRESS-codex.md` 均已在提交 `35ae5a3`（codex-version）中提交。
+- `REQUIREMENTS.md` 已更新：新增 UI 语言约定、Admin 入口可见性要求、Email 显示、Dialog 创建用户、文档列表空状态，状态仍为草稿。
+- `DESIGN.md` 已同步更新：与 REQUIREMENTS.md 逐项对齐。
+- 阶段 1–5 实现提交：`14e0587`→`23fb816`→`252d821`→`5b5b098`→`c6b6f17`。
 
 ## 阶段清单
 
@@ -31,6 +30,7 @@
 - [x] 阶段 3：文档管理页迁移
 - [x] 阶段 4：登录落点与主界面入口
 - [x] 阶段 5：清理与验收
+- [ ] 阶段 6：UI 完善与缺陷修复
 
 ## 已完成工作
 
@@ -42,8 +42,8 @@
 - `src/app/providers.tsx`：添加 `usePathname()` 分流，`/admin/**` 路径跳过 `AppSidebar` / `TopBar`。
 - `src/app/admin/layout.tsx`：Server Component，调用 `requireAdmin()`；非 admin 重定向到 `/chat/new`；渲染 `AdminShell`。
 - `src/components/admin/AdminShell.tsx`：管理界面骨架（`h-dvh` 布局，AdminTopBar + AdminSidebar + 内容区）。
-- `src/components/admin/AdminTopBar.tsx`："FAQ-RAG Admin" 标题、"回到 FAQ"（`getLastChatHref()`）、主题切换、退出登录。
-- `src/components/admin/AdminSidebar.tsx`：独立垂直导航（不依赖 SidebarProvider），三项：仪表板 / 用户管理 / 文档管理。
+- `src/components/admin/AdminTopBar.tsx`："FAQ-RAG Admin" 标题、"Back to FAQ"（`getLastChatHref()`）、主题切换、退出登录。
+- `src/components/admin/AdminSidebar.tsx`：独立垂直导航（不依赖 SidebarProvider），三项：Dashboard / Users / Documents。
 - `src/app/admin/page.tsx`：改写为 Dashboard（统计卡片 + 最近文档表 + 子页面入口）。
 - `src/app/admin/users/page.tsx`：只读用户表（邮箱、角色、注册日期），阶段 2 补操作。
 - `src/app/admin/documents/page.tsx`：只读文档表（文件名、所有者、状态、可见性、选择数），阶段 3 补删除。
@@ -70,35 +70,46 @@
 - `pnpm exec tsc --noEmit`：通过，0 错误。
 - `pnpm exec jest`：83 个测试，81 个通过；2 个预存失败（`documents/[id]/reindex` 和 `documents/[id]/index`），与本 feature 无关。
 
-## 已知不一致
+## 已知实现问题（阶段 6 待修复）
 
-- `REQUIREMENTS.md` 状态仍为草稿，待产品确认。
-- 需求要求文档管理页展示"全站文档列表"且暂不支持分页；现有 API 有分页能力，当前 `/admin` SSR 只取前 50 条。实施阶段 3 需要明确无分页时的数量上限处理。
-- 非 admin 访问 `/admin/**` 的验收标准允许"重定向到主界面（或 403）"，设计当前建议页面重定向到 `/chat/new`，API 保持 401/403。
+以下问题在阶段 1–5 完成后经分析发现，需在阶段 6 修复：
+
+| # | 问题 | 类型 | 影响文件 |
+|---|------|------|----------|
+| 1 | Admin UI 全部使用中文，与主应用英文风格不一致 | 实现 BUG | AdminSidebar、AdminTopBar、AdminUsersWorkspace、AdminDocumentsWorkspace、admin/*/page.tsx |
+| 2 | Chat 界面 Sidebar footer 无 Admin 入口（ChatSidebarContent 未加 Admin 项） | 需求遗漏 | ChatSidebar/index.tsx |
+| 3 | TopBar Admin 按钮在 `hidden md:flex` nav 内，移动端不可见 | 需求遗漏 | TopBar.tsx |
+| 4 | auth-context 无 email 字段；TopBar SignOut 旁无 Email 显示 | 新功能 | auth-context.tsx、providers.tsx、TopBar.tsx、AdminTopBar.tsx |
+| 5 | 创建用户使用内联表单，未使用 Dialog；前端无 Zod 错误显示 | 功能调整 | AdminUsersWorkspace.tsx |
+| 6 | AdminDocumentsWorkspace 文档为空时不渲染表格，直接返回段落文本 | 实现 BUG | AdminDocumentsWorkspace.tsx |
+| 7 | AppSidebar Admin isActive 判断为精确匹配 `/admin`，子页时不激活 | minor bug | AppSidebar.tsx |
 
 ## 验证状态
 
 - `pnpm exec tsc --noEmit`：通过（0 错误）。
 - `pnpm exec jest`：81/83 通过；2 个预存失败（reindex/index API tests，与本 feature 无关）。
-- 人工验证：待进行（见验收清单）。
+- 人工验证：待阶段 6 修复完成后进行。
 
-## 验收清单（待人工验证）
+## 验收清单（待阶段 6 修复后验证）
 
 - [ ] admin 访问 `/admin` 显示 Dashboard（统计卡片 + 最近文档），管理界面专属 shell，无主应用 TopBar/AppSidebar
-- [ ] admin 访问 `/admin/users` 可创建、删除、改密码
-- [ ] admin 访问 `/admin/documents` 可删除文档
-- [ ] 管理界面"回到 FAQ"按钮跳转到主界面
-- [ ] 管理界面顶部显示"FAQ-RAG Admin"标题
+- [ ] admin 访问 `/admin/users` 可通过 Dialog 创建（含 Zod 错误提示）、删除、改密码
+- [ ] admin 访问 `/admin/documents` 可删除文档；空时显示 "No documents found." 占位行
+- [ ] 管理界面 "Back to FAQ" 按钮跳转到主界面
+- [ ] 管理界面顶部显示 "FAQ-RAG Admin" 标题
 - [ ] 普通用户直接访问 `/admin`、`/admin/users`、`/admin/documents` 被重定向到 `/chat/new`
 - [ ] admin 普通登录（无 from 参数）后跳转到 `/admin`
 - [ ] 普通用户登录（无 from 参数）后跳转到 `/chat/new`
 - [ ] 带 `from=/knowledge` 登录后回到 `/knowledge`
-- [ ] 主界面 admin 可见 Shield 图标 Admin 入口，普通用户不可见
+- [ ] 主界面 TopBar 右侧常驻区 Admin 按钮所有屏幕尺寸可见，普通用户不可见
+- [ ] Chat 界面 Sidebar 底部有 Admin 入口，普通用户不可见
+- [ ] TopBar SignOut 左侧显示 Email（小屏隐藏）；SignOut tooltip 含 Email
+- [ ] Admin 界面所有 UI 文本使用英文
 - [ ] 主界面 Chat / Knowledge / About 及 Sign In 页正常渲染（无回归）
 
 ## 下一步
 
-全部验收通过后，此 feature 可合并到 main。
+完成阶段 6 所有修复后，进行人工验收。全部验收通过后，此 feature 可合并到 main。
 
 ## 恢复协议
 
@@ -107,9 +118,8 @@
 1. 先读取本文件（PROGRESS.md）。
 2. 再读取 [DESIGN.md](./DESIGN.md)（规范版；如不存在，读 DESIGN-codex.md）。
 3. 最后读取 [REQUIREMENTS.md](./REQUIREMENTS.md)。
-4. 检查 `git status` 和 `git log`，与"最后确认的实现提交"对比，确认是否有新的 admin-ui 相关提交。
-5. 如果"最后确认的实现提交"仍为"无"，以当前工作树文档为准。
-6. 检查 `REQUIREMENTS.md`、`DESIGN.md` 或本文件是否在最后确认进度之后发生变化。
-7. 如果需求、设计、范围、阶段顺序或验收标准发生冲突，先停下说明不一致。
-8. 每次阶段或子阶段提交前，按实际实现状态更新本文件。
-9. DESIGN-codex.md 和 PROGRESS-codex.md 是 Codex 生成的参考版本，实施时以 DESIGN.md 和 PROGRESS.md 为准，不修改 codex 版本。
+4. 检查 `git status` 和 `git log`，与"最后确认的实现提交"（`c6b6f17`）对比，确认是否有新的 admin-ui 相关提交。
+5. 检查 `REQUIREMENTS.md`、`DESIGN.md` 或本文件是否在最后确认进度之后发生变化。
+6. 如果需求、设计、范围、阶段顺序或验收标准发生冲突，先停下说明不一致。
+7. 每次阶段或子阶段提交前，按实际实现状态更新本文件。
+8. DESIGN-codex.md 和 PROGRESS-codex.md 是 Codex 生成的参考版本，实施时以 DESIGN.md 和 PROGRESS.md 为准，不修改 codex 版本。

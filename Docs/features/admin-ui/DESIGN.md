@@ -35,6 +35,7 @@
 - **权限在服务端兜底**：所有 `/admin` 页面和 `/api/admin/*` 入口继续调用 `requireAdmin()`。客户端只控制可见性，不作为安全边界。
 - **复用现有数据层和服务层**：用户和文档列表、创建用户、删除用户、删除文档优先复用现有 `lib/data/*` 和 `lib/services/*`。
 - **不扩大需求范围**：不实现搜索、排序、分页、设置页、角色升降级或审计日志。
+- **UI 使用英文**：管理界面所有 UI 文本（按钮、表头、提示、弹窗内容）使用英文，与主应用保持风格一致。
 - **UI 尺寸遵循现有系统**：按 `docs/ui-system.md` 使用 `PageShell`、`text-app-*`、shadcn 控件和 Tailwind v4 CSS-first token，不新增 `tailwind.config.ts`。
 - **Next.js App Router 约定**：使用 `app/admin/layout.tsx` 承载 admin shared UI；子页面放在对应 `page.tsx`；Route Handler 继续放在 `app/api/**/route.ts`。
 
@@ -104,9 +105,9 @@ src/app/api/admin/
 
 | 标签 | 路由 | 激活规则 | 图标建议 |
 | --- | --- | --- | --- |
-| 仪表板 | `/admin` | `pathname === "/admin"` | `LayoutDashboard` |
-| 用户管理 | `/admin/users` | `pathname.startsWith("/admin/users")` | `Users` |
-| 文档管理 | `/admin/documents` | `pathname.startsWith("/admin/documents")` | `Files` |
+| Dashboard | `/admin` | `pathname === "/admin"` | `LayoutDashboard` |
+| Users | `/admin/users` | `pathname.startsWith("/admin/users")` | `Users` |
+| Documents | `/admin/documents` | `pathname.startsWith("/admin/documents")` | `Files` |
 
 导航风格复用 `src/components/ui/sidebar.tsx` 的模式和密度，但组件应独立命名，例如 `AdminSidebar`，避免与主界面的 `AppSidebar` 混在一起。
 
@@ -114,9 +115,27 @@ src/app/api/admin/
 
 Admin 顶部栏提供明显按钮：
 
-- 文案：`回到 FAQ`
+- 文案：`Back to FAQ`
 - 目标：优先使用 `getLastChatHref()`；如果不可用则 `/chat/new`。
 - 点击后进入主应用 shell，主应用导航和普通用户体验完全一致。
+
+### 5.5 用户 Email 显示与 Auth Context 扩展
+
+**auth-context.tsx 扩展**：
+
+在 `AuthContextValue` 中增加 `email: string | null` 字段。`AuthContextProvider` 接收 `initialEmail` prop，由 `providers.tsx` 从服务端会话传入（与 `initialAuth`、`initialRole` 同路径）。Supabase `onAuthStateChange` 回调中同步更新：`session?.user.email ?? null`。
+
+注：auth-context 中的 email 来自 Supabase auth session，仅用于显示用途，不作为权限判断。
+
+**TopBar.tsx 更新**：
+
+在 SignOut 按钮左侧插入 Email 显示：
+- 仅登录状态可见，小屏幕隐藏（`hidden sm:inline`）
+- SignOut 按钮 `title` 属性（tooltip）：`Sign out (${email})`
+
+**AdminTopBar.tsx 更新**：
+
+AdminTopBar 从 props 接收 `email`（由 `admin/layout.tsx` 服务端传入），在 SignOut 左侧同样显示 Email（小屏隐藏），tooltip 同样含 Email。
 
 ---
 
@@ -149,11 +168,13 @@ Server side 读取：
 
 Client component 建议拆分为 `AdminUsersPageClient` 或 `AdminUsersWorkspace`：
 
-- 创建用户表单：
-  - `email`
-  - `password`
+- 创建用户通过 **Dialog 弹窗**进行：
+  - 触发：点击 "Add User" 按钮，打开 Dialog
+  - 表单字段：`email`、`password`
   - 固定提交 `role: "user"`
-  - 前端校验与后端一致：`email` 格式、`password.length >= 6`
+  - 前端 Zod 校验与后端共享同一 schema：`email: z.string().email()`、`password: z.string().min(6)`
+  - 校验失败时在字段下方显示具体错误信息（而非依赖浏览器原生提示）
+  - 提交成功后关闭 Dialog、刷新用户列表、toast 提示
 - 用户表格：
   - 邮箱
   - 角色
@@ -188,6 +209,11 @@ Server side 读取：
 - 可见性
 - 选择数
 - 操作
+
+空状态：
+
+- 无文档时仍渲染表格（`<Table>`），`<TableBody>` 内显示单行跨全列的 "No documents found." 占位文字。
+- 不使用 early return 直接返回段落文本。
 
 删除文档：
 
@@ -297,11 +323,24 @@ supabase.auth.admin.updateUserById(userId, { password })
 
 ## 9. 主界面 Admin 入口
 
-主界面仍只对 admin 显示入口：
+主界面仍只对 admin 显示入口，普通用户完全不可见。
 
-- `TopBar`：将普通文本链接改为更明显的 badge 或 icon+text 链接，目标 `/admin`。
-- `AppSidebar`：保留 `Shield` 图标入口，激活规则可改为 `pathname.startsWith("/admin")`，但 admin 路径进入独立 shell 后主 sidebar 不渲染。
-- 普通用户完全不可见 admin 入口。
+**TopBar（右侧常驻操作区）**：
+
+- Admin 按钮移至 TopBar 右侧常驻操作区（主题切换、SignOut 同区域），不放在 `hidden md:flex` 的 nav 内，确保所有屏幕尺寸下均可见。
+- 样式：`Shield` 图标 + badge 边框，跳转 `/admin`。
+- 通过 `useAuth().role` 判断，仅 admin 渲染。
+
+**ChatSidebarContent（chat 视图 sidebar footer）**：
+
+- `ChatSidebarContent` 的 `SidebarFooter` 中增加 Admin 项（`SidebarMenuItem`），位于 About 之后（最底部）。
+- 通过 `useAuth().role` 判断，仅 admin 可见。
+- 图标：`Shield`，href：`/admin`，tooltip：`Admin`。
+
+**AppSidebar（非 chat 视图，如 /knowledge、/about）**：
+
+- 已有 Admin 项，将 `isActive` 修正为 `pathname.startsWith("/admin")`（原为精确匹配 `/admin`）。
+- `/admin/**` 路径下 AppSidebar 不渲染（providers.tsx 分流），此修正仅对普通页面生效。
 
 ---
 
