@@ -37,7 +37,14 @@ async function generateHypotheticalAnswer(query: string, client: OpenAI, model: 
   return resp.choices[0]?.message?.content?.trim() ?? query;
 }
 
-export async function retrieve(userQuery: string, traceId?: string, provider?: string): Promise<ChunkRow[]> {
+type RetrieveOptions = {
+  userId: string;
+  traceId?: string;
+  provider?: string;
+};
+
+export async function retrieve(userQuery: string, options: RetrieveOptions): Promise<ChunkRow[]> {
+  const { userId, traceId, provider } = options;
   const { client, model } = resolveQueryClient(provider);
   const t0 = Date.now();
   const srcLang = detectLang(userQuery);
@@ -62,9 +69,9 @@ export async function retrieve(userQuery: string, traceId?: string, provider?: s
 
   // vector search in parallel across all query vectors
   const searchResults = await Promise.all([
-    vectorSearch(embZh, config.retrieval.topK),
-    vectorSearch(embEn, config.retrieval.topK),
-    embHyde ? vectorSearch(embHyde, config.retrieval.topK) : Promise.resolve([]),
+    vectorSearch(embZh, config.retrieval.topK, userId),
+    vectorSearch(embEn, config.retrieval.topK, userId),
+    embHyde ? vectorSearch(embHyde, config.retrieval.topK, userId) : Promise.resolve([]),
   ]);
 
   const candidates = deduplicateAndSort(searchResults.flat());

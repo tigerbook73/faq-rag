@@ -8,6 +8,7 @@ import { embedBatchForIndexing } from "../embeddings/router";
 import { detectLang } from "../lang/detect";
 import { saveUploadedFile, readUploadedFile } from "../storage";
 import { logger } from "../logger";
+import { DEFAULT_ADMIN_USER_ID } from "../default-users";
 
 async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
   const embeddings = await embedBatchForIndexing(chunks);
@@ -39,7 +40,9 @@ export async function ingestFile(filePath: string): Promise<string> {
   const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
-  const existing = await prisma.document.findUnique({ where: { contentHash } });
+  const existing = await prisma.document.findUnique({
+    where: { ownerUserId_contentHash: { ownerUserId: DEFAULT_ADMIN_USER_ID, contentHash } },
+  });
   if (existing) {
     logger.info({ fileName, hash: contentHash.slice(0, 8) }, "ingest: skipping duplicate");
     return existing.id;
@@ -50,6 +53,7 @@ export async function ingestFile(filePath: string): Promise<string> {
       name: fileName,
       mime,
       contentHash,
+      ownerUserId: DEFAULT_ADMIN_USER_ID,
       sizeBytes,
       status: "pending",
       fileRef: filePath,
@@ -93,11 +97,13 @@ export async function ingestBuffer(
   const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
-  const existing = await prisma.document.findUnique({ where: { contentHash } });
+  const existing = await prisma.document.findUnique({
+    where: { ownerUserId_contentHash: { ownerUserId: DEFAULT_ADMIN_USER_ID, contentHash } },
+  });
   if (existing) return { docId: existing.id, filePath: null };
 
   const doc = await prisma.document.create({
-    data: { name: fileName, mime, contentHash, sizeBytes, status: "pending" },
+    data: { name: fileName, mime, contentHash, ownerUserId: DEFAULT_ADMIN_USER_ID, sizeBytes, status: "pending" },
   });
 
   const storagePath = await saveUploadedFile(buffer, doc.id, fileName);

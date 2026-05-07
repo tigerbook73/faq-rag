@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, LogOut, LogIn, LibraryBig } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, LibraryBig, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -15,7 +15,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 
 export function TopBar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role, email } = useAuth();
   const router = useRouter();
 
   async function handleSignOut() {
@@ -101,15 +101,34 @@ export function TopBar() {
             <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />
           </>
         )}
+        {!isSignIn && role === "admin" && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:bg-muted"
+          >
+            <Shield className="size-3" />
+            Admin
+          </Link>
+        )}
         <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
         {!isSignIn &&
           (isAuthenticated ? (
-            <Button variant="ghost" size="icon" title="Sign out" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <>
+              {email && (
+                <span className="text-muted-foreground hidden text-sm sm:inline">{email}</span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                title={email ? `Sign out (${email})` : "Sign out"}
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
           ) : (
             <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/signin" />}>
               <LogIn className="h-4 w-4" />

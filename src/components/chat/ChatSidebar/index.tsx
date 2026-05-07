@@ -15,11 +15,13 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Info, BookOpen, MessageSquare, RefreshCw } from "lucide-react";
+import { SquarePen, Info, BookOpen, MessageSquare, RefreshCw, Shield } from "lucide-react";
 import Link from "next/link";
 import { type ChatSession } from "@/lib/session-api";
+import { useAuth } from "@/context/auth-context";
 
 export function ChatSidebarContent() {
+  const { role } = useAuth();
   const {
     sessions,
     isLoadingSessions,
@@ -153,6 +155,17 @@ export function ChatSidebarContent() {
               <span>About</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {role === "admin" && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Admin"
+                render={<Link href="/admin" onClick={closeOnMobile} />}
+              >
+                <Shield />
+                <span>Admin</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarFooter>
     </>

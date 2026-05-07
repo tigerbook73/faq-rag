@@ -15,12 +15,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
-import { Info, MessageSquare, BookOpen } from "lucide-react";
+import { Info, MessageSquare, BookOpen, Shield } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getLastChatHref } from "@/lib/last-chat";
 
 export function AppSidebar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const isChat = pathname.startsWith("/chat");
@@ -79,6 +79,18 @@ export function AppSidebar() {
                       <span>Knowledge</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  {role === "admin" && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={pathname.startsWith("/admin")}
+                        tooltip="Admin"
+                        render={<Link href="/admin" onClick={closeOnMobile} />}
+                      >
+                        <Shield />
+                        <span>Admin</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                 </>
               )}
               <SidebarMenuItem>

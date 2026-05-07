@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,10 +24,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const profile = await getCurrentUser().catch(() => null);
   return (
     <html
       lang="en"
@@ -35,7 +32,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        <Providers isAuthenticated={!!user}>{children}</Providers>
+        <Providers isAuthenticated={!!profile} role={profile?.role ?? null} email={profile?.email ?? null}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

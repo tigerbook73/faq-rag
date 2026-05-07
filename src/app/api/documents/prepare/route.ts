@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { z } from "zod";
-import { prisma } from "@/lib/db/client";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireUser } from "@/lib/auth/require-user";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/storage";
 import { mimeFromExt } from "@/lib/ingest/parse";
 import { config } from "@/lib/config";
+import {
+  createPendingDocumentForOwner,
+  deleteDocumentById,
+  findDuplicateDocumentForOwner,
+  setDocumentFileRef,
+} from "@/lib/data/documents";
 
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
 const ALLOWED_MIME_TYPES = new Set([
@@ -23,60 +30,60 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  let body: z.infer<typeof bodySchema>;
   try {
+    const actor = await requireUser();
+    let body: z.infer<typeof bodySchema>;
+
     body = bodySchema.parse(await req.json());
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
 
-  const { name, size, mime, hash } = body;
+    const { name, size, mime, hash } = body;
 
-  const ext = path.extname(name).toLowerCase();
-  if (!ALLOWED_EXTS.has(ext)) {
-    return NextResponse.json({ error: `Unsupported file type: ${ext}` }, { status: 400 });
-  }
+    const ext = path.extname(name).toLowerCase();
+    if (!ALLOWED_EXTS.has(ext)) {
+      return NextResponse.json({ error: `Unsupported file type: ${ext}` }, { status: 400 });
+    }
 
-  if (mime && mime !== "application/octet-stream" && !ALLOWED_MIME_TYPES.has(mime)) {
-    return NextResponse.json({ error: `Unsupported MIME type: ${mime}` }, { status: 400 });
-  }
+    if (mime && mime !== "application/octet-stream" && !ALLOWED_MIME_TYPES.has(mime)) {
+      return NextResponse.json({ error: `Unsupported MIME type: ${mime}` }, { status: 400 });
+    }
 
-  if (size > config.embedding.maxBytesCloud) {
-    return NextResponse.json({ error: "File exceeds 50 KB limit" }, { status: 413 });
-  }
+    if (size > config.embedding.maxBytesCloud) {
+      return NextResponse.json({ error: "File exceeds 50 KB limit" }, { status: 413 });
+    }
 
-  const existing = await prisma.document.findUnique({ where: { contentHash: hash } });
-  if (existing) {
-    return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
-  }
+    const existing = await findDuplicateDocumentForOwner(actor.id, hash);
+    if (existing) {
+      return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
+    }
 
-  const doc = await prisma.document.create({
-    data: {
+    const doc = await createPendingDocumentForOwner({
+      ownerUserId: actor.id,
       name,
       mime: mimeFromExt(ext),
       contentHash: hash,
       sizeBytes: size,
-      status: "pending",
-    },
-  });
+    });
 
-  // Path format: "embed/{docId}/{sanitizedFilename}" — see src/lib/storage/index.ts → saveUploadedFile
-  const storagePath = `embed/${doc.id}/${sanitizeFilename(name)}`;
+    // Path format: "embed/{docId}/{sanitizedFilename}" — see src/lib/storage/index.ts → saveUploadedFile
+    const storagePath = `embed/${doc.id}/${sanitizeFilename(name)}`;
 
-  const supabase = createSupabaseServiceClient();
-  const { data: urlData, error: urlError } = await supabase.storage
-    .from("documents")
-    .createSignedUploadUrl(storagePath);
+    const supabase = createSupabaseServiceClient();
+    const { data: urlData, error: urlError } = await supabase.storage
+      .from("documents")
+      .createSignedUploadUrl(storagePath);
 
-  if (urlError || !urlData) {
-    await prisma.document.delete({ where: { id: doc.id } }).catch(() => {});
-    return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 });
+    if (urlError || !urlData) {
+      await deleteDocumentById(doc.id).catch(() => {});
+      return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 });
+    }
+
+    await setDocumentFileRef(doc.id, storagePath);
+
+    return NextResponse.json({ docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token }, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    return authErrorResponse(error);
   }
-
-  await prisma.document.update({
-    where: { id: doc.id },
-    data: { fileRef: storagePath },
-  });
-
-  return NextResponse.json({ docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token }, { status: 201 });
 }

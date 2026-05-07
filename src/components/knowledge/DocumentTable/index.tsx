@@ -22,6 +22,7 @@ export function DocumentTable({ initialDocuments }: Props) {
     deleteTarget,
     setDeleteTarget,
     reindexingId,
+    visibilityUpdatingId,
     rebuilding,
     rebuildProgress,
     rebuildDialogOpen,
@@ -29,18 +30,29 @@ export function DocumentTable({ initialDocuments }: Props) {
     isManualRefreshing,
     handleDelete,
     handleReindex,
+    handleVisibilityChange,
     handleRebuildAll,
     handleManualRefresh,
   } = useDocumentManagement(initialDocuments);
 
   if (allDocuments.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center text-sm">No documents yet. Upload some files above.</div>
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-app-section">My documents</h2>
+          <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
+        </div>
+        <div className="text-muted-foreground py-12 text-center text-sm">No documents yet. Upload some files above.</div>
+      </section>
     );
   }
 
   return (
-    <>
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-app-section">My documents</h2>
+        <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
+      </div>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Search documents…"
@@ -76,6 +88,7 @@ export function DocumentTable({ initialDocuments }: Props) {
             <TableHead className="hidden sm:table-cell">Lang</TableHead>
             <TableHead className="hidden sm:table-cell">Chunks</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Visibility</TableHead>
             <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -83,7 +96,7 @@ export function DocumentTable({ initialDocuments }: Props) {
         <TableBody>
           {documents.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-muted-foreground py-8 text-center text-sm">
+              <TableCell colSpan={7} className="text-muted-foreground py-8 text-center text-sm">
                 No documents match &ldquo;{search}&rdquo;
               </TableCell>
             </TableRow>
@@ -94,7 +107,9 @@ export function DocumentTable({ initialDocuments }: Props) {
               doc={doc}
               isDeleting={deletingId === doc.id}
               isReindexing={reindexingId === doc.id}
+              isUpdatingVisibility={visibilityUpdatingId === doc.id}
               onReindex={handleReindex}
+              onVisibilityChange={handleVisibilityChange}
               onDelete={(id) => setDeleteTarget(id)}
             />
           ))}
@@ -119,6 +134,6 @@ export function DocumentTable({ initialDocuments }: Props) {
         }}
         rebuilding={rebuilding}
       />
-    </>
+    </section>
   );
 }

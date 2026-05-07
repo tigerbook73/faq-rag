@@ -1,23 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/client";
 import { CreateSessionInputSchema } from "@/lib/schemas/session";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireUser } from "@/lib/auth/require-user";
+import { createSessionForUser, listSessionsForUser } from "@/lib/data/sessions";
 
 export async function GET() {
-  const sessions = await prisma.session.findMany({
-    orderBy: { updatedAt: "desc" },
-    select: { id: true, title: true, updatedAt: true, createdAt: true },
-  });
-  return NextResponse.json(sessions);
+  try {
+    const actor = await requireUser();
+    const sessions = await listSessionsForUser(actor.id);
+    return NextResponse.json(sessions);
+  } catch (error) {
+    return authErrorResponse(error);
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const parsed = CreateSessionInputSchema.safeParse(await req.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  try {
+    const actor = await requireUser();
+    const parsed = CreateSessionInputSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+    const session = await createSessionForUser(actor.id, parsed.data);
+    return NextResponse.json(session, { status: 201 });
+  } catch (error) {
+    return authErrorResponse(error);
   }
-  const { id, title } = parsed.data;
-  const session = await prisma.session.create({
-    data: { id, title: title ?? "New Chat" },
-  });
-  return NextResponse.json(session, { status: 201 });
 }
