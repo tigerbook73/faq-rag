@@ -8,7 +8,6 @@ import { createUserAccount } from "@/lib/services/create-user";
 const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(["user", "admin"]).default("user"),
 });
 
 export async function GET() {
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const user = await createUserAccount(parsed.data);
+    const user = await createUserAccount({ ...parsed.data, role: "user" });
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
     return authErrorResponse(error);

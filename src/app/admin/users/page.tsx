@@ -1,36 +1,22 @@
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageShell } from "@/components/layout/PageShell";
+import { AdminUsersWorkspace, type AdminUser } from "@/components/admin/AdminUsersWorkspace";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { listUsers } from "@/lib/data/users";
 
 export default async function AdminUsersPage() {
-  const users = await listUsers();
+  const [actor, users] = await Promise.all([requireAdmin(), listUsers()]);
+
+  const initialUsers: AdminUser[] = users.map((u) => ({
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    createdAt: u.createdAt.toISOString(),
+  }));
 
   return (
-    <PageShell className="max-w-(--container-app-workspace) space-y-4">
+    <PageShell className="max-w-(--container-app-workspace) space-y-6">
       <h1 className="text-app-title">用户管理</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>邮箱</TableHead>
-            <TableHead>角色</TableHead>
-            <TableHead>注册日期</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Badge variant={user.role === "admin" ? "default" : "secondary"}>{user.role}</Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground text-sm">
-                {new Date(user.createdAt).toLocaleDateString("zh-CN")}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <AdminUsersWorkspace actorId={actor.id} initialUsers={initialUsers} />
     </PageShell>
   );
 }

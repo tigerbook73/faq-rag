@@ -61,4 +61,20 @@ describe("/api/admin/users", () => {
     expect(mockCreateUserAccount).toHaveBeenCalledWith({ email: "new@test.com", password: "secret123", role: "user" });
     expect(await res.json()).toEqual({ id: "user-1", email: "new@test.com", role: "user" });
   });
+
+  it("always creates users with role=user even if role=admin is sent", async () => {
+    mockCreateUserAccount.mockResolvedValue({ id: "user-1", email: "new@test.com", role: "user" });
+
+    const res = await POST(jsonRequest({ email: "new@test.com", password: "secret123", role: "admin" }) as never);
+
+    expect(res.status).toBe(201);
+    expect(mockCreateUserAccount).toHaveBeenCalledWith({ email: "new@test.com", password: "secret123", role: "user" });
+  });
+
+  it("rejects password shorter than 6 characters", async () => {
+    const res = await POST(jsonRequest({ email: "new@test.com", password: "abc" }) as never);
+
+    expect(res.status).toBe(400);
+    expect(mockCreateUserAccount).not.toHaveBeenCalled();
+  });
 });
