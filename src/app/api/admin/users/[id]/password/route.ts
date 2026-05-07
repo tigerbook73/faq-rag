@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { authErrorResponse } from "@/lib/auth/api";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { updateUserPassword } from "@/lib/services/update-user-password";
-
-const schema = z.object({ password: z.string().min(6) });
+import { UpdatePasswordInputSchema } from "@/lib/schemas/user";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -13,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     await requireAdmin();
     const { id } = await params;
 
-    const parsed = schema.safeParse(await req.json());
+    const parsed = UpdatePasswordInputSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }

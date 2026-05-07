@@ -13,6 +13,7 @@ import {
   findDuplicateDocumentForOwner,
   setDocumentFileRef,
 } from "@/lib/data/documents";
+import { PrepareUploadInputSchema } from "@/lib/schemas/document";
 
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
 const ALLOWED_MIME_TYPES = new Set([
@@ -22,19 +23,12 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
-const bodySchema = z.object({
-  name: z.string().min(1),
-  size: z.number().int().positive(),
-  mime: z.string(),
-  hash: z.string().length(64),
-});
-
 export async function POST(req: NextRequest) {
   try {
     const actor = await requireUser();
-    let body: z.infer<typeof bodySchema>;
+    let body: z.infer<typeof PrepareUploadInputSchema>;
 
-    body = bodySchema.parse(await req.json());
+    body = PrepareUploadInputSchema.parse(await req.json());
 
     const { name, size, mime, hash } = body;
 

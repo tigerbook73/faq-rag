@@ -3,7 +3,7 @@ import { authErrorResponse } from "@/lib/auth/api";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { listUsers } from "@/lib/data/users";
 import { createUserAccount } from "@/lib/services/create-user";
-import { createUserSchema } from "@/lib/validations/admin";
+import { CreateUserInputSchema } from "@/lib/schemas/user";
 
 export async function GET() {
   try {
@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
-    const parsed = createUserSchema.safeParse(await req.json());
+    const parsed = CreateUserInputSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }

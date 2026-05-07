@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { authErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/data/documents";
 import { deleteDocument } from "@/lib/services/delete-document";
-
-const updateDocumentSchema = z.object({
-  visibility: z.enum(["private", "public"]),
-});
+import { UpdateDocumentInputSchema } from "@/lib/schemas/document";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const actor = await requireUser();
     const { id } = await params;
-    const parsed = updateDocumentSchema.safeParse(await req.json());
+    const parsed = UpdateDocumentInputSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }

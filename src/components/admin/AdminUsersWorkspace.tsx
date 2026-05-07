@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { createUserSchema } from "@/lib/validations/admin";
+import { CreateUserInputSchema } from "@/lib/schemas/user";
 
 export interface AdminUser {
   id: string;
@@ -62,7 +62,7 @@ export function AdminUsersWorkspace({ actorId, initialUsers }: AdminUsersWorkspa
 
   async function handleCreateUser(event: React.FormEvent) {
     event.preventDefault();
-    const result = createUserSchema.safeParse({ email: createEmail, password: createPassword });
+    const result = CreateUserInputSchema.safeParse({ email: createEmail, password: createPassword });
     if (!result.success) {
       const errors: { email?: string; password?: string } = {};
       for (const issue of result.error.issues) {
@@ -119,7 +119,7 @@ export function AdminUsersWorkspace({ actorId, initialUsers }: AdminUsersWorkspa
 
   async function handleChangePassword() {
     if (!passwordTarget) return;
-    const result = createUserSchema.shape.password.safeParse(newPassword);
+    const result = CreateUserInputSchema.shape.password.safeParse(newPassword);
     if (!result.success) {
       setPasswordError(result.error.issues[0]?.message);
       return;
