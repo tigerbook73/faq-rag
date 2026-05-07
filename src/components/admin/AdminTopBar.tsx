@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { LibraryBig, Sun, Moon, LogOut, ArrowLeft } from "lucide-react";
+import { LibraryBig, Sun, Moon, LogOut, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
+import { Separator } from "@/components/ui/separator";
 
 export function AdminTopBar({ email }: { email: string | null }) {
   const router = useRouter();
@@ -25,16 +25,32 @@ export function AdminTopBar({ email }: { email: string | null }) {
         <span className="text-base font-bold">FAQ-RAG Admin</span>
       </div>
       <div className="flex items-center gap-1 sm:gap-2">
-        <Button variant="outline" size="sm" onClick={() => router.push(getLastChatHref())}>
-          <ArrowLeft className="h-4 w-4" />
-          Back to FAQ
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Go to Chat"
+          aria-label="Go to Chat"
+          onClick={() => router.push(getLastChatHref())}
+        >
+          <MessageSquare className="h-4 w-4" />
         </Button>
         <Separator orientation="vertical" className="my-2 self-stretch" />
-        <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        >
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
-        <Button variant="ghost" size="icon" title={email ? `Sign out (${email})` : "Sign out"} onClick={handleSignOut}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title={email ? `Sign out (${email})` : "Sign out"}
+          aria-label={email ? `Sign out (${email})` : "Sign out"}
+          onClick={handleSignOut}
+        >
           <LogOut className="h-4 w-4" />
         </Button>
       </div>

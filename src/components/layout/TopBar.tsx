@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, LogOut, LogIn, LibraryBig, Shield } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, LibraryBig, ShieldCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -98,16 +98,15 @@ export function TopBar() {
                 About
               </Link>
             </nav>
-            <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />
           </>
         )}
+        {!isSignIn && <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />}
         {!isSignIn && role === "admin" && (
-          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/admin" />}>
-            <Shield className="h-4 w-4" />
-            Admin
+          <Button variant="ghost" size="icon" title="Admin Portal" aria-label="Admin Portal" nativeButton={false} render={<Link href="/admin" />}>
+            <ShieldCog className="h-4 w-4" />
           </Button>
         )}
-        <Button variant="ghost" size="icon" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
+        <Button variant="ghost" size="icon" aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
@@ -117,6 +116,7 @@ export function TopBar() {
               variant="ghost"
               size="icon"
               title={email ? `Sign out (${email})` : "Sign out"}
+              aria-label={email ? `Sign out (${email})` : "Sign out"}
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4" />

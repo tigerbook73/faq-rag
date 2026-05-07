@@ -1,6 +1,6 @@
 const mockRequireUser = jest.fn();
 const mockGetDocumentForWrite = jest.fn();
-const mockUpdate = jest.fn();
+const mockResetDocumentForReindex = jest.fn();
 const mockProcessDocument = jest.fn();
 
 jest.mock("@/lib/auth/require-user", () => ({
@@ -9,14 +9,7 @@ jest.mock("@/lib/auth/require-user", () => ({
 
 jest.mock("@/lib/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
-}));
-
-jest.mock("@/lib/db/client", () => ({
-  prisma: {
-    document: {
-      update: (...args: unknown[]) => mockUpdate(...args),
-    },
-  },
+  resetDocumentForReindex: (...args: unknown[]) => mockResetDocumentForReindex(...args),
 }));
 
 jest.mock("@/lib/ingest/pipeline", () => ({
@@ -31,6 +24,7 @@ describe("/api/documents/[id]/reindex", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireUser.mockResolvedValue({ id: "user-1", role: "user" });
+    mockResetDocumentForReindex.mockResolvedValue(undefined);
   });
 
   it("reindexes only documents writable by the current actor", async () => {
@@ -40,10 +34,7 @@ describe("/api/documents/[id]/reindex", () => {
 
     expect(res.status).toBe(200);
     expect(mockGetDocumentForWrite).toHaveBeenCalledWith({ id: "user-1", role: "user" }, "doc-1");
-    expect(mockUpdate).toHaveBeenCalledWith({
-      where: { id: "doc-1" },
-      data: { status: "pending", errorMsg: null },
-    });
+    expect(mockResetDocumentForReindex).toHaveBeenCalledWith("doc-1");
     expect(mockProcessDocument).toHaveBeenCalledWith("doc-1", "embed/doc-1/faq.md");
     expect(await res.json()).toEqual({ status: "indexed" });
   });
@@ -54,7 +45,7 @@ describe("/api/documents/[id]/reindex", () => {
     const res = await POST(new Request("http://localhost/api/documents/doc-1/reindex") as never, params);
 
     expect(res.status).toBe(404);
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockResetDocumentForReindex).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ error: "Not found" });
   });
 });

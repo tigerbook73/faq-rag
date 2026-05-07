@@ -1,6 +1,6 @@
 const mockRequireUser = jest.fn();
 const mockGetDocumentForWrite = jest.fn();
-const mockUpdateMany = jest.fn();
+const mockSetDocumentUploaded = jest.fn();
 const mockEnqueueIndexing = jest.fn();
 const mockProcessDocument = jest.fn();
 
@@ -10,14 +10,7 @@ jest.mock("@/lib/auth/require-user", () => ({
 
 jest.mock("@/lib/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
-}));
-
-jest.mock("@/lib/db/client", () => ({
-  prisma: {
-    document: {
-      updateMany: (...args: unknown[]) => mockUpdateMany(...args),
-    },
-  },
+  setDocumentUploaded: (...args: unknown[]) => mockSetDocumentUploaded(...args),
 }));
 
 jest.mock("@/lib/config", () => ({
@@ -40,7 +33,7 @@ describe("/api/documents/[id]/index", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequireUser.mockResolvedValue({ id: "user-1", role: "user" });
-    mockUpdateMany.mockResolvedValue({ count: 1 });
+    mockSetDocumentUploaded.mockResolvedValue({ count: 1 });
   });
 
   it("queues indexing only for documents writable by the current actor", async () => {
@@ -50,10 +43,7 @@ describe("/api/documents/[id]/index", () => {
 
     expect(res.status).toBe(200);
     expect(mockGetDocumentForWrite).toHaveBeenCalledWith({ id: "user-1", role: "user" }, "doc-1");
-    expect(mockUpdateMany).toHaveBeenCalledWith({
-      where: { id: "doc-1", status: "pending" },
-      data: { status: "uploaded" },
-    });
+    expect(mockSetDocumentUploaded).toHaveBeenCalledWith("doc-1");
     expect(mockEnqueueIndexing).toHaveBeenCalledWith("doc-1", "embed/doc-1/faq.md");
     expect(mockProcessDocument).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ status: "queued" });
@@ -65,7 +55,7 @@ describe("/api/documents/[id]/index", () => {
     const res = await POST(new Request("http://localhost/api/documents/doc-1/index") as never, params);
 
     expect(res.status).toBe(404);
-    expect(mockUpdateMany).not.toHaveBeenCalled();
+    expect(mockSetDocumentUploaded).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ error: "Not found" });
   });
 });

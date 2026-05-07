@@ -40,7 +40,7 @@ export default async function AboutPage() {
 
       {isAuthenticated ? (
         <Button nativeButton={false} render={<Link href="/chat/last" />}>
-          Back to Chat
+          Go to Chat
         </Button>
       ) : (
         <Button nativeButton={false} render={<Link href="/auth/signin" />}>
