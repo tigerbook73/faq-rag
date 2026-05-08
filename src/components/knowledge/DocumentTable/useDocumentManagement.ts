@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
@@ -15,7 +15,7 @@ export function useDocumentManagement() {
     "/api/documents",
     fetcher,
   );
-  const baseDocuments = data?.items ?? [];
+  const baseDocuments = useMemo(() => data?.items ?? [], [data]);
 
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -35,9 +35,6 @@ export function useDocumentManagement() {
     return q ? baseDocuments.filter((d) => d.name.toLowerCase().includes(q)) : baseDocuments;
   }, [baseDocuments, search]);
 
-  // Track active document IDs to detect completion
-  const lastActiveIdsRef = useRef<Set<string>>(new Set());
-
   const fetchDocuments = useCallback(async () => {
     await mutateDocuments();
   }, [mutateDocuments]);
@@ -54,16 +51,7 @@ export function useDocumentManagement() {
     }
   }, [mutateDocuments]);
 
-  // Polling logic for active documents
   const hasActiveDocs = documents.some((d) => ACTIVE_STATUSES.has(d.status));
-  const hadActiveDocs = lastActiveIdsRef.current.size > 0;
-
-  if (hasActiveDocs || hadActiveDocs) {
-    const currentActiveIds = new Set(
-      documents.filter((d) => ACTIVE_STATUSES.has(d.status)).map((d) => d.id),
-    );
-    lastActiveIdsRef.current = currentActiveIds;
-  }
 
   // Use SWR's built-in refreshInterval for polling when there are active docs
   useSWR<{ items: Document[] }>(

@@ -22,7 +22,7 @@ import { useAuth } from "@/context/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function ChatSidebarContent() {
-  const { role, email } = useAuth();
+  const { email } = useAuth();
   const {
     sessions,
     isLoadingSessions,

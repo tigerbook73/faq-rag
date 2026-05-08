@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useDocumentManagement } from "./useDocumentManagement";
-import { DocumentRow, type Document } from "@/components/knowledge/DocumentRow";
+import { DocumentRow } from "@/components/knowledge/DocumentRow";
 import { DeleteDialog, RebuildDialog } from "@/components/knowledge/DocumentDialogs";
 
 export function DocumentTable() {

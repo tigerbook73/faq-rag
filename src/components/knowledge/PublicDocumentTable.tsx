@@ -26,7 +26,7 @@ export function PublicDocumentTable() {
     "/api/public-documents",
     fetcher,
   );
-  const documents = data?.items ?? [];
+  const documents = useMemo(() => data?.items ?? [], [data]);
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 

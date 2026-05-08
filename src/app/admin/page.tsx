@@ -15,11 +15,6 @@ interface DashboardUser {
   role: string;
 }
 
-interface DashboardData {
-  users: DashboardUser[];
-  documents: { items: AdminDocument[]; total: number };
-}
-
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function StatCard({ title, value }: { title: string; value: number }) {

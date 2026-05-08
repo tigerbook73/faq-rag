@@ -26,9 +26,7 @@ const ALLOWED_MIME_TYPES = new Set([
 export async function POST(req: NextRequest) {
   try {
     const actor = await requireUser();
-    let body: z.infer<typeof PrepareUploadInputSchema>;
-
-    body = PrepareUploadInputSchema.parse(await req.json());
+    const body = PrepareUploadInputSchema.parse(await req.json());
 
     const { name, size, mime, hash } = body;
 

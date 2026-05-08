@@ -23,9 +23,6 @@ export function useChatSessions() {
     mutate,
   } = useSWR<ChatSession[]>(SWR_KEY, fetcher);
 
-  const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
-  const [sessionsError, setSessionsError] = useState<string | null>(null);
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -136,8 +133,8 @@ export function useChatSessions() {
   return {
     sessions,
     isLoadingSessions,
-    isRefreshingSessions,
-    sessionsError,
+    isRefreshingSessions: false as const,
+    sessionsError: null as string | null,
     editingId,
     editValue,
     inputRef,

@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getLastChatHref } from "@/lib/last-chat";
 
 export function AppSidebar() {
-  const { isAuthenticated, role, email } = useAuth();
+  const { isAuthenticated, email } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const isChat = pathname.startsWith("/chat");
