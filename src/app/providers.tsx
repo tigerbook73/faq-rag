@@ -16,6 +16,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
+  const isSignIn = pathname === "/auth/signin";
 
   if (isAdmin) {
     return (
@@ -28,7 +29,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-      {(isAuthenticated || isAuthLoading) && <AppSidebar />}
+      {!isSignIn && (isAuthenticated || isAuthLoading) && <AppSidebar />}
       <SidebarInset className="flex flex-col overflow-hidden">
         <TopBar />
         {children}
