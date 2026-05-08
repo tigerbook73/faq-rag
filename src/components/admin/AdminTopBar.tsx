@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { LibraryBig, Sun, Moon, LogOut, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 import { Separator } from "@/components/ui/separator";
@@ -21,7 +22,10 @@ export function AdminTopBar({ email }: { email: string | null }) {
   return (
     <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-3 sm:px-4">
       <div className="flex items-center gap-2">
-        <LibraryBig className="size-6 shrink-0" />
+        <SidebarTrigger className="size-10 shrink-0 md:hidden">
+          <LibraryBig className="size-6" />
+        </SidebarTrigger>
+        <LibraryBig className="hidden size-6 shrink-0 md:block" />
         <span className="text-base font-bold">FAQ-RAG Admin</span>
       </div>
       <div className="flex items-center gap-1 sm:gap-2">
