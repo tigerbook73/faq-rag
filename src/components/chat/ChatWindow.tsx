@@ -47,7 +47,6 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     session,
     setSession,
     provider,
-    router,
     input,
     setInput,
     draftKey,

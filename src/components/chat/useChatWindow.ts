@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type Dispatch, type SetStateAction } from "react";
-import { type AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { upsertSession, type Message, type ChatSession } from "@/lib/session-api";
 import { lastChat } from "@/lib/last-chat";
 import { STORAGE_KEYS, CHAT_EVENTS } from "@/lib/constants";
@@ -87,7 +86,6 @@ interface UseStreamingChatParams {
   session: ChatSession | null;
   setSession: Dispatch<SetStateAction<ChatSession | null>>;
   provider: string;
-  router: AppRouterInstance;
   input: string;
   setInput: Dispatch<SetStateAction<string>>;
   draftKey: string;
@@ -100,7 +98,6 @@ export function useStreamingChat({
   session,
   setSession,
   provider,
-  router,
   input,
   setInput,
   draftKey,
@@ -218,31 +215,31 @@ export function useStreamingChat({
           const finalMessages: Message[] = [...withUser, { role: "assistant", content: interrupted, citations: [] }];
           setMessages(finalMessages);
           await persistMessages(finalMessages, sessionAtSend, resolvedId);
-          if (!chatId) router.replace(`/chat/${resolvedId}`);
+          if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
           streamDone = true;
         }
       }
 
       if (doneMessages) {
         await persistMessages(doneMessages, sessionAtSend, resolvedId);
-        if (!chatId) router.replace(`/chat/${resolvedId}`);
+        if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
       } else if (!streamDone && assistantContent) {
         // stream ended without "done" event (e.g. server crash) — save partial content
         const partial = assistantContent + "\n\n⚠️ _回答被中断_";
         const finalMessages: Message[] = [...withUser, { role: "assistant", content: partial, citations: [] }];
         setMessages(finalMessages);
         await persistMessages(finalMessages, sessionAtSend, resolvedId);
-        if (!chatId) router.replace(`/chat/${resolvedId}`);
+        if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
       }
     } catch (err) {
       toast.error(String(err));
       setMessages(withUser);
       await persistMessages(withUser, sessionAtSend, resolvedId);
-      if (!chatId) router.replace(`/chat/${resolvedId}`);
+      if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, provider, session, chatId, router, persistMessages, draftKey, setInput, setMessages]);
+  }, [input, loading, messages, provider, session, chatId, persistMessages, draftKey, setInput, setMessages]);
 
   return { loading, send, textareaRef };
 }
