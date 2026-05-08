@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import useSWR from "swr";
 import { apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/session-api";
 import { getLastChatHref } from "@/lib/last-chat";
-import { CHAT_EVENTS } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar";
 
 const SWR_KEY = "/api/sessions";
@@ -35,15 +34,6 @@ export function useChatSessions() {
     if (isMobile) setOpenMobile(false);
   }, [isMobile, setOpenMobile]);
 
-  // Re-fetch sessions when any component dispatches chat-session-updated
-  useEffect(() => {
-    function onUpdate() {
-      void mutate();
-    }
-    window.addEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
-    return () => window.removeEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
-  }, [mutate]);
-
   // Focus input when edit mode activates
   useEffect(() => {
     if (editingId) {
@@ -61,10 +51,17 @@ export function useChatSessions() {
       const trimmed = editValue.trim();
       setEditingId(null);
       if (!trimmed) return;
-      await updateSessionTitle(id, trimmed);
-      window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
+      mutate(
+        (current) => current?.map((s) => (s.id === id ? { ...s, title: trimmed } : s)),
+        false,
+      );
+      try {
+        await updateSessionTitle(id, trimmed);
+      } catch {
+        void mutate();
+      }
     },
-    [editValue],
+    [editValue, mutate],
   );
 
   const cancelEdit = useCallback(() => {
@@ -109,11 +106,18 @@ export function useChatSessions() {
     async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
       e.stopPropagation();
-      await apiDeleteSession(id);
-      window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
+      mutate(
+        (current) => current?.filter((s) => s.id !== id),
+        false,
+      );
       if (pathname === `/chat/${id}`) router.replace("/chat/new");
+      try {
+        await apiDeleteSession(id);
+      } catch {
+        void mutate();
+      }
     },
-    [pathname, router],
+    [pathname, router, mutate],
   );
 
   const navigateToSession = useCallback(

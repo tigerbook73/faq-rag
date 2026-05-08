@@ -3,7 +3,3 @@ export const STORAGE_KEYS = {
   DRAFT: (chatId: string) => `chat:draft:${chatId}`,
   SCROLL: (chatId: string) => `chat:scroll:${chatId}`,
 } as const;
-
-export const CHAT_EVENTS = {
-  SESSION_UPDATED: "chat-session-updated",
-} as const;

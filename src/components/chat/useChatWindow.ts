@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type Dispatch, type SetStateAction } from "react";
 import { upsertSession, type Message, type ChatSession } from "@/lib/session-api";
 import { lastChat } from "@/lib/last-chat";
-import { STORAGE_KEYS, CHAT_EVENTS } from "@/lib/constants";
+import { mutate as swrMutate } from "swr";
+import { STORAGE_KEYS } from "@/lib/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
 import type { Citation } from "./CitationDrawer";
@@ -125,7 +126,7 @@ export function useStreamingChat({
       setSession(next);
       lastChat.set(idToUse);
       await upsertSession(next);
-      window.dispatchEvent(new CustomEvent(CHAT_EVENTS.SESSION_UPDATED));
+      void swrMutate("/api/sessions");
     },
     [setSession],
   );
