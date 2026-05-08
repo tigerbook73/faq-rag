@@ -1,24 +1,38 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AdminDocumentsWorkspace, type AdminDocument } from "@/components/admin/AdminDocumentsWorkspace";
-import { listAdminDocuments } from "@/lib/data/documents";
 
-export default async function AdminDocumentsPage() {
-  const { items } = await listAdminDocuments({ skip: 0, take: 100 });
+function AdminDocumentsSkeleton() {
+  return (
+    <div className="mx-auto max-w-(--container-app-workspace) space-y-4 px-(--spacing-app-page-x) py-(--spacing-app-page-y)">
+      <Skeleton className="h-8 w-32" />
+      <div className="space-y-2">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-  const initialDocuments: AdminDocument[] = items.map((doc) => ({
-    id: doc.id,
-    name: doc.name,
-    ownerUserId: doc.ownerUserId,
-    status: doc.status,
-    visibility: doc.visibility,
-    owner: { email: doc.owner.email },
-    _count: { selections: doc._count.selections },
-  }));
+export default function AdminDocumentsPage() {
+  const [documents, setDocuments] = useState<AdminDocument[] | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/documents?pageSize=100")
+      .then((r) => r.json())
+      .then((data) => setDocuments(data.items ?? []));
+  }, []);
+
+  if (!documents) return <AdminDocumentsSkeleton />;
 
   return (
     <PageShell className="max-w-(--container-app-workspace) space-y-4">
       <h1 className="text-app-title">Documents</h1>
-      <AdminDocumentsWorkspace initialDocuments={initialDocuments} />
+      <AdminDocumentsWorkspace initialDocuments={documents} />
     </PageShell>
   );
 }
