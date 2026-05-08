@@ -6,11 +6,27 @@ import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer, type Citation } from "./CitationDrawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { type Message, type ChatSession } from "@/lib/session-api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { type Message, type ChatSession, fetchSession } from "@/lib/session-api";
 import { lastChat } from "@/lib/last-chat";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { useDraftPersistence, useChatScroll, useStreamingChat } from "./useChatWindow";
+
+function ChatLoadingSkeleton() {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-(--container-app-chat) space-y-4 px-4 py-4">
+          <Skeleton className="ml-auto h-12 w-2/3 rounded-xl" />
+          <Skeleton className="h-24 w-3/4 rounded-xl" />
+          <Skeleton className="ml-auto h-10 w-1/2 rounded-xl" />
+          <Skeleton className="h-20 w-3/4 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ChatWindow({ chatId, initialSession }: { chatId: string | null; initialSession: ChatSession | null }) {
   const router = useRouter();
@@ -20,9 +36,10 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
   const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isSessionLoading, setIsSessionLoading] = useState(chatId !== null && initialSession === null);
 
   const { input, setInput, draftKey } = useDraftPersistence(chatId);
-  const { bottomRef, scrollContainerRef } = useChatScroll(messages, chatId, initialSession?.messages?.length ?? 0);
+  const { bottomRef, scrollContainerRef } = useChatScroll(messages, chatId, 0);
   const { loading, send, textareaRef } = useStreamingChat({
     chatId,
     messages,
@@ -38,12 +55,19 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
 
   useEffect(() => {
     if (!chatId) return;
-    if (!initialSession) {
-      router.replace("/chat/new");
+    if (initialSession !== null) {
+      lastChat.set(chatId);
       return;
     }
-    lastChat.set(chatId);
-  }, [chatId, initialSession, router]);
+    fetchSession(chatId)
+      .then((loaded) => {
+        if (!loaded) { router.replace("/chat/new"); return; }
+        setSession(loaded);
+        setMessages(loaded.messages);
+        lastChat.set(chatId);
+      })
+      .finally(() => setIsSessionLoading(false));
+  }, [chatId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setSubtitle(session?.title ?? "New Chat");
@@ -64,6 +88,8 @@ export function ChatWindow({ chatId, initialSession }: { chatId: string | null; 
     },
     [send],
   );
+
+  if (isSessionLoading) return <ChatLoadingSkeleton />;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
