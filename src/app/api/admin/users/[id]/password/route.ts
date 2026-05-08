@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { updateUserPassword } from "@/lib/services/update-user-password";
 import { UpdatePasswordInputSchema } from "@/lib/schemas/user";
@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const parsed = UpdatePasswordInputSchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return validationErrorResponse(parsed.error);
     }
 
     const result = await updateUserPassword(id, parsed.data.password);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/data/documents";
 import { deleteDocument } from "@/lib/services/delete-document";
@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const { id } = await params;
     const parsed = UpdateDocumentInputSchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return validationErrorResponse(parsed.error);
     }
 
     const document = await updateDocumentVisibilityForOwner(actor.id, id, parsed.data.visibility);

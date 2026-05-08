@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CreateSessionInputSchema } from "@/lib/schemas/session";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { createSessionForUser, listSessionsForUser } from "@/lib/data/sessions";
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const actor = await requireUser();
     const parsed = CreateSessionInputSchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return validationErrorResponse(parsed.error);
     }
     const session = await createSessionForUser(actor.id, parsed.data);
     return NextResponse.json(session, { status: 201 });

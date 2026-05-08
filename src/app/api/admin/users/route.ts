@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { listUsers } from "@/lib/data/users";
 import { createUserAccount } from "@/lib/services/create-user";
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     await requireAdmin();
     const parsed = CreateUserInputSchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return validationErrorResponse(parsed.error);
     }
 
     const user = await createUserAccount({ ...parsed.data, role: "user" });

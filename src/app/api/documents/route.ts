@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { listDocumentsPageForOwner } from "@/lib/data/documents";
 import { DocumentListQuerySchema } from "@/lib/schemas/document";
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const params = Object.fromEntries(req.nextUrl.searchParams);
     const parsed = DocumentListQuerySchema.safeParse(params);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return validationErrorResponse(parsed.error);
     }
     const { page, pageSize } = parsed.data;
     const skip = (page - 1) * pageSize;
