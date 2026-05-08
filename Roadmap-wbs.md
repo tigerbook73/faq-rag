@@ -233,8 +233,8 @@ Phase 3 完成后形成最终架构描述，识别剩余不一致点。
 | T7 | refactor | Knowledge 页面 → client component | T0,T4 | 🟡 | ✅ |
 | T8 | refactor | Root layout 去 async + AuthContext role 修复 + proxy.ts getSession() | T0 | 🔴 | ✅ |
 | T9 | refactor | Chat 页面去除服务端 session 水合 | T0,T4 | 🟡 | ✅ |
-| T10 | analysis | 首页加载优化分析 | Phase 3 | — | ⬜ |
-| T11 | analysis | 全系统架构一致性报告 | Phase 3 | — | ⬜ |
+| T10 | analysis | 首页加载优化分析 | Phase 3 | — | ❌ 关闭（about/signin 已是 Static，优化收益不足）|
+| T11 | analysis | 全系统架构一致性报告 | Phase 3 | — | ✅ |
 
 ---
 
