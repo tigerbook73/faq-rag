@@ -8,42 +8,60 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   role: "user" | "admin" | null;
   email: string | null;
+  isAuthLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextValue>({ isAuthenticated: false, role: null, email: null });
+const AuthContext = createContext<AuthContextValue>({
+  isAuthenticated: false,
+  role: null,
+  email: null,
+  isAuthLoading: true,
+});
 
-export function AuthContextProvider({
-  children,
-  initialAuth,
-  initialRole,
-  initialEmail,
-}: {
-  children: ReactNode;
-  initialAuth: boolean;
-  initialRole: "user" | "admin" | null;
-  initialEmail: string | null;
-}) {
-  const [isAuthenticated, setIsAuthenticated] = useState(initialAuth);
-  const [role, setRole] = useState<"user" | "admin" | null>(initialRole);
-  const [email, setEmail] = useState<string | null>(initialEmail);
+export function AuthContextProvider({ children }: { children: ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [role, setRole] = useState<"user" | "admin" | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
+
+    async function fetchRole() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setRole(data.role ?? null);
+        }
+      } finally {
+        setIsAuthLoading(false);
+      }
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsAuthenticated(!!session);
-      if (!session) {
+      if (session) {
+        setIsAuthenticated(true);
+        setEmail(session.user.email ?? null);
+        fetchRole();
+      } else {
+        setIsAuthenticated(false);
         setRole(null);
         setEmail(null);
-      } else {
-        setEmail(session.user.email ?? null);
+        setIsAuthLoading(false);
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
-  return <AuthContext.Provider value={{ isAuthenticated, role, email }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, role, email, isAuthLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

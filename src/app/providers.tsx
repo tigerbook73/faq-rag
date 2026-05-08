@@ -10,42 +10,42 @@ import { TopBar } from "@/components/layout/TopBar";
 import { PageTitleProvider } from "@/context/page-title-context";
 import { ProviderContextProvider } from "@/context/provider-context";
 import { AuthContextProvider } from "@/context/auth-context";
+import { useAuth } from "@/context/auth-context";
 
-export function Providers({
-  children,
-  isAuthenticated,
-  role,
-  email,
-}: {
-  children: React.ReactNode;
-  isAuthenticated: boolean;
-  role: "user" | "admin" | null;
-  email: string | null;
-}) {
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
 
+  if (isAdmin) {
+    return (
+      <>
+        {children}
+        <Toaster />
+      </>
+    );
+  }
+
+  return (
+    <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
+      {isAuthenticated && <AppSidebar />}
+      <SidebarInset className="flex flex-col overflow-hidden">
+        <TopBar />
+        {children}
+      </SidebarInset>
+      <Toaster />
+    </SidebarProvider>
+  );
+}
+
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <AuthContextProvider initialAuth={isAuthenticated} initialRole={role} initialEmail={email}>
+      <AuthContextProvider>
         <PageTitleProvider>
           <ProviderContextProvider>
             <TooltipProvider>
-              {isAdmin ? (
-                <>
-                  {children}
-                  <Toaster />
-                </>
-              ) : (
-                <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-                  {isAuthenticated && <AppSidebar />}
-                  <SidebarInset className="flex flex-col overflow-hidden">
-                    <TopBar />
-                    {children}
-                  </SidebarInset>
-                  <Toaster />
-                </SidebarProvider>
-              )}
+              <AppLayout>{children}</AppLayout>
             </TooltipProvider>
           </ProviderContextProvider>
         </PageTitleProvider>
