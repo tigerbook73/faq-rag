@@ -38,7 +38,7 @@ export function Providers({
                 </>
               ) : (
                 <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-                  <AppSidebar />
+                  {isAuthenticated && <AppSidebar />}
                   <SidebarInset className="flex flex-col overflow-hidden">
                     <TopBar />
                     {children}

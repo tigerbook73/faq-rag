@@ -17,10 +17,11 @@ import {
 import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
 import { Info, MessageSquare, BookOpen } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getLastChatHref } from "@/lib/last-chat";
 
 export function AppSidebar() {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, email } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const isChat = pathname.startsWith("/chat");
@@ -44,6 +45,14 @@ export function AppSidebar() {
           <SidebarHeader>
             <div className="flex items-center justify-between">
               <SidebarTrigger />
+              {email && (
+                <div className="group-data-[state=collapsed]/sidebar-wrapper:hidden flex min-w-0 items-center gap-2 overflow-hidden">
+                  <Avatar className="size-6 shrink-0">
+                    <AvatarFallback className="text-xs">{email.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-muted-foreground truncate text-xs">{email}</span>
+                </div>
+              )}
             </div>
           </SidebarHeader>
           <SidebarContent />

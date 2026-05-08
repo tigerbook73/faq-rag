@@ -34,7 +34,7 @@ export function TopBar() {
   return (
     <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-3 sm:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        {isSignIn ? (
+        {isSignIn || !isAuthenticated ? (
           <LibraryBig className="size-6 shrink-0" />
         ) : (
           <>
@@ -60,8 +60,7 @@ export function TopBar() {
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {isChat && (
           <>
-            <span className="text-muted-foreground hidden text-sm sm:inline">Provider:</span>
-            <ProviderSelect value={provider} onChange={setProvider} className="w-28 sm:w-36" />
+            <ProviderSelect value={provider} onChange={setProvider} />
             <Separator orientation="vertical" className="my-2 hidden self-stretch sm:block" />
           </>
         )}
