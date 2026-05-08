@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateUserInputSchema } from "@/lib/schemas/user";
+import { useAuth } from "@/context/auth-context";
 
 export interface AdminUser {
   id: string;
@@ -25,14 +26,13 @@ export interface AdminUser {
   createdAt: string;
 }
 
-interface AdminUsersWorkspaceProps {
-  actorId: string;
-  initialUsers: AdminUser[];
-}
+const SWR_KEY = "/api/admin/users";
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-export function AdminUsersWorkspace({ actorId, initialUsers }: AdminUsersWorkspaceProps) {
-  const router = useRouter();
-  const [users, setUsers] = useState(initialUsers);
+export function AdminUsersWorkspace() {
+  const { id: actorId } = useAuth();
+  const { data, mutate } = useSWR<{ items: AdminUser[] }>(SWR_KEY, fetcher);
+  const users = data?.items ?? [];
 
   // Create user dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -83,12 +83,8 @@ export function AdminUsersWorkspace({ actorId, initialUsers }: AdminUsersWorkspa
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? `Failed to create user (${res.status})`);
-      setUsers((curr) => [
-        { id: data.id, email: data.email, role: data.role, createdAt: data.createdAt },
-        ...curr,
-      ]);
       setCreateOpen(false);
-      router.refresh();
+      await mutate();
       toast.success("User created");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create user");
@@ -106,9 +102,8 @@ export function AdminUsersWorkspace({ actorId, initialUsers }: AdminUsersWorkspa
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `Failed to delete user (${res.status})`);
       }
-      setUsers((curr) => curr.filter((u) => u.id !== deleteTarget.id));
       setDeleteTarget(null);
-      router.refresh();
+      await mutate();
       toast.success("User deleted");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete user");

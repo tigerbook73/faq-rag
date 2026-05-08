@@ -8,10 +8,12 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/context/auth-context";
 
-export function AdminTopBar({ email }: { email: string | null }) {
+export function AdminTopBar() {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
+  const { email } = useAuth();
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();

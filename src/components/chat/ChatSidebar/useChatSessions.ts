@@ -2,20 +2,30 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { fetchSessions, apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/session-api";
+import useSWR from "swr";
+import { apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/session-api";
 import { getLastChatHref } from "@/lib/last-chat";
 import { CHAT_EVENTS } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar";
+
+const SWR_KEY = "/api/sessions";
+const fetcher = (url: string) =>
+  fetch(url)
+    .then((r) => r.json())
+    .then((data) => data as ChatSession[]);
 
 export function useChatSessions() {
   const router = useRouter();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const {
+    data: sessions = [],
+    isLoading: isLoadingSessions,
+    mutate,
+  } = useSWR<ChatSession[]>(SWR_KEY, fetcher);
+
   const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
-  const mountedRef = useRef(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -25,77 +35,18 @@ export function useChatSessions() {
     if (isMobile) setOpenMobile(false);
   }, [isMobile, setOpenMobile]);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const loadSessions = useCallback(async (mode: "initial" | "refresh" = "refresh") => {
-    if (mode === "initial") {
-      setIsLoadingSessions(true);
-    } else {
-      setIsRefreshingSessions(true);
-    }
-    setSessionsError(null);
-
-    try {
-      const data = await fetchSessions();
-      if (!mountedRef.current) return;
-      setSessions(data);
-    } catch (error) {
-      if (!mountedRef.current) return;
-      console.error("[useChatSessions] Failed to load sessions", error);
-      setSessionsError("Unable to load chats");
-    } finally {
-      if (!mountedRef.current) return;
-      if (mode === "initial") {
-        setIsLoadingSessions(false);
-      } else {
-        setIsRefreshingSessions(false);
-      }
-    }
-  }, []);
-
-  // Initial session fetch
-  useEffect(() => {
-    let active = true;
-
-    async function loadInitialSessions() {
-      try {
-        const data = await fetchSessions();
-        if (!active) return;
-        setSessions(data);
-      } catch (error) {
-        if (!active) return;
-        console.error("[useChatSessions] Failed to load sessions", error);
-        setSessionsError("Unable to load chats");
-      } finally {
-        if (active) setIsLoadingSessions(false);
-      }
-    }
-
-    void loadInitialSessions();
-    return () => {
-      active = false;
-    };
-  }, []);
-
   // Re-fetch sessions when any component dispatches chat-session-updated
   useEffect(() => {
     function onUpdate() {
-      void loadSessions("refresh");
+      void mutate();
     }
     window.addEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
     return () => window.removeEventListener(CHAT_EVENTS.SESSION_UPDATED, onUpdate);
-  }, [loadSessions]);
+  }, [mutate]);
 
   // Focus input when edit mode activates
   useEffect(() => {
     if (editingId) {
-      // Small timeout to ensure DOM is ready if needed,
-      // but usually inputRef.current?.select() works if triggered by state change
       setTimeout(() => inputRef.current?.select(), 0);
     }
   }, [editingId]);
@@ -196,7 +147,7 @@ export function useChatSessions() {
     navigateToSession,
     navigateToLastChat,
     closeOnMobile,
-    reloadSessions: loadSessions,
+    reloadSessions: mutate,
     pathname,
   };
 }

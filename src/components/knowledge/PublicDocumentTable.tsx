@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,14 @@ export interface PublicDocument {
   _count: { chunks: number };
 }
 
-interface PublicDocumentTableProps {
-  initialDocuments: PublicDocument[];
-}
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-export function PublicDocumentTable({ initialDocuments }: PublicDocumentTableProps) {
-  const router = useRouter();
-  const [documents, setDocuments] = useState(initialDocuments);
+export function PublicDocumentTable() {
+  const { data, mutate } = useSWR<{ items: PublicDocument[] }>(
+    "/api/public-documents",
+    fetcher,
+  );
+  const documents = data?.items ?? [];
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -36,8 +37,13 @@ export function PublicDocumentTable({ initialDocuments }: PublicDocumentTablePro
   }, [documents, search]);
 
   async function handleSelectionChange(id: string, selected: boolean) {
-    const prev = documents;
-    setDocuments(prev.map((doc) => (doc.id === id ? { ...doc, selected } : doc)));
+    mutate(
+      (current) =>
+        current
+          ? { items: current.items.map((doc) => (doc.id === id ? { ...doc, selected } : doc)) }
+          : current,
+      false,
+    );
     setUpdatingId(id);
 
     try {
@@ -48,9 +54,9 @@ export function PublicDocumentTable({ initialDocuments }: PublicDocumentTablePro
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `Selection update failed (${res.status})`);
       }
-      router.refresh();
+      await mutate();
     } catch (err) {
-      setDocuments(prev);
+      await mutate();
       toast.error(err instanceof Error ? err.message : "Selection update failed");
     } finally {
       setUpdatingId(null);

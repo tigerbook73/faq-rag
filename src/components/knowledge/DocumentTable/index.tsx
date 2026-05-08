@@ -8,11 +8,7 @@ import { useDocumentManagement } from "./useDocumentManagement";
 import { DocumentRow, type Document } from "@/components/knowledge/DocumentRow";
 import { DeleteDialog, RebuildDialog } from "@/components/knowledge/DocumentDialogs";
 
-interface Props {
-  initialDocuments: Document[];
-}
-
-export function DocumentTable({ initialDocuments }: Props) {
+export function DocumentTable() {
   const {
     documents,
     allDocuments,
@@ -33,7 +29,7 @@ export function DocumentTable({ initialDocuments }: Props) {
     handleVisibilityChange,
     handleRebuildAll,
     handleManualRefresh,
-  } = useDocumentManagement(initialDocuments);
+  } = useDocumentManagement();
 
   if (allDocuments.length === 0) {
     return (

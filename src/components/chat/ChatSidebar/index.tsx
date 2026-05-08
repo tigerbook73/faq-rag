@@ -92,7 +92,7 @@ export function ChatSidebarContent() {
                       variant="ghost"
                       size="xs"
                       className="h-6 px-1.5"
-                      onClick={() => void reloadSessions("initial")}
+                      onClick={() => void reloadSessions()}
                     >
                       <RefreshCw className="size-3" />
                       Retry

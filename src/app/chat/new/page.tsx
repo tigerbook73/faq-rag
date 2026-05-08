@@ -1,5 +1,5 @@
 import { ChatWindow } from "@/components/chat/ChatWindow";
 
 export default function NewChatPage() {
-  return <ChatWindow key="new" chatId={null} initialSession={null} />;
+  return <ChatWindow key="new" chatId={null} />;
 }

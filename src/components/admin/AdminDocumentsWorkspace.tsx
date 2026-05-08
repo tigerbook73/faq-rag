@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,12 @@ export interface AdminDocument {
   _count: { selections: number };
 }
 
-interface AdminDocumentsWorkspaceProps {
-  initialDocuments: AdminDocument[];
-}
+const SWR_KEY = "/api/admin/documents?pageSize=100";
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-export function AdminDocumentsWorkspace({ initialDocuments }: AdminDocumentsWorkspaceProps) {
-  const router = useRouter();
-  const [documents, setDocuments] = useState(initialDocuments);
+export function AdminDocumentsWorkspace() {
+  const { data, mutate } = useSWR<{ items: AdminDocument[] }>(SWR_KEY, fetcher);
+  const documents = data?.items ?? [];
   const [deleteTarget, setDeleteTarget] = useState<AdminDocument | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -44,9 +43,8 @@ export function AdminDocumentsWorkspace({ initialDocuments }: AdminDocumentsWork
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `Failed to delete document (${res.status})`);
       }
-      setDocuments((curr) => curr.filter((d) => d.id !== deleteTarget.id));
       setDeleteTarget(null);
-      router.refresh();
+      await mutate();
       toast.success("Document deleted");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete document");

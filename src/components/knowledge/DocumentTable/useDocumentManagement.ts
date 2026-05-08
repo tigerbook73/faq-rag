@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useCallback, useRef } from "react";
+import useSWR from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
 import { type Document } from "@/components/knowledge/DocumentRow";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 
-export function useDocumentManagement(initialDocuments: Document[]) {
-  const router = useRouter();
-  const [polledDocuments, setPolledDocuments] = useState<Document[] | null>(null);
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+export function useDocumentManagement() {
+  const { data, mutate: mutateDocuments } = useSWR<{ items: Document[] }>(
+    "/api/documents",
+    fetcher,
+  );
+  const baseDocuments = data?.items ?? [];
+
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -24,87 +30,59 @@ export function useDocumentManagement(initialDocuments: Document[]) {
   } | null>(null);
   const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
-  const allDocuments = polledDocuments ?? initialDocuments;
-
   const documents = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return q ? allDocuments.filter((d) => d.name.toLowerCase().includes(q)) : allDocuments;
-  }, [allDocuments, search]);
+    return q ? baseDocuments.filter((d) => d.name.toLowerCase().includes(q)) : baseDocuments;
+  }, [baseDocuments, search]);
 
   // Track active document IDs to detect completion
   const lastActiveIdsRef = useRef<Set<string>>(new Set());
 
   const fetchDocuments = useCallback(async () => {
-    const res = await fetch("/api/documents");
-    const data = await res.json();
-    const newDocs = data.items as Document[];
-    setPolledDocuments(newDocs);
-    return newDocs;
-  }, []);
+    await mutateDocuments();
+  }, [mutateDocuments]);
 
   const handleManualRefresh = useCallback(async () => {
     setIsManualRefreshing(true);
     try {
-      await fetchDocuments();
-      router.refresh();
+      await mutateDocuments();
       toast.success("Table refreshed");
     } catch {
       toast.error("Refresh failed");
     } finally {
       setIsManualRefreshing(false);
     }
-  }, [fetchDocuments, router]);
+  }, [mutateDocuments]);
 
-  // Polling logic with improved refresh behavior (Roadmap 2.5)
-  useEffect(() => {
-    const currentActive = documents.filter((d) => ACTIVE_STATUSES.has(d.status));
-    const currentActiveIds = new Set(currentActive.map((d) => d.id));
+  // Polling logic for active documents
+  const hasActiveDocs = documents.some((d) => ACTIVE_STATUSES.has(d.status));
+  const hadActiveDocs = lastActiveIdsRef.current.size > 0;
 
-    // Update ref with current active if it's the first run or we have active docs
-    if (currentActiveIds.size > 0 || lastActiveIdsRef.current.size > 0) {
-      // We only start polling if there are active docs
-      if (currentActiveIds.size === 0 && lastActiveIdsRef.current.size === 0) {
-        return;
-      }
-    } else {
-      return;
-    }
+  if (hasActiveDocs || hadActiveDocs) {
+    const currentActiveIds = new Set(
+      documents.filter((d) => ACTIVE_STATUSES.has(d.status)).map((d) => d.id),
+    );
+    lastActiveIdsRef.current = currentActiveIds;
+  }
 
-    const id = setInterval(async () => {
-      const latestDocs = await fetchDocuments();
-
-      const latestActiveIds = new Set(
-        latestDocs.filter((d: Document) => ACTIVE_STATUSES.has(d.status)).map((d: Document) => d.id),
-      );
-
-      // Check if any document that was active is now terminal
-      let anyFinished = false;
-      for (const docId of lastActiveIdsRef.current) {
-        if (!latestActiveIds.has(docId)) {
-          anyFinished = true;
-          break;
-        }
-      }
-
-      lastActiveIdsRef.current = latestActiveIds;
-
-      if (anyFinished) {
-        router.refresh();
-      }
-    }, config.ui.pollIntervalMs);
-
-    return () => clearInterval(id);
-  }, [documents, fetchDocuments, router]);
+  // Use SWR's built-in refreshInterval for polling when there are active docs
+  useSWR<{ items: Document[] }>(
+    hasActiveDocs ? "/api/documents" : null,
+    fetcher,
+    { refreshInterval: config.ui.pollIntervalMs },
+  );
 
   async function handleDelete(id: string) {
-    const prev = polledDocuments ?? initialDocuments;
-    setPolledDocuments(prev.filter((d) => d.id !== id));
+    mutateDocuments(
+      (current) => current ? { items: current.items.filter((d) => d.id !== id) } : current,
+      false,
+    );
     setDeletingId(id);
     try {
       await fetch(`/api/documents/${id}`, { method: "DELETE" });
-      router.refresh();
+      await mutateDocuments();
     } catch {
-      setPolledDocuments(prev);
+      await mutateDocuments();
     } finally {
       setDeletingId(null);
       setDeleteTarget(null);
@@ -112,8 +90,13 @@ export function useDocumentManagement(initialDocuments: Document[]) {
   }
 
   async function handleReindex(id: string) {
-    const prev = polledDocuments ?? initialDocuments;
-    setPolledDocuments(prev.map((d) => (d.id === id ? { ...d, status: "pending" } : d)));
+    mutateDocuments(
+      (current) =>
+        current
+          ? { items: current.items.map((d) => (d.id === id ? { ...d, status: "pending" as Document["status"] } : d)) }
+          : current,
+      false,
+    );
     setReindexingId(id);
     try {
       const res = await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
@@ -121,9 +104,9 @@ export function useDocumentManagement(initialDocuments: Document[]) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `Reindex failed (${res.status})`);
       }
-      router.refresh();
+      await mutateDocuments();
     } catch (err) {
-      setPolledDocuments(prev);
+      await mutateDocuments();
       toast.error(err instanceof Error ? err.message : "Reindex failed");
     } finally {
       setReindexingId(null);
@@ -131,11 +114,16 @@ export function useDocumentManagement(initialDocuments: Document[]) {
   }
 
   async function handleVisibilityChange(id: string, visibility: "private" | "public") {
-    const prev = polledDocuments ?? initialDocuments;
-    const target = prev.find((d) => d.id === id);
+    const target = baseDocuments.find((d) => d.id === id);
     if (!target || target.visibility === visibility) return;
 
-    setPolledDocuments(prev.map((d) => (d.id === id ? { ...d, visibility } : d)));
+    mutateDocuments(
+      (current) =>
+        current
+          ? { items: current.items.map((d) => (d.id === id ? { ...d, visibility } : d)) }
+          : current,
+      false,
+    );
     setVisibilityUpdatingId(id);
     try {
       const res = await fetch(`/api/documents/${id}`, {
@@ -147,10 +135,10 @@ export function useDocumentManagement(initialDocuments: Document[]) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `Visibility update failed (${res.status})`);
       }
-      router.refresh();
+      await mutateDocuments();
       toast.success(`Document is now ${visibility}`);
     } catch (err) {
-      setPolledDocuments(prev);
+      await mutateDocuments();
       toast.error(err instanceof Error ? err.message : "Visibility update failed");
     } finally {
       setVisibilityUpdatingId(null);
@@ -167,12 +155,11 @@ export function useDocumentManagement(initialDocuments: Document[]) {
         if (!res.ok) failed++;
         setRebuildProgress({ done: i + 1, total: documents.length });
       }
-      setPolledDocuments(null);
-      router.refresh();
+      await mutateDocuments();
       if (failed > 0) toast.error(`${failed} document${failed > 1 ? "s" : ""} failed to reindex`);
     } catch {
       toast.error("Rebuild interrupted");
-      router.refresh();
+      await mutateDocuments();
     } finally {
       setRebuilding(false);
       setRebuildProgress(null);
@@ -181,7 +168,7 @@ export function useDocumentManagement(initialDocuments: Document[]) {
 
   return {
     documents,
-    allDocuments,
+    allDocuments: baseDocuments,
     search,
     setSearch,
     deletingId,
@@ -199,5 +186,6 @@ export function useDocumentManagement(initialDocuments: Document[]) {
     handleVisibilityChange,
     handleRebuildAll,
     handleManualRefresh,
+    fetchDocuments,
   };
 }

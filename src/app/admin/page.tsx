@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { Files, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageShell } from "@/components/layout/PageShell";
 import type { AdminDocument } from "@/components/admin/AdminDocumentsWorkspace";
@@ -21,27 +20,7 @@ interface DashboardData {
   documents: { items: AdminDocument[]; total: number };
 }
 
-function AdminDashboardSkeleton() {
-  return (
-    <div className="mx-auto max-w-(--container-app-workspace) space-y-6 px-(--spacing-app-page-x) py-(--spacing-app-page-y)">
-      <Skeleton className="h-8 w-32" />
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-xl" />
-        ))}
-      </div>
-      <div className="flex gap-3">
-        <Skeleton className="h-10 w-32" />
-        <Skeleton className="h-10 w-36" />
-      </div>
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    </div>
-  );
-}
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (
@@ -57,34 +36,27 @@ function StatCard({ title, value }: { title: string; value: number }) {
 }
 
 export default function AdminDashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const { data: usersData } = useSWR<{ items: DashboardUser[] }>("/api/admin/users", fetcher);
+  const { data: docsData } = useSWR<{ items: AdminDocument[]; total: number }>(
+    "/api/admin/documents?pageSize=5",
+    fetcher,
+  );
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/users").then((r) => r.json()),
-      fetch("/api/admin/documents?pageSize=5").then((r) => r.json()),
-    ]).then(([usersData, docsData]) => {
-      setData({
-        users: usersData.items ?? [],
-        documents: { items: docsData.items ?? [], total: docsData.total ?? 0 },
-      });
-    });
-  }, []);
+  const users = usersData?.items ?? [];
+  const documents = docsData ?? { items: [], total: 0 };
 
-  if (!data) return <AdminDashboardSkeleton />;
-
-  const adminCount = data.users.filter((u) => u.role === "admin").length;
-  const userCount = data.users.filter((u) => u.role === "user").length;
+  const adminCount = users.filter((u) => u.role === "admin").length;
+  const userCount = users.filter((u) => u.role === "user").length;
 
   return (
     <PageShell className="max-w-(--container-app-workspace) space-y-6">
       <h1 className="text-app-title">Dashboard</h1>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard title="Total Users" value={data.users.length} />
+        <StatCard title="Total Users" value={users.length} />
         <StatCard title="Admins" value={adminCount} />
         <StatCard title="Users" value={userCount} />
-        <StatCard title="Total Documents" value={data.documents.total} />
+        <StatCard title="Total Documents" value={documents.total} />
       </div>
 
       <div className="flex gap-3">
@@ -110,14 +82,14 @@ export default function AdminDashboardPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.documents.items.length === 0 ? (
+            {documents.items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-muted-foreground text-center text-sm">
                   No documents found.
                 </TableCell>
               </TableRow>
             ) : (
-              data.documents.items.map((doc) => (
+              documents.items.map((doc) => (
                 <TableRow key={doc.id}>
                   <TableCell className="font-medium">{doc.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{doc.owner.email}</TableCell>
