@@ -11,11 +11,12 @@ import { ProviderSelect } from "@/components/chat/ProviderSelect";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { useAuth } from "@/context/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 
 export function TopBar() {
-  const { isAuthenticated, role, email } = useAuth();
+  const { isAuthenticated, isAuthLoading, role, email } = useAuth();
   const router = useRouter();
 
   async function handleSignOut() {
@@ -34,7 +35,7 @@ export function TopBar() {
   return (
     <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-3 sm:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        {isSignIn || !isAuthenticated ? (
+        {isSignIn || (!isAuthenticated && !isAuthLoading) ? (
           <LibraryBig className="size-6 shrink-0" />
         ) : (
           <>
@@ -123,7 +124,9 @@ export function TopBar() {
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
         {!isSignIn &&
-          (isAuthenticated ? (
+          (isAuthLoading ? (
+            <Skeleton className="h-8 w-8 rounded-full" />
+          ) : isAuthenticated ? (
             <Button
               variant="ghost"
               size="icon"

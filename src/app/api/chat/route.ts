@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { retrieve } from "@/lib/retrieval/query";
 import { sanitizeChunkContent } from "@/lib/retrieval/utils";
@@ -18,12 +18,9 @@ export async function POST(req: NextRequest) {
     return authErrorResponse(error);
   }
 
-  let body: ChatRequestInput;
-  try {
-    body = ChatRequestInputSchema.parse(await req.json());
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 400 });
-  }
+  const parsed = ChatRequestInputSchema.safeParse(await req.json());
+  if (!parsed.success) return validationErrorResponse(parsed.error);
+  const body: ChatRequestInput = parsed.data;
 
   const { question, provider: providerName, history } = body;
 

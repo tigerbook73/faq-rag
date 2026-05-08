@@ -13,7 +13,7 @@ import { AuthContextProvider } from "@/context/auth-context";
 import { useAuth } from "@/context/auth-context";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthLoading } = useAuth();
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
 
@@ -28,7 +28,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-      {isAuthenticated && <AppSidebar />}
+      {(isAuthenticated || isAuthLoading) && <AppSidebar />}
       <SidebarInset className="flex flex-col overflow-hidden">
         <TopBar />
         {children}

@@ -187,7 +187,7 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 - **Embedding routing**: `getEmbedding()` / `getEmbeddingsBatch()` in `embeddings/router.ts` dispatch to bge-m3 or OpenAI based on `IS_CLOUD` (`EMBEDDING_PROVIDER === "openai"`). Always import from `router.ts`, not directly from `bge.ts`.
 - **Cloud mode (`IS_CLOUD`)**: when true, `instrumentation.ts` skips the worker thread (indexing runs inline in the request handler) and applies a 50 KB file size limit.
 - **Cross-encoder disabled**: `rerankChunks` in `retrieval/query.ts` is commented out — the `deduplicateAndSort` cosine ranking is used instead. Uncomment to enable; be aware of cold-start latency for the ONNX model.
-- **Supabase browser client**: `createBrowserClient(URL, KEY)` is called inline in `TopBar.tsx` and `signin/page.tsx`. Not yet centralized — a future refactor target (`src/lib/supabase/browser.ts`).
+- **Supabase browser client**: factory function `createSupabaseBrowserClient()` is centralized in `src/lib/supabase/browser.ts`. Components call it inline inside event handlers (not at render time), which is correct — no singleton needed on the client.
 - **`filePath` field duality**: on local mode, `Document.filePath` holds a local filesystem path; on cloud mode (Supabase Storage), it holds a storage object path (`{docId}/{filename}`). `readUploadedFile` / `saveUploadedFile` in `storage/index.ts` abstract this.
 
 ---

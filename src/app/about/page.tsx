@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 
-export default async function AboutPage() {
+export default function AboutPage() {
   return (
     <PageShell className="max-w-(--container-app-readable) space-y-6">
       <h1 className="text-app-title font-bold">About FAQ-RAG</h1>
