@@ -227,12 +227,12 @@ Phase 3 完成后形成最终架构描述，识别剩余不一致点。
 | T1 | refactor | Admin sidebar 可折叠 | — | 🟡 | ✅ |
 | T2 | feature | 页面切换导航进度条 | — | 🟢 | ⏸ 暂缓 |
 | T3 | feature | ~~补全各页面 loading skeleton~~ | — | — | ❌ 跳过（A1） |
-| T4 | refactor | API schema 覆盖率审计与统一 | — | 🟡 | ⬜ |
+| T4 | refactor | API schema 覆盖率审计与统一 | — | 🟡 | ✅ |
 | T5 | ~~feature~~ | ~~补全 client-side 所需 API~~ | — | — | ❌ 关闭，并入 T6/T8 |
-| T6 | refactor | Admin 子页面 → client component（admin/layout.tsx 保留 SC） | T0,T1,T4 | 🟡 | ⬜ |
-| T7 | refactor | Knowledge 页面 → client component | T0,T4 | 🟡 | ⬜ |
-| T8 | refactor | Root layout 去 async + AuthContext role 修复 + proxy.ts getSession() | T0 | 🔴 | ⬜ |
-| T9 | refactor | Chat 页面去除服务端 session 水合 | T0,T4 | 🟡 | ⬜ |
+| T6 | refactor | Admin 子页面 → client component（admin/layout.tsx 保留 SC） | T0,T1,T4 | 🟡 | ✅ |
+| T7 | refactor | Knowledge 页面 → client component | T0,T4 | 🟡 | ✅ |
+| T8 | refactor | Root layout 去 async + AuthContext role 修复 + proxy.ts getSession() | T0 | 🔴 | ✅ |
+| T9 | refactor | Chat 页面去除服务端 session 水合 | T0,T4 | 🟡 | ✅ |
 | T10 | analysis | 首页加载优化分析 | Phase 3 | — | ⬜ |
 | T11 | analysis | 全系统架构一致性报告 | Phase 3 | — | ⬜ |
 
