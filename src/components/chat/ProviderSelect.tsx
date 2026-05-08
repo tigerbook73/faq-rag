@@ -15,10 +15,8 @@ export function ProviderSelect({ value, onChange, className }: Props) {
   return (
     <Tooltip>
       <Select value={value} onValueChange={(v) => onChange(v as Provider)}>
-        <TooltipTrigger asChild>
-          <SelectTrigger className={cn("w-28", className)}>
-            <span>{PROVIDER_LABEL[value]}</span>
-          </SelectTrigger>
+        <TooltipTrigger render={<SelectTrigger className={cn("w-28", className)} />}>
+          <span>{PROVIDER_LABEL[value]}</span>
         </TooltipTrigger>
         <SelectContent>
           <SelectItem value={PROVIDER.CLAUDE}>{PROVIDER_LABEL[PROVIDER.CLAUDE]}</SelectItem>
