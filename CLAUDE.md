@@ -2,7 +2,7 @@
 
 # Project: FAQ RAG
 
-A local FAQ question-answering system. Users upload documents (Chinese or English), ask questions in either language, and receive streamed answers with cited source chunks.
+A multi-user FAQ question-answering system. Users upload documents (Chinese or English), ask questions in either language, and receive streamed answers with cited source chunks. Admins manage users and curate public documents accessible to all users.
 
 ---
 
@@ -35,25 +35,41 @@ Browser
   └── /auth/signin       ← Supabase email/password sign-in (public)
   └── /chat/layout       ← passthrough (global layout lives in providers.tsx)
       ├── /chat/new      ← ChatWindow with chatId=null (new ephemeral session)
-      ├── /chat/[id]     ← ChatWindow with chatId from URL
+      ├── /chat/[id]     ← ChatWindow with chatId from URL (client-side hydration via SWR)
       └── /chat/last     ← client redirect to last active chat
-  └── /knowledge         ← upload / list / delete / reindex
+  └── /knowledge         ← upload / list / delete / reindex (owner-scoped)
+  └── /admin             ← admin dashboard (admin role required)
+      ├── /admin/documents ← document management across all users
+      └── /admin/users     ← user list + role management
   └── /about             ← public info page (no auth required)
 
 Next.js Route Handlers (src/app/api/)
-  ├── POST /api/chat                        ← retrieve → LLM → SSE stream
-  ├── GET/POST /api/documents               ← list, upload + async index
-  ├── GET/DELETE /api/documents/[id]
+  ├── POST /api/chat                          ← retrieve (ownership-scoped) → LLM → SSE stream
+  ├── GET/POST /api/documents                 ← list (owner-scoped), upload + async index
+  ├── GET/PATCH/DELETE /api/documents/[id]
+  ├── POST /api/documents/[id]/index          ← confirm upload complete, enqueue indexing
   ├── POST /api/documents/[id]/reindex
-  ├── POST /api/ingest-hook                 ← Supabase Storage webhook (pg_net trigger → index doc)
-  ├── GET/POST /api/sessions                ← session list CRUD
-  ├── GET/PATCH/DELETE /api/sessions/[id]   ← single session CRUD
+  ├── POST /api/documents/prepare             ← create pending doc + Supabase signed upload URL
+  ├── POST /api/ingest-hook                   ← Supabase Storage webhook (pg_net trigger → index doc)
+  ├── GET/POST /api/sessions                  ← session list CRUD (owner-scoped)
+  ├── GET/PATCH/DELETE /api/sessions/[id]     ← single session CRUD
+  ├── GET /api/public-documents               ← list public docs selectable by current user
+  ├── POST /api/public-documents/[id]/selection ← toggle admin's public-doc selection
+  ├── GET /api/auth/me                        ← current user id / email / role
+  ├── GET/POST /api/admin/documents           ← admin: list all docs / bulk actions
+  ├── GET/DELETE /api/admin/documents/[id]    ← admin: single doc
+  ├── GET/POST /api/admin/users               ← admin: list users / create account
+  ├── PATCH/DELETE /api/admin/users/[id]      ← admin: update role / delete user
+  ├── POST /api/admin/users/[id]/password     ← admin: reset password
   └── GET /api/health
 
 Service Layer (src/lib/)
-  ├── chat-storage.ts  session CRUD (localStorage for last-chat-id only; full sessions stored in DB)
+  ├── auth/            requireUser.ts, requireAdmin.ts, api.ts (authErrorResponse, validationErrorResponse), errors.ts
+  ├── data/            documents.ts, public-documents.ts, sessions.ts, users.ts — DB query helpers
+  ├── schemas/         Zod schemas: chat.ts, document.ts, session.ts, user.ts
+  ├── chat-storage.ts  session API wrappers (localStorage for last-chat-id only; full sessions in DB)
   ├── ingest/          parse → semantic split → embed → pgvector ($executeRaw); worker thread isolated
-  ├── retrieval/       detect lang → translate + HyDE → embed → vector search → cross-encoder rerank
+  ├── retrieval/       detect lang → translate + HyDE → embed → vector search (ownership-scoped) → rerank
   ├── llm/             provider abstraction (claude.ts, deepseek.ts, router.ts, providers.ts, truncate.ts)
   ├── embeddings/      bge.ts — local bge-m3 singleton + getEmbeddingsBatch()
   └── lang/            detect.ts — franc-min wrapper
@@ -66,23 +82,32 @@ PostgreSQL + pgvector
 ## Data Models
 
 ```
-Document  id (uuid), name, mime, content_hash (unique SHA-256), lang,
-          size_bytes, status (pending|indexed|failed), error_msg, total_chunks, created_at
-          @@index([status])
+UserProfile     id (= Supabase auth UID), email (unique), role (user|admin),
+                created_at, updated_at
 
-Chunk     id (uuid), document_id → Document (cascade delete), ord,
-          content, embedding vector(1024), lang, created_at
-          @@index([documentId])
-          HNSW index on embedding (applied via raw migration, m=16, ef_construction=64)
+Document        id (uuid), owner_user_id → UserProfile (cascade delete), name, mime,
+                content_hash, visibility (private|public), lang, size_bytes,
+                status (pending|uploaded|indexing|indexed|failed), error_msg, total_chunks,
+                file_path (Prisma field: fileRef), created_at
+                @@unique([ownerUserId, contentHash])
+                @@index([ownerUserId, createdAt])  @@index([visibility, status])  @@index([status])
 
-Session        id (uuid), title, created_at, updated_at
-               @@index([updatedAt])
+Chunk           id (uuid), document_id → Document (cascade delete), ord,
+                content, embedding vector(1024), lang, created_at
+                @@index([documentId])
+                HNSW index on embedding (applied via raw migration, m=16, ef_construction=64)
 
-SessionMessage id (uuid), session_id → Session (cascade delete), role (user|assistant),
-               content, citations (Json?), created_at
+Session         id (uuid), user_id → UserProfile (cascade delete), title, created_at, updated_at
+                @@index([userId, updatedAt])
+
+SessionMessage  id (uuid), session_id → Session (cascade delete), role (user|assistant),
+                content, citations (Json?), created_at
+
+PublicDocumentSelection  id (uuid), user_id → UserProfile (cascade), document_id → Document (cascade)
+                         @@unique([userId, documentId])  @@index([documentId])
 ```
 
-`embedding` is `Unsupported("vector(1024)")` in Prisma. All vector writes use `prisma.$executeRaw` with `::vector` cast. Vector search uses cosine distance (`<=>`).
+`embedding` is `Unsupported("vector(1024)")` in Prisma. All vector writes use `prisma.$executeRaw` with `::vector` cast. Vector search uses cosine distance (`<=>`) and is scoped to the requesting user's owned documents plus public documents they have selected (`PublicDocumentSelection`).
 
 ---
 
@@ -109,9 +134,9 @@ interface Message {
 ```
 
 - Sessions older than 2 days are pruned on layout mount (`pruneOldSessions` calls `DELETE /api/sessions/[id]`).
-- `ChatSidebar` fetches session list via `GET /api/sessions` and subscribes to `chat-session-updated` custom events dispatched after writes.
+- `ChatSidebar` fetches the session list via `GET /api/sessions` using SWR; updates propagate via SWR `mutate()` after any write — no custom events.
 - On `/chat/new`, `chatId` prop is `null`; a UUID is generated at send-time and the URL is replaced with `/chat/<id>` after the first message.
-- `ChatWindow` receives `initialSession` hydrated server-side via `GET /api/sessions/[id]`.
+- `ChatWindow` fetches the session client-side via SWR on mount — there is no server-side hydration.
 
 ---
 
@@ -181,14 +206,19 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 - **Ingestion is async**: `POST /api/documents` returns the document ID immediately; indexing runs in the background in a worker thread. Poll `status` field.
 - **System prompt**: written in English to avoid biasing the LLM toward any specific response language.
 - **localStorage is client-only**: `chat-storage.ts` uses localStorage only for `chat:last`. Full session data is in PostgreSQL.
-- **Session sync**: after any session write (API call), dispatch `new CustomEvent("chat-session-updated")` so `ChatSidebar` re-renders.
+- **Session sync**: after any session write, call SWR's `mutate()` on the `/api/sessions` key — do not dispatch custom events.
+- **Document ownership**: every document belongs to `ownerUserId`. API handlers enforce ownership via `requireUser()`. `vectorSearch` is scoped to the caller's own docs plus public docs they have selected.
+- **Document visibility**: `private` (owner-only) vs `public`. Public docs become searchable to a user only after an admin adds them to `PublicDocumentSelection` for that user.
+- **API auth helpers**: `requireUser()` throws `AuthError(401)` if unauthenticated; `requireAdmin()` throws `AuthError(403)` if role ≠ admin. Wrap all protected handlers with these.
+- **Validation errors**: use `validationErrorResponse(error)` for `ZodError` — returns `{ error: "Invalid request body" }` with 400.
 - **Batch embedding**: use `getEmbeddingsBatch(texts[])` for multi-text embedding (used in semantic splitter). `getEmbedding(text)` is for single-text cases.
 - **Rate limiting**: `checkRateLimit(key, limit, windowMs)` in `src/lib/rate-limit.ts` — in-memory only, not distributed.
 - **Embedding routing**: `getEmbedding()` / `getEmbeddingsBatch()` in `embeddings/router.ts` dispatch to bge-m3 or OpenAI based on `IS_CLOUD` (`EMBEDDING_PROVIDER === "openai"`). Always import from `router.ts`, not directly from `bge.ts`.
 - **Cloud mode (`IS_CLOUD`)**: when true, `instrumentation.ts` skips the worker thread (indexing runs inline in the request handler) and applies a 50 KB file size limit.
 - **Cross-encoder disabled**: `rerankChunks` in `retrieval/query.ts` is commented out — the `deduplicateAndSort` cosine ranking is used instead. Uncomment to enable; be aware of cold-start latency for the ONNX model.
 - **Supabase browser client**: factory function `createSupabaseBrowserClient()` is centralized in `src/lib/supabase/browser.ts`. Components call it inline inside event handlers (not at render time), which is correct — no singleton needed on the client.
-- **`filePath` field duality**: on local mode, `Document.filePath` holds a local filesystem path; on cloud mode (Supabase Storage), it holds a storage object path (`{docId}/{filename}`). `readUploadedFile` / `saveUploadedFile` in `storage/index.ts` abstract this.
+- **`fileRef` field duality**: Prisma field `fileRef` maps to DB column `file_path`. On local mode it holds a local filesystem path; on cloud mode (Supabase Storage) it holds a storage object path (`embed/{docId}/{sanitizedFilename}`). `readUploadedFile` / `saveUploadedFile` in `storage/index.ts` abstract this.
+- **Cloud upload flow**: client calls `POST /api/documents/prepare` → gets `{ docId, signedUrl, token }` → PUT to Supabase Storage → `POST /api/documents/{docId}/index` to confirm and enqueue indexing.
 
 ---
 
@@ -196,14 +226,27 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 
 | Path                                             | Purpose                                                                             |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about, /api/ingest-hook) |
-| `src/app/layout.tsx`                             | Root layout — async, reads session, passes isAuthenticated                          |
-| `src/app/providers.tsx`                          | Client shell — TopBar + AppSidebar + contexts + TooltipProvider                     |
-| `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval + LLM streaming (SSE)                                     |
+| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about, /api/ingest-hook); uses `getSession()` |
+| `src/app/layout.tsx`                             | Root layout — sync, no server-side auth; delegates entirely to `<Providers>`        |
+| `src/app/providers.tsx`                          | Client shell — `AppLayout` renders sidebar/topbar for non-admin routes; hides sidebar on /auth/signin and when unauthenticated |
+| `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval (ownership-scoped) + LLM streaming (SSE)                 |
+| `src/app/api/documents/prepare/route.ts`         | POST: validate file, create pending doc, return Supabase signed upload URL          |
+| `src/app/api/documents/[id]/index/route.ts`      | POST: confirm upload complete, enqueue indexing                                     |
 | `src/app/api/sessions/route.ts`                  | Session list — GET (list) / POST (create)                                           |
 | `src/app/api/sessions/[id]/route.ts`             | Single session — GET / PATCH (title + messages) / DELETE                            |
+| `src/app/api/auth/me/route.ts`                   | GET current user id / email / role                                                  |
+| `src/app/api/public-documents/route.ts`          | GET selectable public documents for current user                                    |
+| `src/app/api/public-documents/[id]/selection/route.ts` | POST: toggle admin's public-doc selection                                     |
+| `src/app/api/admin/documents/route.ts`           | Admin: GET all documents / DELETE                                                   |
+| `src/app/api/admin/documents/[id]/route.ts`      | Admin: single document actions                                                      |
+| `src/app/api/admin/users/route.ts`               | Admin: GET user list / POST create account                                          |
+| `src/app/api/admin/users/[id]/route.ts`          | Admin: PATCH role / DELETE user                                                     |
+| `src/app/api/admin/users/[id]/password/route.ts` | Admin: reset password                                                               |
 | `src/app/chat/layout.tsx`                        | Chat layout — passthrough `<>{children}</>`                                         |
-| `src/app/chat/[id]/page.tsx`                     | Renders ChatWindow for a specific session (server-hydrated)                         |
+| `src/app/chat/[id]/page.tsx`                     | Renders ChatWindow with chatId from URL (no server hydration)                       |
+| `src/app/admin/page.tsx`                         | Admin dashboard — user + document stats                                             |
+| `src/app/admin/documents/page.tsx`               | Admin document management — list all, delete, visibility                            |
+| `src/app/admin/users/page.tsx`                   | Admin user management — list, role change, password reset, delete                  |
 | `src/app/chat/new/page.tsx`                      | Renders ChatWindow with chatId=null                                                 |
 | `src/app/chat/last/page.tsx`                     | Client redirect to last active chat                                                 |
 | `src/app/knowledge/page.tsx`                     | Knowledge base — upload + document list                                             |
