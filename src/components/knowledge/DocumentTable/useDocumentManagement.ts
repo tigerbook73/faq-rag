@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
-import { type Document } from "@/components/knowledge/DocumentRow";
+import { type DocumentItem as Document } from "@/lib/schemas/document";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 

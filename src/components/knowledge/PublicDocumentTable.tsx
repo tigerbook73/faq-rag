@@ -7,17 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-export interface PublicDocument {
-  id: string;
-  name: string;
-  lang: string | null;
-  status: string;
-  selected: boolean;
-  createdAt: Date;
-  owner: { email: string };
-  _count: { chunks: number };
-}
+import { type PublicDocumentItem as PublicDocument } from "@/lib/schemas/document";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 

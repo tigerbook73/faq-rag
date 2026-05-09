@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MessageBubble } from "./MessageBubble";
-import { CitationDrawer, type Citation } from "./CitationDrawer";
+import { CitationDrawer } from "./CitationDrawer";
+import { type Citation } from "@/lib/schemas/session";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { type Message, type ChatSession, fetchSession } from "@/lib/session-api";

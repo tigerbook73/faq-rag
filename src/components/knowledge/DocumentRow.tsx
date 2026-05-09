@@ -4,19 +4,9 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { type DocumentItem as Document } from "@/lib/schemas/document";
 
-export interface Document {
-  id: string;
-  name: string;
-  lang: string | null;
-  status: string;
-  visibility: "private" | "public";
-  sizeBytes: number;
-  errorMsg: string | null;
-  totalChunks: number | null;
-  createdAt: Date;
-  _count: { chunks: number };
-}
+export type { Document };
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 

@@ -5,8 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import type { Citation } from "@/lib/schemas/session";
 
-export type { Citation };
-
 interface Props {
   open: boolean;
   onClose: () => void;

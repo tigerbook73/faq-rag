@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { AuthMeResponseSchema } from "@/lib/schemas/user";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -34,9 +35,11 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch("/api/auth/me");
         if (res.ok) {
-          const data = await res.json();
-          setRole(data.role ?? null);
-          setId(data.id ?? null);
+          const parsed = AuthMeResponseSchema.safeParse(await res.json());
+          if (parsed.success) {
+            setRole(parsed.data.role);
+            setId(parsed.data.id);
+          }
         }
       } finally {
         setIsAuthLoading(false);

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageShell } from "@/components/layout/PageShell";
-import type { AdminDocument } from "@/components/admin/AdminDocumentsWorkspace";
+import { type AdminDocumentItem as AdminDocument } from "@/lib/schemas/document";
 
 interface DashboardUser {
   id: string;

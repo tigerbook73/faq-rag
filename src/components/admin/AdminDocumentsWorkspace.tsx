@@ -14,16 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-export interface AdminDocument {
-  id: string;
-  name: string;
-  ownerUserId: string;
-  status: string;
-  visibility: "private" | "public";
-  owner: { email: string };
-  _count: { selections: number };
-}
+import { type AdminDocumentItem as AdminDocument } from "@/lib/schemas/document";
 
 const SWR_KEY = "/api/admin/documents?pageSize=100";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());

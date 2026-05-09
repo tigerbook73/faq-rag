@@ -16,15 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CreateUserInputSchema } from "@/lib/schemas/user";
+import { CreateUserInputSchema, type AdminUserItem as AdminUser } from "@/lib/schemas/user";
 import { useAuth } from "@/context/auth-context";
-
-export interface AdminUser {
-  id: string;
-  email: string;
-  role: "user" | "admin";
-  createdAt: string;
-}
 
 const SWR_KEY = "/api/admin/users";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());

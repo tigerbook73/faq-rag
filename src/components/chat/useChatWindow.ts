@@ -7,7 +7,7 @@ import { mutate as swrMutate } from "swr";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
-import type { Citation } from "./CitationDrawer";
+import type { Citation } from "@/lib/schemas/session";
 
 // ── Draft persistence ──────────────────────────────────────────────────────────
 // Manages the textarea input value and its localStorage draft backup.
