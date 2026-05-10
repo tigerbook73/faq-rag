@@ -12,19 +12,12 @@ import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
 import { isSignInRoute, shouldHideSidebar } from "@/lib/route-policy";
 
 export function TopBar() {
   const { isAuthenticated, isAuthLoading, role, email } = useAuth();
   const router = useRouter();
-
-  async function handleSignOut() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.push("/auth/signin");
-  }
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const { subtitle } = usePageTitle();
@@ -134,7 +127,8 @@ export function TopBar() {
               size="icon"
               title={email ? `Sign out (${email})` : "Sign out"}
               aria-label={email ? `Sign out (${email})` : "Sign out"}
-              onClick={handleSignOut}
+              nativeButton={false}
+              render={<Link href="/auth/signout" />}
             >
               <LogOut className="h-4 w-4" />
             </Button>

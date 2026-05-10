@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { buildCurrentPath, canBypassAuthProxy } from "@/lib/route-policy";
+import { buildCurrentPath, canBypassAuthProxy, isSignInRoute, resolvePostLoginRedirect } from "@/lib/route-policy";
 
 export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-
-  if (canBypassAuthProxy(pathname)) {
-    return NextResponse.next();
-  }
+  const isSignIn = isSignInRoute(pathname);
 
   const { createServerClient } = await import("@supabase/ssr");
 
@@ -29,6 +26,27 @@ export async function proxy(req: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  if (isSignIn) {
+    if (!session) return NextResponse.next();
+
+    const { data: profile, error } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (error || (profile?.role !== "admin" && profile?.role !== "user")) {
+      return NextResponse.next();
+    }
+
+    const redirectUrl = new URL(resolvePostLoginRedirect(profile.role, req.nextUrl.searchParams.get("from")), req.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (canBypassAuthProxy(pathname)) {
+    return NextResponse.next();
+  }
 
   if (!session) {
     const loginUrl = new URL("/auth/signin", req.url);

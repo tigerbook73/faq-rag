@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 3: server-side sign-in implemented. Ready to continue with Phase 4 proxy, page, and shell separation.
+Phase 4: proxy, page, and shell separation implemented. Ready to continue with Phase 5 verification and cleanup.
 
 ## Last Confirmed Commit
 
-7012cc4
+6f3173a
 
 ## Confirmed Decisions
 
@@ -50,6 +50,11 @@ Phase 3: server-side sign-in implemented. Ready to continue with Phase 4 proxy, 
 - Updated `/auth/signin` client form to call the server endpoint instead of browser direct sign-in.
 - Updated `/auth/signin` page to redirect already-authenticated users via `resolvePostLoginRedirect(role, from)`.
 - Added `/api/auth/signin` and `/auth/signout` route handler tests.
+- Updated `src/proxy.ts` so signed-in users visiting `/auth/signin` are redirected by role, while authenticated admin routes pass through to layout authorization.
+- Updated admin layout to render a 403 access denied UI for role=user instead of redirecting to sign-in/user home.
+- Added `/admin/about`.
+- Added About, Chat, and Knowledge entries to admin sidebar.
+- Changed user/admin shell signout controls to link to unified `/auth/signout`.
 
 ## Known Mismatches
 
@@ -62,17 +67,16 @@ Phase 3: server-side sign-in implemented. Ready to continue with Phase 4 proxy, 
 - `pnpm test src/lib/auth/helpers.test.ts src/app/api/auth/me/route.test.ts src/lib/route-policy.test.ts`
 - `pnpm test src/app/api/auth/signin/route.test.ts src/app/auth/signout/route.test.ts src/app/api/auth/me/route.test.ts src/lib/auth/helpers.test.ts src/lib/route-policy.test.ts`
 - `pnpm exec tsc --noEmit`
+- `pnpm build` (passes; Turbopack reports existing NFT tracing warnings involving `next.config.ts` / Prisma import trace)
 
 ## Next Entry Point
 
-Phase 4 实施从以下开始：
+Phase 5 实施从以下开始：
 
-1. 更新 `src/proxy.ts`：`/auth/signin` 已登录时按 role redirect；admin 私有页面有 session 时放行。
-2. admin layout 调用 `requireAdmin()`；role=user 时渲染 403 UI，不重定向。
-3. 新增 `/admin/about` 页面。
-4. 确认 user TopBar / Sidebar 的 Admin 按钮按 role 条件渲染。
-5. AdminSidebar 增加 About，以及 Chat / Knowledge 等 user 功能快捷入口。
+1. 补齐 e2e 覆盖：anonymous redirects、role-aware login redirects、role=user admin 403、role=admin user/admin access、signout。
+2. 运行完整单元测试、类型检查和 build。
+3. 清理或记录与旧 feature docs 的剩余冲突。
 
 建议下一个实现 commit message：
 
-`site-separation phase 4: separate proxy and admin shell`
+`site-separation phase 5: verify separated site flows`
