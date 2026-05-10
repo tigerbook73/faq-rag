@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { AboutProjectPage } from "@/components/about/AboutProjectPage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -10,5 +9,5 @@ export default async function Home() {
 
   if (session) redirect("/chat/last");
 
-  return <AboutProjectPage />;
+  redirect("/about");
 }
