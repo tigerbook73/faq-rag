@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 1: requirements and design drafted (single sign-in, single session, role-based routing). No implementation has started.
+Phase 1: requirements and design confirmed (single sign-in, single session, role-based routing). No implementation has started.
 
 ## Last Confirmed Commit
 
-48a43c8
+969b6cc
 
 ## Confirmed Decisions
 
@@ -37,6 +37,7 @@ Phase 1: requirements and design drafted (single sign-in, single session, role-b
 - Created `docs/features/site-separation/DESIGN.md`.
 - Created this `PROGRESS.md`.
 - Iterated design from dual-session → single-session + dual sign-in → single-session + single sign-in.
+- Refined implementation plan to keep `route-policy.ts` and Supabase/auth helpers as focused single-file extensions where practical.
 
 ## Known Mismatches
 
@@ -51,8 +52,8 @@ Documentation-only change. No tests or build were run.
 
 Phase 1 实施从以下开始：
 
-1. 将 `src/lib/route-policy.ts` 迁移为 `src/lib/route-policy/` 目录模块。
-2. 添加 user/admin route classification 和 `resolvePostLoginRedirect(role, from)`。
+1. 在 `src/lib/route-policy.ts` 中扩展 user/admin route classification、`RouteAccess` 类型和路径常量。
+2. 添加 `resolvePostLoginRedirect(role, from)`。
 3. 补充路由策略测试。
 
 建议第一个实现 commit message：
