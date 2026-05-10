@@ -6,7 +6,7 @@ Phase 2: auth helper整理 implemented. Ready to continue with Phase 3 server-si
 
 ## Last Confirmed Commit
 
-9ef8e89
+94cccc2
 
 ## Confirmed Decisions
 
