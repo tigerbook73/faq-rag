@@ -1,11 +1,23 @@
-export const SIGNED_IN_HOME_PATH = "/chat/last";
-export const ADMIN_ACCESS_DENIED_PATH = "/chat/last";
+export const SIGN_IN_PATH = "/auth/signin";
+export const SIGN_OUT_PATH = "/auth/signout";
+export const USER_HOME_PATH = "/chat/last";
+export const ADMIN_HOME_PATH = "/admin";
+export const SIGNED_IN_HOME_PATH = USER_HOME_PATH;
+export const ADMIN_ACCESS_DENIED_PATH = USER_HOME_PATH;
 
-export type RouteAccess = "public-home" | "public-auth-enhanced" | "public-only" | "authenticated-only" | "admin-only";
+export type UserRole = "user" | "admin";
+export type RouteAccess =
+  | "public"
+  | "sign-in"
+  | "user-private"
+  | "admin-private"
+  | "public-api"
+  | "user-api"
+  | "admin-api";
 type RouteMatch = "exact" | "prefix";
 type SidebarPolicy = "always-hide" | "anonymous-hide" | "authenticated-allowed";
 
-interface RoutePolicy {
+export interface RoutePolicy {
   path: string;
   match: RouteMatch;
   access: RouteAccess;
@@ -16,7 +28,7 @@ interface RoutePolicy {
 const DEFAULT_ROUTE_POLICY: RoutePolicy = {
   path: "*",
   match: "prefix",
-  access: "authenticated-only",
+  access: "user-private",
   authProxyBypass: false,
   sidebar: "authenticated-allowed",
 };
@@ -25,49 +37,98 @@ const ROUTE_POLICIES: readonly RoutePolicy[] = [
   {
     path: "/",
     match: "exact",
-    access: "public-home",
+    access: "public",
     authProxyBypass: true,
     sidebar: "always-hide",
   },
   {
     path: "/about",
     match: "exact",
-    access: "public-auth-enhanced",
+    access: "public",
     authProxyBypass: true,
     sidebar: "anonymous-hide",
   },
   {
-    path: "/auth/signin",
+    path: SIGN_IN_PATH,
     match: "prefix",
-    access: "public-only",
+    access: "sign-in",
+    authProxyBypass: true,
+    sidebar: "always-hide",
+  },
+  {
+    path: SIGN_OUT_PATH,
+    match: "exact",
+    access: "public",
     authProxyBypass: true,
     sidebar: "always-hide",
   },
   {
     path: "/chat",
     match: "prefix",
-    access: "authenticated-only",
+    access: "user-private",
     authProxyBypass: false,
     sidebar: "authenticated-allowed",
   },
   {
     path: "/knowledge",
     match: "prefix",
-    access: "authenticated-only",
+    access: "user-private",
     authProxyBypass: false,
     sidebar: "authenticated-allowed",
   },
   {
     path: "/admin",
     match: "prefix",
-    access: "admin-only",
+    access: "admin-private",
     authProxyBypass: false,
     sidebar: "authenticated-allowed",
   },
   {
+    path: "/api/admin",
+    match: "prefix",
+    access: "admin-api",
+    authProxyBypass: false,
+    sidebar: "always-hide",
+  },
+  {
+    path: "/api/chat",
+    match: "exact",
+    access: "user-api",
+    authProxyBypass: false,
+    sidebar: "always-hide",
+  },
+  {
+    path: "/api/documents",
+    match: "prefix",
+    access: "user-api",
+    authProxyBypass: false,
+    sidebar: "always-hide",
+  },
+  {
+    path: "/api/sessions",
+    match: "prefix",
+    access: "user-api",
+    authProxyBypass: false,
+    sidebar: "always-hide",
+  },
+  {
+    path: "/api/public-documents",
+    match: "prefix",
+    access: "user-api",
+    authProxyBypass: false,
+    sidebar: "always-hide",
+  },
+  {
+    path: "/api/health",
+    match: "exact",
+    access: "public-api",
+    authProxyBypass: true,
+    sidebar: "always-hide",
+  },
+  {
     path: "/api/ingest-hook",
     match: "prefix",
-    access: "public-only",
+    access: "public-api",
     authProxyBypass: true,
     sidebar: "always-hide",
   },
@@ -85,6 +146,8 @@ function matchesRoutePolicy(pathname: string, policy: RoutePolicy) {
 export function findRoutePolicy(pathname: string): RoutePolicy {
   return ROUTE_POLICIES.find((policy) => matchesRoutePolicy(pathname, policy)) ?? DEFAULT_ROUTE_POLICY;
 }
+
+export const getRoutePolicy = findRoutePolicy;
 
 export function getRouteAccess(pathname: string): RouteAccess {
   return findRoutePolicy(pathname).access;
@@ -106,18 +169,43 @@ export function shouldHideSidebar(pathname: string, isAuthenticated: boolean) {
 }
 
 export function isSignInRoute(pathname: string) {
-  return findRoutePolicy(pathname).access === "public-only" && matchesPathPrefix(pathname, "/auth/signin");
+  return findRoutePolicy(pathname).access === "sign-in" && matchesPathPrefix(pathname, SIGN_IN_PATH);
 }
 
 export function isAdminRoute(pathname: string) {
-  return findRoutePolicy(pathname).access === "admin-only";
+  return findRoutePolicy(pathname).access === "admin-private";
+}
+
+export function isUserPrivateRoute(pathname: string) {
+  return findRoutePolicy(pathname).access === "user-private";
+}
+
+export function isAdminPrivateRoute(pathname: string) {
+  return findRoutePolicy(pathname).access === "admin-private";
+}
+
+export function isUserApiRoute(pathname: string) {
+  return findRoutePolicy(pathname).access === "user-api";
+}
+
+export function isAdminApiRoute(pathname: string) {
+  return findRoutePolicy(pathname).access === "admin-api";
+}
+
+export function shouldHideUserShell(pathname: string, isAuthenticated: boolean) {
+  return shouldHideSidebar(pathname, isAuthenticated);
 }
 
 export function buildCurrentPath(pathname: string, search = "") {
   return `${pathname}${search}`;
 }
 
-export function sanitizeRedirectPath(from: string | null | undefined, fallback = SIGNED_IN_HOME_PATH) {
+function isRecognizedPageRoute(pathname: string) {
+  const policy = findRoutePolicy(pathname);
+  return policy !== DEFAULT_ROUTE_POLICY && !policy.access.endsWith("-api");
+}
+
+export function sanitizeRedirectPath(from: string | null | undefined, fallback = USER_HOME_PATH) {
   if (!from) return fallback;
   if (!from.startsWith("/") || from.startsWith("//")) return fallback;
 
@@ -130,6 +218,22 @@ export function sanitizeRedirectPath(from: string | null | undefined, fallback =
 
   if (url.origin !== "http://app.local") return fallback;
   if (isSignInRoute(url.pathname)) return fallback;
+  if (url.pathname === SIGN_OUT_PATH) return fallback;
+  if (url.pathname === "/api" || matchesPathPrefix(url.pathname, "/api")) return fallback;
+  if (url.pathname === "/_next" || matchesPathPrefix(url.pathname, "/_next")) return fallback;
+  if (!isRecognizedPageRoute(url.pathname)) return fallback;
 
   return `${url.pathname}${url.search}${url.hash}`;
+}
+
+export function resolvePostLoginRedirect(role: UserRole, from: string | null | undefined) {
+  const homePath = role === "admin" ? ADMIN_HOME_PATH : USER_HOME_PATH;
+  const redirectPath = sanitizeRedirectPath(from, homePath);
+  const redirectUrl = new URL(redirectPath, "http://app.local");
+
+  if (role !== "admin" && isAdminPrivateRoute(redirectUrl.pathname)) {
+    return homePath;
+  }
+
+  return redirectPath;
 }

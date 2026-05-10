@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 1: requirements and design confirmed (single sign-in, single session, role-based routing). No implementation has started.
+Phase 1: route policy model implemented. Ready to continue with Phase 2 auth helper整理.
 
 ## Last Confirmed Commit
 
@@ -38,6 +38,10 @@ Phase 1: requirements and design confirmed (single sign-in, single session, role
 - Created this `PROGRESS.md`.
 - Iterated design from dual-session → single-session + dual sign-in → single-session + single sign-in.
 - Refined implementation plan to keep `route-policy.ts` and Supabase/auth helpers as focused single-file extensions where practical.
+- Extended `src/lib/route-policy.ts` with separated user/admin/page/API route classification.
+- Added `SIGN_IN_PATH`、`SIGN_OUT_PATH`、`USER_HOME_PATH`、`ADMIN_HOME_PATH` constants.
+- Added role-aware `resolvePostLoginRedirect(role, from)` and stricter redirect sanitization.
+- Updated `src/lib/route-policy.test.ts` for route classification, redirect sanitizer, and post-login role routing.
 
 ## Known Mismatches
 
@@ -46,16 +50,17 @@ Phase 1: requirements and design confirmed (single sign-in, single session, role
 
 ## Verification Status
 
-Documentation-only change. No tests or build were run.
+- `pnpm test src/lib/route-policy.test.ts`
+- `pnpm exec tsc --noEmit`
 
 ## Next Entry Point
 
-Phase 1 实施从以下开始：
+Phase 2 实施从以下开始：
 
-1. 在 `src/lib/route-policy.ts` 中扩展 user/admin route classification、`RouteAccess` 类型和路径常量。
-2. 添加 `resolvePostLoginRedirect(role, from)`。
-3. 补充路由策略测试。
+1. 新增 `src/lib/auth/helpers.ts`，集中 `requireUser()`、`requireAdmin()`、`getProfile()`。
+2. 确认 `requireUser()` 接受 role=admin。
+3. 确认 `GET /api/auth/me` 返回含 `role` 的 auth state。
 
-建议第一个实现 commit message：
+建议下一个实现 commit message：
 
-`site-separation phase 1: add route policy for separated sites`
+`site-separation phase 2: consolidate auth helpers`
