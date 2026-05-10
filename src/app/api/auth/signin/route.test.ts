@@ -11,6 +11,24 @@ jest.mock("@supabase/supabase-js", () => ({
   })),
 }));
 
+jest.mock("@supabase/ssr", () => ({
+  createServerClient: jest.fn((_url, _key, options) => {
+    options.cookies.setAll([{ name: "sb-test-auth-token", value: "token", options: { path: "/" } }]);
+    return {
+      auth: {
+        setSession: mockSetSession,
+        signOut: mockSignOut,
+      },
+    };
+  }),
+}));
+
+jest.mock("next/headers", () => ({
+  cookies: async () => ({
+    getAll: () => [],
+  }),
+}));
+
 jest.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({
     auth: {

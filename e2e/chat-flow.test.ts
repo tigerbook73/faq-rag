@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
+import { signIn } from "./helpers";
 
 test.describe("Chat flow", () => {
   test("sends a message and receives a streamed response with citation", async ({ page }) => {
+    await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();
-    await input.fill("What is RAG?");
+    await input.fill("How many vacation days do employees get per year?");
     await input.press("Control+Enter");
 
     // Wait for the first token to arrive (stream started)
@@ -22,10 +24,11 @@ test.describe("Chat flow", () => {
   });
 
   test("citation superscript is rendered and opens CitationDrawer on click", async ({ page }) => {
+    await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();
-    await input.fill("What is RAG?");
+    await input.fill("How many vacation days do employees get per year?");
     await input.press("Control+Enter");
 
     // After the stream's "done" event, ChatWindow awaits persistMessages then calls

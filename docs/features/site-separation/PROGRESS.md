@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 4: proxy, page, and shell separation implemented. Ready to continue with Phase 5 verification and cleanup.
+Phase 5: verification and cleanup implemented. Feature is implementation-complete pending any follow-up product review.
 
 ## Last Confirmed Commit
 
-5895239
+327e190
 
 ## Confirmed Decisions
 
@@ -55,28 +55,29 @@ Phase 4: proxy, page, and shell separation implemented. Ready to continue with P
 - Added `/admin/about`.
 - Added About, Chat, and Knowledge entries to admin sidebar.
 - Changed user/admin shell signout controls to link to unified `/auth/signout`.
+- Fixed `/api/auth/*` route-policy bypass so auth route handlers, not proxy redirects, own auth API responses.
+- Updated server sign-in/signout route handlers to attach Supabase cookie mutations to the returned `NextResponse`.
+- Changed sign-in success navigation to a full document navigation so server-provided auth state is reloaded after endpoint login.
+- Added `e2e/site-separation.test.ts` covering anonymous redirects, role-aware login redirects, user admin 403, admin user/admin access, and signout.
+- Added shared e2e sign-in helpers and updated chat/knowledge e2e tests for authenticated routes.
+- Fixed knowledge upload table refresh by mutating the `/api/documents` SWR key after upload.
+- Refreshed existing e2e expectations for the current About heading, seeded citation question, and local upload/indexing behavior.
 
 ## Known Mismatches
 
 - Existing `docs/features/admin-ui/REQUIREMENTS.md` 仍包含关于站点自由切换、user UI 显示 admin 入口的旧假设；`site-separation` 明确覆盖这些条目。
-- 当前实现仍是 browser direct sign-in；尚未做任何代码变更。
 
 ## Verification Status
 
 - `pnpm test src/lib/route-policy.test.ts`
 - `pnpm test src/lib/auth/helpers.test.ts src/app/api/auth/me/route.test.ts src/lib/route-policy.test.ts`
 - `pnpm test src/app/api/auth/signin/route.test.ts src/app/auth/signout/route.test.ts src/app/api/auth/me/route.test.ts src/lib/auth/helpers.test.ts src/lib/route-policy.test.ts`
+- `pnpm exec playwright test e2e/site-separation.test.ts`
+- `pnpm test`
 - `pnpm exec tsc --noEmit`
 - `pnpm build` (passes; Turbopack reports existing NFT tracing warnings involving `next.config.ts` / Prisma import trace)
+- `pnpm exec playwright test`
 
 ## Next Entry Point
 
-Phase 5 实施从以下开始：
-
-1. 补齐 e2e 覆盖：anonymous redirects、role-aware login redirects、role=user admin 403、role=admin user/admin access、signout。
-2. 运行完整单元测试、类型检查和 build。
-3. 清理或记录与旧 feature docs 的剩余冲突。
-
-建议下一个实现 commit message：
-
-`site-separation phase 5: verify separated site flows`
+Feature implementation is complete. Future cleanup can reconcile old `docs/features/admin-ui/REQUIREMENTS.md` assumptions with this feature's final behavior.

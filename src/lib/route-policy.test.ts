@@ -52,6 +52,8 @@ describe("route-policy", () => {
 
     it("classifies API routes", () => {
       expect(getRouteAccess("/api/health")).toBe("public-api");
+      expect(getRouteAccess("/api/auth/signin")).toBe("public-api");
+      expect(getRouteAccess("/api/auth/me")).toBe("public-api");
       expect(getRouteAccess("/api/ingest-hook")).toBe("public-api");
       expect(getRouteAccess("/api/chat")).toBe("user-api");
       expect(getRouteAccess("/api/documents/123")).toBe("user-api");
@@ -68,6 +70,8 @@ describe("route-policy", () => {
       expect(canBypassAuthProxy("/auth/signin")).toBe(true);
       expect(canBypassAuthProxy("/auth/signout")).toBe(true);
       expect(canBypassAuthProxy("/api/health")).toBe(true);
+      expect(canBypassAuthProxy("/api/auth/signin")).toBe(true);
+      expect(canBypassAuthProxy("/api/auth/me")).toBe(true);
       expect(canBypassAuthProxy("/api/ingest-hook")).toBe(true);
       expect(canBypassAuthProxy("/api/ingest-hook/supabase")).toBe(true);
 

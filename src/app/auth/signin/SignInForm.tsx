@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { lastChat } from "@/lib/last-chat";
 import { sanitizeRedirectPath } from "@/lib/route-policy";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ const DEMO_ACCOUNTS = [
 ];
 
 export function SignInForm() {
-  const router = useRouter();
   const explicitFrom = useSearchParams().get("from");
   const redirectTarget = sanitizeRedirectPath(explicitFrom);
   const [email, setEmail] = useState("admin@test.com");
@@ -53,8 +52,7 @@ export function SignInForm() {
       return;
     }
 
-    router.refresh();
-    router.replace(body?.redirectTo ?? redirectTarget);
+    window.location.assign(body?.redirectTo ?? redirectTarget);
   }
 
   return (

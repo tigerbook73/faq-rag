@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { getProfile } from "@/lib/auth/helpers";
 import { resolvePostLoginRedirect } from "@/lib/route-policy";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const SignInInputSchema = z.object({
   email: z.string().email(),
@@ -47,20 +48,32 @@ export async function POST(request: Request) {
 
   try {
     const profile = await getProfile(data.user.id);
-    const supabase = await createSupabaseServerClient();
+    let response: NextResponse = NextResponse.json({
+      redirectTo: resolvePostLoginRedirect(profile.role, parsed.data.from),
+    });
+    const cookieStore = await cookies();
+    const supabase = createServerClient(supabaseUrl(), supabaseAnonKey(), {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    });
     const { error: sessionError } = await supabase.auth.setSession({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
     });
 
     if (sessionError) {
+      response = NextResponse.json({ error: "Unable to create session" }, { status: 401 });
       await supabase.auth.signOut();
-      return NextResponse.json({ error: "Unable to create session" }, { status: 401 });
+      return response;
     }
 
-    return NextResponse.json({
-      redirectTo: resolvePostLoginRedirect(profile.role, parsed.data.from),
-    });
+    return response;
   } catch (error) {
     return authErrorResponse(error);
   }

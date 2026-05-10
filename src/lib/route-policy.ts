@@ -126,6 +126,13 @@ const ROUTE_POLICIES: readonly RoutePolicy[] = [
     sidebar: "always-hide",
   },
   {
+    path: "/api/auth",
+    match: "prefix",
+    access: "public-api",
+    authProxyBypass: true,
+    sidebar: "always-hide",
+  },
+  {
     path: "/api/ingest-hook",
     match: "prefix",
     access: "public-api",

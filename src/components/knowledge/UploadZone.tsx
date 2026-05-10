@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
+import { useSWRConfig } from "swr";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { config } from "@/lib/config";
@@ -18,6 +19,7 @@ async function computeSHA256(file: File): Promise<string> {
 export function UploadZone() {
   const [progress, setProgress] = useState<number | null>(null);
   const router = useRouter();
+  const { mutate } = useSWRConfig();
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -95,9 +97,10 @@ export function UploadZone() {
         toast.error(`${success} uploaded, ${errors.length} failed: ${errors.join("; ")}`);
       }
 
+      await mutate("/api/documents");
       router.refresh();
     },
-    [router],
+    [mutate, router],
   );
 
   const onDropRejected = useCallback((rejections: FileRejection[]) => {
