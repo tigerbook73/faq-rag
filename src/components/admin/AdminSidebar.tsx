@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Files, Info, LayoutDashboard, MessageSquare, Users } from "lucide-react";
+import { Files, Info, LayoutDashboard, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,8 +18,6 @@ const NAV_ITEMS = [
   { label: "Users", href: "/admin/users", icon: Users, exact: false },
   { label: "Documents", href: "/admin/documents", icon: Files, exact: false },
   { label: "About", href: "/admin/about", icon: Info, exact: true },
-  { label: "Chat", href: "/chat/last", icon: MessageSquare, exact: false },
-  { label: "Knowledge", href: "/knowledge", icon: BookOpen, exact: true },
 ] as const;
 
 export function AdminSidebar() {

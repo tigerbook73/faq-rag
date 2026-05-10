@@ -18,10 +18,9 @@ export function AdminTopBar() {
   return (
     <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-3 sm:px-4">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="size-10 shrink-0 md:hidden">
+        <SidebarTrigger className="size-10 shrink-0">
           <LibraryBig className="size-6" />
         </SidebarTrigger>
-        <LibraryBig className="hidden size-6 shrink-0 md:block" />
         <span className="text-base font-bold">FAQ-RAG Admin</span>
       </div>
       <div className="flex items-center gap-1 sm:gap-2">

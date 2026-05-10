@@ -51,7 +51,7 @@ export function ChatSidebarContent() {
 
   return (
     <>
-      <SidebarHeader>
+      <SidebarHeader className="pr-12 md:pr-2">
         <div className="flex items-center justify-between">
           <SidebarTrigger />
           {email && (
