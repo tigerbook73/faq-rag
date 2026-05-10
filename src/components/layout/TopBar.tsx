@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, LogOut, LogIn, LibraryBig, ShieldCog } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, LibraryBig, ShieldCog, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -110,6 +110,19 @@ export function TopBar() {
             About
           </Link>
         </nav>
+        {isSignIn && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            title="About"
+            aria-label="About"
+            nativeButton={false}
+            render={<Link href="/about" />}
+          >
+            <Info className="h-4 w-4" />
+          </Button>
+        )}
         {!isSignIn && <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />}
         {!isSignIn && role === "admin" && (
           <Button
