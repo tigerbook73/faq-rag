@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 1: route policy model implemented. Ready to continue with Phase 2 auth helper整理.
+Phase 2: auth helper整理 implemented. Ready to continue with Phase 3 server-side sign-in.
 
 ## Last Confirmed Commit
 
-b30675a
+9ef8e89
 
 ## Confirmed Decisions
 
@@ -42,6 +42,10 @@ b30675a
 - Added `SIGN_IN_PATH`、`SIGN_OUT_PATH`、`USER_HOME_PATH`、`ADMIN_HOME_PATH` constants.
 - Added role-aware `resolvePostLoginRedirect(role, from)` and stricter redirect sanitization.
 - Updated `src/lib/route-policy.test.ts` for route classification, redirect sanitizer, and post-login role routing.
+- Added `src/lib/auth/helpers.ts` to centralize `getProfile()`、`getCurrentUser()`、`requireUser()`、`requireAdmin()`.
+- Kept `get-current-user.ts`、`require-user.ts`、`require-admin.ts` as compatibility re-export modules.
+- Confirmed `requireUser()` accepts role=admin profiles and `requireAdmin()` rejects role=user.
+- Added `/api/auth/me` route tests confirming the auth state includes `role`.
 
 ## Known Mismatches
 
@@ -51,16 +55,18 @@ b30675a
 ## Verification Status
 
 - `pnpm test src/lib/route-policy.test.ts`
+- `pnpm test src/lib/auth/helpers.test.ts src/app/api/auth/me/route.test.ts src/lib/route-policy.test.ts`
 - `pnpm exec tsc --noEmit`
 
 ## Next Entry Point
 
-Phase 2 实施从以下开始：
+Phase 3 实施从以下开始：
 
-1. 新增 `src/lib/auth/helpers.ts`，集中 `requireUser()`、`requireAdmin()`、`getProfile()`。
-2. 确认 `requireUser()` 接受 role=admin。
-3. 确认 `GET /api/auth/me` 返回含 `role` 的 auth state。
+1. 新增 `POST /api/auth/signin`，使用服务端 endpoint 登录并写 session cookie。
+2. 将 `/auth/signin` 表单从 browser direct sign-in 改为调用 endpoint。
+3. 确认或更新 `GET /auth/signout` 行为。
+4. 添加 route handler 测试。
 
 建议下一个实现 commit message：
 
-`site-separation phase 2: consolidate auth helpers`
+`site-separation phase 3: move sign-in to server endpoint`
