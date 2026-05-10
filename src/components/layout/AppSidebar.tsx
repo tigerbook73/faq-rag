@@ -46,7 +46,7 @@ export function AppSidebar() {
             <div className="flex items-center justify-between">
               <SidebarTrigger />
               {email && (
-                <div className="group-data-[state=collapsed]/sidebar-wrapper:hidden flex min-w-0 items-center gap-2 overflow-hidden">
+                <div className="flex min-w-0 items-center gap-2 overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:hidden">
                   <Avatar className="size-6 shrink-0">
                     <AvatarFallback className="text-xs">{email.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>

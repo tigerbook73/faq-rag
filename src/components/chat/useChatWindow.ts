@@ -216,27 +216,27 @@ export function useStreamingChat({
           const finalMessages: Message[] = [...withUser, { role: "assistant", content: interrupted, citations: [] }];
           setMessages(finalMessages);
           await persistMessages(finalMessages, sessionAtSend, resolvedId);
-          if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
+          if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
           streamDone = true;
         }
       }
 
       if (doneMessages) {
         await persistMessages(doneMessages, sessionAtSend, resolvedId);
-        if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
+        if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
       } else if (!streamDone && assistantContent) {
         // stream ended without "done" event (e.g. server crash) — save partial content
         const partial = assistantContent + "\n\n⚠️ _回答被中断_";
         const finalMessages: Message[] = [...withUser, { role: "assistant", content: partial, citations: [] }];
         setMessages(finalMessages);
         await persistMessages(finalMessages, sessionAtSend, resolvedId);
-        if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
+        if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
       }
     } catch (err) {
       toast.error(String(err));
       setMessages(withUser);
       await persistMessages(withUser, sessionAtSend, resolvedId);
-      if (!chatId) window.history.replaceState(null, '', `/chat/${resolvedId}`);
+      if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
     } finally {
       setLoading(false);
     }

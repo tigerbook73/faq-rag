@@ -53,7 +53,7 @@ export function AdminDocumentsWorkspace() {
             <TableHead className="hidden sm:table-cell">Owner</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="hidden md:table-cell">Visibility</TableHead>
-            <TableHead className="hidden md:table-cell text-right">Selections</TableHead>
+            <TableHead className="hidden text-right md:table-cell">Selections</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -72,20 +72,14 @@ export function AdminDocumentsWorkspace() {
                 <TableCell>
                   <Badge
                     variant={
-                      doc.status === "indexed"
-                        ? "default"
-                        : doc.status === "failed"
-                          ? "destructive"
-                          : "secondary"
+                      doc.status === "indexed" ? "default" : doc.status === "failed" ? "destructive" : "secondary"
                     }
                   >
                     {doc.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
-                  <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>
-                    {doc.visibility}
-                  </Badge>
+                  <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>{doc.visibility}</Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground hidden text-right text-sm md:table-cell">
                   {doc._count.selections}

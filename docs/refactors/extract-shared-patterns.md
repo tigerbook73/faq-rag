@@ -17,11 +17,13 @@
 ### 1A：提取共享 SWR fetcher
 
 **新建文件** `src/lib/swr.ts`：
+
 ```typescript
 export const fetcher = (url: string) => fetch(url).then((r) => r.json());
 ```
 
 **更新以下 5 个文件**，删除本地 `fetcher` 定义，改为 `import { fetcher } from "@/lib/swr"`：
+
 - `src/components/admin/AdminUsersWorkspace.tsx`（行 30）
 - `src/components/admin/AdminDocumentsWorkspace.tsx`
 - `src/components/knowledge/DocumentTable/useDocumentManagement.ts`（行 11）
@@ -31,6 +33,7 @@ export const fetcher = (url: string) => fetch(url).then((r) => r.json());
 ### 1B：提取 `notFoundResponse` 辅助函数
 
 **更新** `src/lib/auth/api.ts`，新增：
+
 ```typescript
 export function notFoundResponse(resource = "Resource") {
   return NextResponse.json({ error: `${resource} not found` }, { status: 404 });
@@ -38,6 +41,7 @@ export function notFoundResponse(resource = "Resource") {
 ```
 
 **更新** 所有包含 `NextResponse.json({ error: "Not found" }, { status: 404 })` 的文件（约 8 处），替换为 `notFoundResponse()`：
+
 - `src/app/api/documents/[id]/route.ts`（2 处）
 - `src/app/api/sessions/[id]/route.ts`（2 处）
 - `src/app/api/admin/users/[id]/route.ts`
@@ -52,6 +56,7 @@ export function notFoundResponse(resource = "Resource") {
 ## Phase 2 — API 路由 HOF 包装器（中等工作量，影响最广）
 
 当前每个 route handler 都是：
+
 ```typescript
 export async function GET(req, ctx) {
   try {
@@ -64,6 +69,7 @@ export async function GET(req, ctx) {
 ```
 
 **更新** `src/lib/auth/api.ts`，新增两个 HOF：
+
 ```typescript
 import type { NextRequest } from "next/server";
 
@@ -96,24 +102,25 @@ export function withAdmin<P = Record<string, string>>(handler: AdminHandler<P>) 
 
 **重构目标路由文件**（约 13 个，不含 `ingest-hook`、`health`、`auth/me` 等独立端点）：
 
-| 文件 | 当前 auth | 迁移到 |
-|------|-----------|--------|
-| `api/documents/route.ts` | requireUser | withUser |
-| `api/documents/[id]/route.ts` | requireUser | withUser |
-| `api/documents/[id]/index/route.ts` | requireUser | withUser |
-| `api/documents/[id]/reindex/route.ts` | requireUser | withUser |
-| `api/documents/prepare/route.ts` | requireUser | withUser |
-| `api/sessions/route.ts` | requireUser | withUser |
-| `api/sessions/[id]/route.ts` | requireUser | withUser |
-| `api/public-documents/route.ts` | requireUser | withUser |
-| `api/public-documents/[id]/selection/route.ts` | requireUser | withUser |
-| `api/admin/documents/route.ts` | requireAdmin | withAdmin |
-| `api/admin/documents/[id]/route.ts` | requireAdmin | withAdmin |
-| `api/admin/users/route.ts` | requireAdmin | withAdmin |
-| `api/admin/users/[id]/route.ts` | requireAdmin | withAdmin |
-| `api/admin/users/[id]/password/route.ts` | requireAdmin | withAdmin |
+| 文件                                           | 当前 auth    | 迁移到    |
+| ---------------------------------------------- | ------------ | --------- |
+| `api/documents/route.ts`                       | requireUser  | withUser  |
+| `api/documents/[id]/route.ts`                  | requireUser  | withUser  |
+| `api/documents/[id]/index/route.ts`            | requireUser  | withUser  |
+| `api/documents/[id]/reindex/route.ts`          | requireUser  | withUser  |
+| `api/documents/prepare/route.ts`               | requireUser  | withUser  |
+| `api/sessions/route.ts`                        | requireUser  | withUser  |
+| `api/sessions/[id]/route.ts`                   | requireUser  | withUser  |
+| `api/public-documents/route.ts`                | requireUser  | withUser  |
+| `api/public-documents/[id]/selection/route.ts` | requireUser  | withUser  |
+| `api/admin/documents/route.ts`                 | requireAdmin | withAdmin |
+| `api/admin/documents/[id]/route.ts`            | requireAdmin | withAdmin |
+| `api/admin/users/route.ts`                     | requireAdmin | withAdmin |
+| `api/admin/users/[id]/route.ts`                | requireAdmin | withAdmin |
+| `api/admin/users/[id]/password/route.ts`       | requireAdmin | withAdmin |
 
 迁移后示例（`sessions/[id]/route.ts`）：
+
 ```typescript
 type P = { id: string };
 
@@ -135,6 +142,7 @@ export const PATCH = withUser<P>(async (actor, req, { params }) => {
 ```
 
 **注意**：
+
 - `api/auth/me/route.ts` 使用 `getSession()` 而非 `requireUser()`，不迁移
 - `api/chat/route.ts` 逻辑复杂，单独评估是否值得迁移
 
@@ -145,6 +153,7 @@ export const PATCH = withUser<P>(async (actor, req, { params }) => {
 ## Phase 3 — `useAsyncAction` Hook（消除客户端操作样板）
 
 **当前重复模式**（出现在 AdminUsersWorkspace、AdminDocumentsWorkspace、useDocumentManagement）：
+
 ```typescript
 setState(loading);
 try {
@@ -161,6 +170,7 @@ try {
 ```
 
 **新建文件** `src/hooks/useAsyncAction.ts`：
+
 ```typescript
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
@@ -186,11 +196,7 @@ export function useAsyncAction<TId = string>(options: Options = {}) {
         if (options.successMessage) toast.success(options.successMessage);
         await options.onSuccess?.();
       } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : (options.errorMessage ?? "Operation failed"),
-        );
+        toast.error(error instanceof Error ? error.message : (options.errorMessage ?? "Operation failed"));
       } finally {
         setPendingId(null);
       }
@@ -203,6 +209,7 @@ export function useAsyncAction<TId = string>(options: Options = {}) {
 ```
 
 **更新以下文件**，用 `useAsyncAction` 替换手写的 try/catch/finally 块：
+
 - `src/components/admin/AdminUsersWorkspace.tsx` — `handleDeleteUser`、`handleChangePassword`、`handleChangeRole`
 - `src/components/admin/AdminDocumentsWorkspace.tsx` — `handleDelete`
 - `src/components/knowledge/DocumentTable/useDocumentManagement.ts` — `handleDelete`、`handleReindex`、`handleVisibilityChange`

@@ -41,7 +41,10 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
     if (!chatId) return;
     fetchSession(chatId)
       .then((loaded) => {
-        if (!loaded) { router.replace("/chat/new"); return; }
+        if (!loaded) {
+          router.replace("/chat/new");
+          return;
+        }
         setSession(loaded);
         setMessages(loaded.messages);
         lastChat.set(chatId);

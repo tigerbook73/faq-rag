@@ -6,25 +6,25 @@
 
 ## 决策记录
 
-| 决策 | 选项 | 说明 |
-|------|------|------|
-| A — T3 时机 | A1：跳过 T3 | T6–T9 迁移时在各 client component 内加 inline loading，一步到位 |
-| B — proxy.ts auth | B1：换 `getSession()` | 本地 JWT 验证，零网络开销；并入 T8 一起做 |
-| C — admin/layout.tsx | C1：保留 SC，只做 role check | 子页面改 client component；`admin/layout.tsx` 不动 |
-| D — T8 范围 | D2：T8 含 proxy.ts 改动 | layout 去 async + AuthContext 修复 + proxy.ts 换 getSession() |
+| 决策                 | 选项                         | 说明                                                            |
+| -------------------- | ---------------------------- | --------------------------------------------------------------- |
+| A — T3 时机          | A1：跳过 T3                  | T6–T9 迁移时在各 client component 内加 inline loading，一步到位 |
+| B — proxy.ts auth    | B1：换 `getSession()`        | 本地 JWT 验证，零网络开销；并入 T8 一起做                       |
+| C — admin/layout.tsx | C1：保留 SC，只做 role check | 子页面改 client component；`admin/layout.tsx` 不动              |
+| D — T8 范围          | D2：T8 含 proxy.ts 改动      | layout 去 async + AuthContext 修复 + proxy.ts 换 getSession()   |
 
 ---
 
 ## 现状速览
 
-| 方面 | 现状 |
-|------|------|
-| Server Components | 除 `chat/last` 外，所有 page/layout 均为 async server component |
-| API Schema | `src/lib/schemas/` 已有 zod schemas，但未审计覆盖率 |
-| Loading 状态 | 仅 `knowledge/loading.tsx` 有骨架屏，其余页面无 |
-| Admin Sidebar | 独立的 `AdminSidebar`（不可折叠）与 `AppSidebar`（可折叠）两套体系 → 已修复（T1） |
-| Admin 页面 | 4 个 async server component，有独立 `AdminShell` layout |
-| proxy.ts auth | `getUser()`（网络验证，~100ms/次） → T8 改为 `getSession()` |
+| 方面              | 现状                                                                              |
+| ----------------- | --------------------------------------------------------------------------------- |
+| Server Components | 除 `chat/last` 外，所有 page/layout 均为 async server component                   |
+| API Schema        | `src/lib/schemas/` 已有 zod schemas，但未审计覆盖率                               |
+| Loading 状态      | 仅 `knowledge/loading.tsx` 有骨架屏，其余页面无                                   |
+| Admin Sidebar     | 独立的 `AdminSidebar`（不可折叠）与 `AppSidebar`（可折叠）两套体系 → 已修复（T1） |
+| Admin 页面        | 4 个 async server component，有独立 `AdminShell` layout                           |
+| proxy.ts auth     | `getUser()`（网络验证，~100ms/次） → T8 改为 `getSession()`                       |
 
 ---
 
@@ -59,15 +59,15 @@ T10, T11 — 待 Phase 3 完成后分析
 
 #### 数据依赖映射表
 
-| Server Component | 当前数据来源 | 对应 API | API 覆盖？ | 迁移备注 |
-|-----------------|------------|---------|-----------|---------|
-| `layout.tsx` | `getCurrentUser()` → `{role, email}` | `GET /api/auth/me` → `{id, email, role}` | ✅ | T8 处理 |
-| `chat/[id]/page.tsx` | `requireUser()` + `getSessionForUser(actorId, id)` | `GET /api/sessions/[id]` | ✅ | middleware 已覆盖认证 |
-| `admin/layout.tsx` | `requireAdmin()` → role check | — | ✅ 保留 SC | **C1 决策**：保留为 SC，只做 role check，不取数据 |
-| `admin/page.tsx` | `listUsers()` + `listAdminDocuments({take:5})` | `GET /api/admin/users` + `GET /api/admin/documents?pageSize=5` | ✅ | T6 处理 |
-| `admin/documents/page.tsx` | `listAdminDocuments({take:100})` | `GET /api/admin/documents?pageSize=100` | ✅ | T6 处理 |
-| `admin/users/page.tsx` | `requireAdmin()` + `listUsers()` | `GET /api/admin/users` | ✅ | T6 处理；`actorId` 改从 `/api/auth/me` 取 |
-| `knowledge/page.tsx` | `requireUser()` + `listDocumentsForOwner()` + `listSelectablePublicDocuments()` | `GET /api/documents` + `GET /api/public-documents` | ✅ | T7 处理 |
+| Server Component           | 当前数据来源                                                                    | 对应 API                                                       | API 覆盖？ | 迁移备注                                          |
+| -------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------- | ------------------------------------------------- |
+| `layout.tsx`               | `getCurrentUser()` → `{role, email}`                                            | `GET /api/auth/me` → `{id, email, role}`                       | ✅         | T8 处理                                           |
+| `chat/[id]/page.tsx`       | `requireUser()` + `getSessionForUser(actorId, id)`                              | `GET /api/sessions/[id]`                                       | ✅         | middleware 已覆盖认证                             |
+| `admin/layout.tsx`         | `requireAdmin()` → role check                                                   | —                                                              | ✅ 保留 SC | **C1 决策**：保留为 SC，只做 role check，不取数据 |
+| `admin/page.tsx`           | `listUsers()` + `listAdminDocuments({take:5})`                                  | `GET /api/admin/users` + `GET /api/admin/documents?pageSize=5` | ✅         | T6 处理                                           |
+| `admin/documents/page.tsx` | `listAdminDocuments({take:100})`                                                | `GET /api/admin/documents?pageSize=100`                        | ✅         | T6 处理                                           |
+| `admin/users/page.tsx`     | `requireAdmin()` + `listUsers()`                                                | `GET /api/admin/users`                                         | ✅         | T6 处理；`actorId` 改从 `/api/auth/me` 取         |
+| `knowledge/page.tsx`       | `requireUser()` + `listDocumentsForOwner()` + `listSelectablePublicDocuments()` | `GET /api/documents` + `GET /api/public-documents`             | ✅         | T7 处理                                           |
 
 ---
 
@@ -119,6 +119,7 @@ T10, T11 — 待 Phase 3 完成后分析
 **范围**：`src/app/api/**`，`src/lib/schemas/`
 
 实施要点：
+
 1. 逐个检查每条 API 路由的 request body/query 校验
 2. 未使用 schema 的路由补充接入 `src/lib/schemas/`
 3. 统一 error response 格式（`{ error: string }`）
@@ -141,6 +142,7 @@ T10, T11 — 待 Phase 3 完成后分析
 **范围**：`proxy.ts`、`src/app/layout.tsx`、`src/context/auth-context.tsx`
 
 实施要点：
+
 1. **`proxy.ts`**：`getUser()` → `getSession()`，消除每次导航的 Supabase 网络调用
 2. **`layout.tsx`**：去除 `async`，移除 `getCurrentUser()`，`Providers` 的 `initialAuth/initialRole/initialEmail` 改传 `false/null/null`
 3. **`auth-context.tsx`**：mount 时调 `GET /api/auth/me` 获取初始值；`onAuthStateChange` 触发时重新调 `/api/auth/me` 更新 role（而非只从 session 取 email）
@@ -159,6 +161,7 @@ T10, T11 — 待 Phase 3 完成后分析
 **不改**：`admin/layout.tsx`（保留 SC，继续做 `requireAdmin()` role check）
 
 实施要点：
+
 1. 三个子页面改为 `"use client"` + `useEffect` 调用对应 `/api/admin/*`
 2. `admin/users/page.tsx`：移除冗余的 `requireAdmin()`，`actorId` 改从 `useAuth()` 或 `GET /api/auth/me` 取
 3. 各页面加 inline loading 状态（**决策 A1**，取代 loading.tsx）
@@ -175,6 +178,7 @@ T10, T11 — 待 Phase 3 完成后分析
 **范围**：`src/app/knowledge/page.tsx`
 
 实施要点：
+
 1. 改为 `"use client"` + `useEffect` 调用 `GET /api/documents` + `GET /api/public-documents`
 2. 移除冗余的 `requireUser()`（middleware 已覆盖）
 3. 加 inline loading 状态（**决策 A1**）
@@ -191,6 +195,7 @@ T10, T11 — 待 Phase 3 完成后分析
 **范围**：`src/app/chat/[id]/page.tsx`，`src/components/chat/ChatWindow.tsx`
 
 实施要点：
+
 1. `chat/[id]/page.tsx` 改为非 async，不传 `initialSession`
 2. `ChatWindow` 改为 mount 时调 `GET /api/sessions/[id]` 获取数据
 3. 加 inline loading 状态（**决策 A1**）
@@ -221,20 +226,20 @@ Phase 3 完成后形成最终架构描述，识别剩余不一致点。
 
 ## 任务总表
 
-| ID | 类型 | 标题 | 依赖 | 风险 | 状态 |
-|----|------|------|------|------|------|
-| T0 | analysis | Server Component 数据依赖审计 | — | 🟢 | ✅ |
-| T1 | refactor | Admin sidebar 可折叠 | — | 🟡 | ✅ |
-| T2 | feature | 页面切换导航进度条 | — | 🟢 | ⏸ 暂缓 |
-| T3 | feature | ~~补全各页面 loading skeleton~~ | — | — | ❌ 跳过（A1） |
-| T4 | refactor | API schema 覆盖率审计与统一 | — | 🟡 | ✅ |
-| T5 | ~~feature~~ | ~~补全 client-side 所需 API~~ | — | — | ❌ 关闭，并入 T6/T8 |
-| T6 | refactor | Admin 子页面 → client component（admin/layout.tsx 保留 SC） | T0,T1,T4 | 🟡 | ✅ |
-| T7 | refactor | Knowledge 页面 → client component | T0,T4 | 🟡 | ✅ |
-| T8 | refactor | Root layout 去 async + AuthContext role 修复 + proxy.ts getSession() | T0 | 🔴 | ✅ |
-| T9 | refactor | Chat 页面去除服务端 session 水合 | T0,T4 | 🟡 | ✅ |
-| T10 | analysis | 首页加载优化分析 | Phase 3 | — | ❌ 关闭（about/signin 已是 Static，优化收益不足）|
-| T11 | analysis | 全系统架构一致性报告 | Phase 3 | — | ✅ |
+| ID  | 类型        | 标题                                                                 | 依赖     | 风险 | 状态                                              |
+| --- | ----------- | -------------------------------------------------------------------- | -------- | ---- | ------------------------------------------------- |
+| T0  | analysis    | Server Component 数据依赖审计                                        | —        | 🟢   | ✅                                                |
+| T1  | refactor    | Admin sidebar 可折叠                                                 | —        | 🟡   | ✅                                                |
+| T2  | feature     | 页面切换导航进度条                                                   | —        | 🟢   | ⏸ 暂缓                                            |
+| T3  | feature     | ~~补全各页面 loading skeleton~~                                      | —        | —    | ❌ 跳过（A1）                                     |
+| T4  | refactor    | API schema 覆盖率审计与统一                                          | —        | 🟡   | ✅                                                |
+| T5  | ~~feature~~ | ~~补全 client-side 所需 API~~                                        | —        | —    | ❌ 关闭，并入 T6/T8                               |
+| T6  | refactor    | Admin 子页面 → client component（admin/layout.tsx 保留 SC）          | T0,T1,T4 | 🟡   | ✅                                                |
+| T7  | refactor    | Knowledge 页面 → client component                                    | T0,T4    | 🟡   | ✅                                                |
+| T8  | refactor    | Root layout 去 async + AuthContext role 修复 + proxy.ts getSession() | T0       | 🔴   | ✅                                                |
+| T9  | refactor    | Chat 页面去除服务端 session 水合                                     | T0,T4    | 🟡   | ✅                                                |
+| T10 | analysis    | 首页加载优化分析                                                     | Phase 3  | —    | ❌ 关闭（about/signin 已是 Static，优化收益不足） |
+| T11 | analysis    | 全系统架构一致性报告                                                 | Phase 3  | —    | ✅                                                |
 
 ---
 

@@ -11,10 +11,7 @@ const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function useDocumentManagement() {
-  const { data, mutate: mutateDocuments } = useSWR<{ items: Document[] }>(
-    "/api/documents",
-    fetcher,
-  );
+  const { data, mutate: mutateDocuments } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
   const baseDocuments = useMemo(() => data?.items ?? [], [data]);
 
   const [search, setSearch] = useState("");
@@ -54,17 +51,12 @@ export function useDocumentManagement() {
   const hasActiveDocs = documents.some((d) => ACTIVE_STATUSES.has(d.status));
 
   // Use SWR's built-in refreshInterval for polling when there are active docs
-  useSWR<{ items: Document[] }>(
-    hasActiveDocs ? "/api/documents" : null,
-    fetcher,
-    { refreshInterval: config.ui.pollIntervalMs },
-  );
+  useSWR<{ items: Document[] }>(hasActiveDocs ? "/api/documents" : null, fetcher, {
+    refreshInterval: config.ui.pollIntervalMs,
+  });
 
   async function handleDelete(id: string) {
-    mutateDocuments(
-      (current) => current ? { items: current.items.filter((d) => d.id !== id) } : current,
-      false,
-    );
+    mutateDocuments((current) => (current ? { items: current.items.filter((d) => d.id !== id) } : current), false);
     setDeletingId(id);
     try {
       await fetch(`/api/documents/${id}`, { method: "DELETE" });
@@ -106,10 +98,7 @@ export function useDocumentManagement() {
     if (!target || target.visibility === visibility) return;
 
     mutateDocuments(
-      (current) =>
-        current
-          ? { items: current.items.map((d) => (d.id === id ? { ...d, visibility } : d)) }
-          : current,
+      (current) => (current ? { items: current.items.map((d) => (d.id === id ? { ...d, visibility } : d)) } : current),
       false,
     );
     setVisibilityUpdatingId(id);

@@ -38,7 +38,9 @@ export function DocumentTable() {
           <h2 className="text-app-section">My documents</h2>
           <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
         </div>
-        <div className="text-muted-foreground py-12 text-center text-sm">No documents yet. Upload some files above.</div>
+        <div className="text-muted-foreground py-12 text-center text-sm">
+          No documents yet. Upload some files above.
+        </div>
       </section>
     );
   }

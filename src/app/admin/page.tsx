@@ -89,14 +89,16 @@ export default function AdminDashboardPage() {
                   <TableCell className="font-medium">{doc.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{doc.owner.email}</TableCell>
                   <TableCell>
-                    <Badge variant={doc.status === "indexed" ? "default" : doc.status === "failed" ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={
+                        doc.status === "indexed" ? "default" : doc.status === "failed" ? "destructive" : "secondary"
+                      }
+                    >
                       {doc.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>
-                      {doc.visibility}
-                    </Badge>
+                    <Badge variant={doc.visibility === "public" ? "outline" : "secondary"}>{doc.visibility}</Badge>
                   </TableCell>
                 </TableRow>
               ))

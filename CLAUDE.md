@@ -224,70 +224,70 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 
 ## Important File Locations
 
-| Path                                             | Purpose                                                                             |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `proxy.ts`                                       | Next.js 16 middleware — auth guard (public: /auth/signin, /about, /api/ingest-hook); uses `getSession()` |
-| `src/app/layout.tsx`                             | Root layout — sync, no server-side auth; delegates entirely to `<Providers>`        |
-| `src/app/providers.tsx`                          | Client shell — `AppLayout` renders sidebar/topbar for non-admin routes; hides sidebar on /auth/signin and when unauthenticated |
-| `src/app/api/chat/route.ts`                      | Chat endpoint — retrieval (ownership-scoped) + LLM streaming (SSE)                 |
-| `src/app/api/documents/prepare/route.ts`         | POST: validate file, create pending doc, return Supabase signed upload URL          |
-| `src/app/api/documents/[id]/index/route.ts`      | POST: confirm upload complete, enqueue indexing                                     |
-| `src/app/api/sessions/route.ts`                  | Session list — GET (list) / POST (create)                                           |
-| `src/app/api/sessions/[id]/route.ts`             | Single session — GET / PATCH (title + messages) / DELETE                            |
-| `src/app/api/auth/me/route.ts`                   | GET current user id / email / role                                                  |
-| `src/app/api/public-documents/route.ts`          | GET selectable public documents for current user                                    |
-| `src/app/api/public-documents/[id]/selection/route.ts` | POST: toggle admin's public-doc selection                                     |
-| `src/app/api/admin/documents/route.ts`           | Admin: GET all documents / DELETE                                                   |
-| `src/app/api/admin/documents/[id]/route.ts`      | Admin: single document actions                                                      |
-| `src/app/api/admin/users/route.ts`               | Admin: GET user list / POST create account                                          |
-| `src/app/api/admin/users/[id]/route.ts`          | Admin: PATCH role / DELETE user                                                     |
-| `src/app/api/admin/users/[id]/password/route.ts` | Admin: reset password                                                               |
-| `src/app/chat/layout.tsx`                        | Chat layout — passthrough `<>{children}</>`                                         |
-| `src/app/chat/[id]/page.tsx`                     | Renders ChatWindow with chatId from URL (no server hydration)                       |
-| `src/app/admin/page.tsx`                         | Admin dashboard — user + document stats                                             |
-| `src/app/admin/documents/page.tsx`               | Admin document management — list all, delete, visibility                            |
-| `src/app/admin/users/page.tsx`                   | Admin user management — list, role change, password reset, delete                  |
-| `src/app/chat/new/page.tsx`                      | Renders ChatWindow with chatId=null                                                 |
-| `src/app/chat/last/page.tsx`                     | Client redirect to last active chat                                                 |
-| `src/app/knowledge/page.tsx`                     | Knowledge base — upload + document list                                             |
-| `src/app/about/page.tsx`                         | Public about page — no auth required                                                |
-| `src/components/layout/TopBar.tsx`               | Global top bar — brand, nav, provider select, theme, auth                           |
-| `src/components/layout/AppSidebar.tsx`           | Global sidebar — chat sessions on /chat/\*, About link elsewhere                    |
-| `src/context/page-title-context.tsx`             | Chat subtitle context (ChatWindow → TopBar)                                         |
-| `src/context/provider-context.tsx`               | LLM provider context (lifted from ChatWindow)                                       |
-| `src/lib/chat-storage.ts`                        | Session API wrappers (upsertSession, deleteSession, pruneOld…)                      |
-| `src/lib/config.ts`                              | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)                       |
-| `src/lib/rate-limit.ts`                          | In-memory IP-based rate limiting                                                    |
-| `src/lib/llm/providers.ts`                       | PROVIDER const + PROVIDER_LABEL                                                     |
-| `src/lib/llm/router.ts`                          | LLM provider selection (Claude default)                                             |
-| `src/lib/llm/truncate.ts`                        | Token-budget history truncation (keeps recent turns, ≤6000 est.)                    |
-| `src/lib/llm/openai.ts`                          | OpenAI GPT provider (`gpt-4o-mini` default)                                         |
-| `src/lib/llm/clients.ts`                         | Shared LLM client singletons (deepseekClient, openaiClient)                         |
-| `src/lib/embeddings/router.ts`                   | Embedding dispatch: local bge-m3 vs OpenAI via `IS_CLOUD`                           |
-| `src/lib/embeddings/openai-embed.ts`             | OpenAI `text-embedding-3-small` — single + batch                                    |
-| `src/lib/storage/index.ts`                       | Supabase Storage helpers: save / read / delete uploaded files                       |
-| `src/lib/supabase/server.ts`                     | Supabase server clients: SSR (cookie-based) + service-role                          |
-| `src/context/auth-context.tsx`                   | Reactive auth state (`isAuthenticated`) via `onAuthStateChange`                     |
-| `src/app/auth/signin/page.tsx`                   | Email/password sign-in form (Supabase)                                              |
-| `src/app/auth/signout/route.ts`                  | Server-side sign-out route                                                          |
-| `src/lib/retrieval/query.ts`                     | Retrieval orchestration: translate + HyDE + embed + (rerank)                        |
-| `src/lib/retrieval/vector-search.ts`             | pgvector cosine search (`<=>`)                                                      |
-| `src/lib/retrieval/rerank.ts`                    | Deduplicate + sort candidate chunks by score                                        |
-| `src/lib/retrieval/cross-encoder.ts`             | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)                        |
-| `src/lib/ingest/pipeline.ts`                     | Ingestion pipeline (parse → chunk → embed → store)                                  |
-| `src/lib/ingest/parse.ts`                        | File parser (md/txt/pdf/docx)                                                       |
-| `src/lib/ingest/split.ts`                        | Chunking entry point — semantic splitter with fixed fallback                        |
-| `src/lib/ingest/semantic-splitter.ts`            | Semantic chunking via embedding cosine boundary detection                           |
-| `src/lib/ingest/indexing-worker.ts`              | Worker thread entry — loads models once, processes docs via IPC                     |
-| `src/lib/ingest/indexing-queue.ts`               | Main-thread interface: `enqueueIndexing(docId, filePath)`                           |
-| `src/lib/embeddings/bge.ts`                      | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`                        |
-| `instrumentation.ts` / `instrumentation.node.ts` | Server startup hook — resume pending docs, warm worker thread                       |
-| `src/components/chat/ChatWindow.tsx`             | Main chat UI — SSE streaming, session hydration, send logic                         |
-| `src/components/chat/ChatSidebar.tsx`            | Session list — create/rename/delete/export/navigate                                 |
-| `src/components/chat/CitationDrawer.tsx`         | Bottom drawer for citation detail view                                              |
-| `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, inline citation superscripts                          |
-| `src/components/chat/ProviderSelect.tsx`         | Provider dropdown (Claude + DeepSeek both selectable)                               |
-| `src/app/api/ingest-hook/route.ts`               | Supabase Storage webhook — validates secret, triggers indexing                      |
-| `scripts/setup-webhook.ts`                       | CLI to read/write `app.ingest_config` (hook_url, hook_secret)                       |
-| `prisma/schema.prisma`                           | DB schema (Document, Chunk, Session, SessionMessage)                                |
-| `jest.config.ts`                                 | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)                          |
+| Path                                                   | Purpose                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `proxy.ts`                                             | Next.js 16 middleware — auth guard (public: /auth/signin, /about, /api/ingest-hook); uses `getSession()`                       |
+| `src/app/layout.tsx`                                   | Root layout — sync, no server-side auth; delegates entirely to `<Providers>`                                                   |
+| `src/app/providers.tsx`                                | Client shell — `AppLayout` renders sidebar/topbar for non-admin routes; hides sidebar on /auth/signin and when unauthenticated |
+| `src/app/api/chat/route.ts`                            | Chat endpoint — retrieval (ownership-scoped) + LLM streaming (SSE)                                                             |
+| `src/app/api/documents/prepare/route.ts`               | POST: validate file, create pending doc, return Supabase signed upload URL                                                     |
+| `src/app/api/documents/[id]/index/route.ts`            | POST: confirm upload complete, enqueue indexing                                                                                |
+| `src/app/api/sessions/route.ts`                        | Session list — GET (list) / POST (create)                                                                                      |
+| `src/app/api/sessions/[id]/route.ts`                   | Single session — GET / PATCH (title + messages) / DELETE                                                                       |
+| `src/app/api/auth/me/route.ts`                         | GET current user id / email / role                                                                                             |
+| `src/app/api/public-documents/route.ts`                | GET selectable public documents for current user                                                                               |
+| `src/app/api/public-documents/[id]/selection/route.ts` | POST: toggle admin's public-doc selection                                                                                      |
+| `src/app/api/admin/documents/route.ts`                 | Admin: GET all documents / DELETE                                                                                              |
+| `src/app/api/admin/documents/[id]/route.ts`            | Admin: single document actions                                                                                                 |
+| `src/app/api/admin/users/route.ts`                     | Admin: GET user list / POST create account                                                                                     |
+| `src/app/api/admin/users/[id]/route.ts`                | Admin: PATCH role / DELETE user                                                                                                |
+| `src/app/api/admin/users/[id]/password/route.ts`       | Admin: reset password                                                                                                          |
+| `src/app/chat/layout.tsx`                              | Chat layout — passthrough `<>{children}</>`                                                                                    |
+| `src/app/chat/[id]/page.tsx`                           | Renders ChatWindow with chatId from URL (no server hydration)                                                                  |
+| `src/app/admin/page.tsx`                               | Admin dashboard — user + document stats                                                                                        |
+| `src/app/admin/documents/page.tsx`                     | Admin document management — list all, delete, visibility                                                                       |
+| `src/app/admin/users/page.tsx`                         | Admin user management — list, role change, password reset, delete                                                              |
+| `src/app/chat/new/page.tsx`                            | Renders ChatWindow with chatId=null                                                                                            |
+| `src/app/chat/last/page.tsx`                           | Client redirect to last active chat                                                                                            |
+| `src/app/knowledge/page.tsx`                           | Knowledge base — upload + document list                                                                                        |
+| `src/app/about/page.tsx`                               | Public about page — no auth required                                                                                           |
+| `src/components/layout/TopBar.tsx`                     | Global top bar — brand, nav, provider select, theme, auth                                                                      |
+| `src/components/layout/AppSidebar.tsx`                 | Global sidebar — chat sessions on /chat/\*, About link elsewhere                                                               |
+| `src/context/page-title-context.tsx`                   | Chat subtitle context (ChatWindow → TopBar)                                                                                    |
+| `src/context/provider-context.tsx`                     | LLM provider context (lifted from ChatWindow)                                                                                  |
+| `src/lib/chat-storage.ts`                              | Session API wrappers (upsertSession, deleteSession, pruneOld…)                                                                 |
+| `src/lib/config.ts`                                    | Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)                                                                  |
+| `src/lib/rate-limit.ts`                                | In-memory IP-based rate limiting                                                                                               |
+| `src/lib/llm/providers.ts`                             | PROVIDER const + PROVIDER_LABEL                                                                                                |
+| `src/lib/llm/router.ts`                                | LLM provider selection (Claude default)                                                                                        |
+| `src/lib/llm/truncate.ts`                              | Token-budget history truncation (keeps recent turns, ≤6000 est.)                                                               |
+| `src/lib/llm/openai.ts`                                | OpenAI GPT provider (`gpt-4o-mini` default)                                                                                    |
+| `src/lib/llm/clients.ts`                               | Shared LLM client singletons (deepseekClient, openaiClient)                                                                    |
+| `src/lib/embeddings/router.ts`                         | Embedding dispatch: local bge-m3 vs OpenAI via `IS_CLOUD`                                                                      |
+| `src/lib/embeddings/openai-embed.ts`                   | OpenAI `text-embedding-3-small` — single + batch                                                                               |
+| `src/lib/storage/index.ts`                             | Supabase Storage helpers: save / read / delete uploaded files                                                                  |
+| `src/lib/supabase/server.ts`                           | Supabase server clients: SSR (cookie-based) + service-role                                                                     |
+| `src/context/auth-context.tsx`                         | Reactive auth state (`isAuthenticated`) via `onAuthStateChange`                                                                |
+| `src/app/auth/signin/page.tsx`                         | Email/password sign-in form (Supabase)                                                                                         |
+| `src/app/auth/signout/route.ts`                        | Server-side sign-out route                                                                                                     |
+| `src/lib/retrieval/query.ts`                           | Retrieval orchestration: translate + HyDE + embed + (rerank)                                                                   |
+| `src/lib/retrieval/vector-search.ts`                   | pgvector cosine search (`<=>`)                                                                                                 |
+| `src/lib/retrieval/rerank.ts`                          | Deduplicate + sort candidate chunks by score                                                                                   |
+| `src/lib/retrieval/cross-encoder.ts`                   | Cross-encoder reranking (bge-reranker-base, sigmoid/softmax)                                                                   |
+| `src/lib/ingest/pipeline.ts`                           | Ingestion pipeline (parse → chunk → embed → store)                                                                             |
+| `src/lib/ingest/parse.ts`                              | File parser (md/txt/pdf/docx)                                                                                                  |
+| `src/lib/ingest/split.ts`                              | Chunking entry point — semantic splitter with fixed fallback                                                                   |
+| `src/lib/ingest/semantic-splitter.ts`                  | Semantic chunking via embedding cosine boundary detection                                                                      |
+| `src/lib/ingest/indexing-worker.ts`                    | Worker thread entry — loads models once, processes docs via IPC                                                                |
+| `src/lib/ingest/indexing-queue.ts`                     | Main-thread interface: `enqueueIndexing(docId, filePath)`                                                                      |
+| `src/lib/embeddings/bge.ts`                            | bge-m3 singleton — `getEmbedding()` + `getEmbeddingsBatch()`                                                                   |
+| `instrumentation.ts` / `instrumentation.node.ts`       | Server startup hook — resume pending docs, warm worker thread                                                                  |
+| `src/components/chat/ChatWindow.tsx`                   | Main chat UI — SSE streaming, session hydration, send logic                                                                    |
+| `src/components/chat/ChatSidebar.tsx`                  | Session list — create/rename/delete/export/navigate                                                                            |
+| `src/components/chat/CitationDrawer.tsx`               | Bottom drawer for citation detail view                                                                                         |
+| `src/components/chat/MessageBubble.tsx`                | Message rendering — Markdown, inline citation superscripts                                                                     |
+| `src/components/chat/ProviderSelect.tsx`               | Provider dropdown (Claude + DeepSeek both selectable)                                                                          |
+| `src/app/api/ingest-hook/route.ts`                     | Supabase Storage webhook — validates secret, triggers indexing                                                                 |
+| `scripts/setup-webhook.ts`                             | CLI to read/write `app.ingest_config` (hook_url, hook_secret)                                                                  |
+| `prisma/schema.prisma`                                 | DB schema (Document, Chunk, Session, SessionMessage)                                                                           |
+| `jest.config.ts`                                       | Jest + ts-jest config (CJS mode, `types: ["jest","node"]`)                                                                     |

@@ -35,7 +35,7 @@
 ```ts
 // 上传成功后
 const newDoc = await res.json();
-setDocuments(prev => [newDoc, ...prev]);
+setDocuments((prev) => [newDoc, ...prev]);
 startPollingFor(newDoc.id);
 ```
 
@@ -70,10 +70,10 @@ upload success
 
 ## 4. 组件改造范围
 
-| 文件 | 变更 |
-|------|------|
-| `src/app/knowledge/page.tsx` 或其 client 组件 | 上传后 optimistic insert；管理 `hasActiveDoc` state 和轮询逻辑 |
-| `src/lib/config.ts` | 确认 `POLL_INTERVAL_MS` 值，必要时新增 `ACTIVE_POLL_INTERVAL_MS`（可与现有值相同） |
+| 文件                                          | 变更                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/app/knowledge/page.tsx` 或其 client 组件 | 上传后 optimistic insert；管理 `hasActiveDoc` state 和轮询逻辑                     |
+| `src/lib/config.ts`                           | 确认 `POLL_INTERVAL_MS` 值，必要时新增 `ACTIVE_POLL_INTERVAL_MS`（可与现有值相同） |
 
 实施前需读取 knowledge 页面的完整实现（确认 client/server 拆分方式、现有轮询代码位置）。
 

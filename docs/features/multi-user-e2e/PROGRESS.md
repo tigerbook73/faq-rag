@@ -38,6 +38,7 @@
 ## 下一步
 
 启动阶段 1：
+
 1. 新增 `e2e/global-setup.ts`，为三个账号生成 storageState。
 2. 新增 `e2e/fixtures/auth.ts`，暴露 `adminPage`、`user1Page`、`user2Page`。
 3. 更新 `playwright.config.ts` 引用 globalSetup。

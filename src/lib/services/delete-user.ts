@@ -18,7 +18,10 @@ export async function deleteUserAccount(userId: string) {
       .filter((document) => !!document.fileRef)
       .map((document) =>
         deleteUploadedFile(document.fileRef as string).catch((error) => {
-          logger.warn({ error, userId, documentId: document.id, fileRef: document.fileRef }, "user storage delete failed");
+          logger.warn(
+            { error, userId, documentId: document.id, fileRef: document.fileRef },
+            "user storage delete failed",
+          );
         }),
       ),
   );

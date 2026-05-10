@@ -394,8 +394,8 @@ const session = await getSessionForUser(actor.id, sessionId);
 建议函数签名：
 
 ```ts
-retrieve(userQuery, { userId, traceId, provider })
-vectorSearch(embedding, topK, userId)
+retrieve(userQuery, { userId, traceId, provider });
+vectorSearch(embedding, topK, userId);
 ```
 
 可用文档 SQL 条件：

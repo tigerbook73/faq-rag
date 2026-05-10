@@ -36,7 +36,11 @@ describe("/api/documents/[id]", () => {
   });
 
   it("updates visibility only for the current owner", async () => {
-    mockUpdateDocumentVisibilityForOwner.mockResolvedValue({ id: "doc-1", ownerUserId: "user-1", visibility: "public" });
+    mockUpdateDocumentVisibilityForOwner.mockResolvedValue({
+      id: "doc-1",
+      ownerUserId: "user-1",
+      visibility: "public",
+    });
 
     const res = await PATCH(jsonRequest({ visibility: "public" }) as never, params);
 

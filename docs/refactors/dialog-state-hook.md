@@ -7,6 +7,7 @@
 `AdminDocumentsWorkspace` 也有相同的模式。
 
 **当前模式（以删除 dialog 为例）**：
+
 ```typescript
 const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
 const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -25,6 +26,7 @@ setDeleteTarget(null);
 ## 实现
 
 **新建文件** `src/hooks/useDialog.ts`：
+
 ```typescript
 import { useState, useCallback } from "react";
 
@@ -47,7 +49,9 @@ export function useDialog<T = null>() {
     openEmpty,
     close,
     // shadcn Dialog 的 onOpenChange 兼容
-    onOpenChange: (open: boolean) => { if (!open) close(); },
+    onOpenChange: (open: boolean) => {
+      if (!open) close();
+    },
   };
 }
 ```
@@ -77,6 +81,7 @@ const passwordDialog = useDialog<AdminUser>();
 ```
 
 使用示例：
+
 ```typescript
 // 打开删除 dialog
 deleteDialog.openWith(user);
@@ -99,10 +104,10 @@ deleteDialog.openWith(user);
 
 ## 变更范围
 
-| 文件 | 变更类型 |
-|------|---------|
-| `src/hooks/useDialog.ts` | 新增 |
-| `src/components/admin/AdminUsersWorkspace.tsx` | 重构（减少 ~8 个 useState） |
+| 文件                                               | 变更类型                    |
+| -------------------------------------------------- | --------------------------- |
+| `src/hooks/useDialog.ts`                           | 新增                        |
+| `src/components/admin/AdminUsersWorkspace.tsx`     | 重构（减少 ~8 个 useState） |
 | `src/components/admin/AdminDocumentsWorkspace.tsx` | 重构（减少 ~2 个 useState） |
 
 ---

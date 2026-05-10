@@ -12,10 +12,7 @@ import { type PublicDocumentItem as PublicDocument } from "@/lib/schemas/documen
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function PublicDocumentTable() {
-  const { data, mutate } = useSWR<{ items: PublicDocument[] }>(
-    "/api/public-documents",
-    fetcher,
-  );
+  const { data, mutate } = useSWR<{ items: PublicDocument[] }>("/api/public-documents", fetcher);
   const documents = useMemo(() => data?.items ?? [], [data]);
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -29,9 +26,7 @@ export function PublicDocumentTable() {
   async function handleSelectionChange(id: string, selected: boolean) {
     mutate(
       (current) =>
-        current
-          ? { items: current.items.map((doc) => (doc.id === id ? { ...doc, selected } : doc)) }
-          : current,
+        current ? { items: current.items.map((doc) => (doc.id === id ? { ...doc, selected } : doc)) } : current,
       false,
     );
     setUpdatingId(id);

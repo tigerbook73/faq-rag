@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const PUBLIC_PATHS = ["/auth/signin", "/about", "/api/ingest-hook"];
+import { buildCurrentPath, canBypassAuthProxy } from "@/lib/route-policy";
 
 export async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
 
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (canBypassAuthProxy(pathname)) {
     return NextResponse.next();
   }
 
@@ -33,7 +32,7 @@ export async function proxy(req: NextRequest) {
 
   if (!session) {
     const loginUrl = new URL("/auth/signin", req.url);
-    loginUrl.searchParams.set("from", pathname);
+    loginUrl.searchParams.set("from", buildCurrentPath(pathname, search));
     return NextResponse.redirect(loginUrl);
   }
 

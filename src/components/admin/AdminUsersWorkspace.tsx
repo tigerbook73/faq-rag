@@ -208,9 +208,7 @@ export function AdminUsersWorkspace() {
                 disabled={creating}
                 onChange={(e) => setCreateEmail(e.target.value)}
               />
-              {createErrors.email && (
-                <p className="text-destructive text-sm">{createErrors.email}</p>
-              )}
+              {createErrors.email && <p className="text-destructive text-sm">{createErrors.email}</p>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="create-password">Password</Label>
@@ -222,17 +220,10 @@ export function AdminUsersWorkspace() {
                 disabled={creating}
                 onChange={(e) => setCreatePassword(e.target.value)}
               />
-              {createErrors.password && (
-                <p className="text-destructive text-sm">{createErrors.password}</p>
-              )}
+              {createErrors.password && <p className="text-destructive text-sm">{createErrors.password}</p>}
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={creating}
-                onClick={() => setCreateOpen(false)}
-              >
+              <Button type="button" variant="outline" disabled={creating} onClick={() => setCreateOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={creating}>
@@ -249,8 +240,8 @@ export function AdminUsersWorkspace() {
           <DialogHeader>
             <DialogTitle>Delete User?</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>{deleteTarget?.email}</strong>&apos;s account, documents,
-              sessions, and all associated data. This action cannot be undone.
+              This will permanently delete <strong>{deleteTarget?.email}</strong>&apos;s account, documents, sessions,
+              and all associated data. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -291,9 +282,7 @@ export function AdminUsersWorkspace() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
-            {passwordError && (
-              <p className="text-destructive text-sm">{passwordError}</p>
-            )}
+            {passwordError && <p className="text-destructive text-sm">{passwordError}</p>}
           </div>
           <DialogFooter>
             <Button
@@ -306,10 +295,7 @@ export function AdminUsersWorkspace() {
             >
               Cancel
             </Button>
-            <Button
-              disabled={!!changingPasswordId}
-              onClick={handleChangePassword}
-            >
+            <Button disabled={!!changingPasswordId} onClick={handleChangePassword}>
               {changingPasswordId ? "Updating…" : "Confirm"}
             </Button>
           </DialogFooter>

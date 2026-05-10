@@ -17,11 +17,7 @@ export function useChatSessions() {
   const router = useRouter();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const {
-    data: sessions = [],
-    isLoading: isLoadingSessions,
-    mutate,
-  } = useSWR<ChatSession[]>(SWR_KEY, fetcher);
+  const { data: sessions = [], isLoading: isLoadingSessions, mutate } = useSWR<ChatSession[]>(SWR_KEY, fetcher);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -48,10 +44,7 @@ export function useChatSessions() {
       const trimmed = editValue.trim();
       setEditingId(null);
       if (!trimmed) return;
-      mutate(
-        (current) => current?.map((s) => (s.id === id ? { ...s, title: trimmed } : s)),
-        false,
-      );
+      mutate((current) => current?.map((s) => (s.id === id ? { ...s, title: trimmed } : s)), false);
       try {
         await updateSessionTitle(id, trimmed);
       } catch {
@@ -103,10 +96,7 @@ export function useChatSessions() {
     async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
       e.stopPropagation();
-      mutate(
-        (current) => current?.filter((s) => s.id !== id),
-        false,
-      );
+      mutate((current) => current?.filter((s) => s.id !== id), false);
       if (pathname === `/chat/${id}`) router.replace("/chat/new");
       try {
         await apiDeleteSession(id);

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import type { InitialAuthState } from "@/context/auth-context";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -18,11 +20,27 @@ export const metadata: Metadata = {
   description: "Knowledge base Q&A powered by RAG",
 };
 
-export default function RootLayout({
+async function getInitialAuthState(): Promise<InitialAuthState> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return {
+    isAuthenticated: Boolean(session),
+    role: null,
+    email: session?.user.email ?? null,
+    id: null,
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialAuthState = await getInitialAuthState();
+
   return (
     <html
       lang="en"
@@ -30,7 +48,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex h-full flex-col overflow-hidden">
-        <Providers>{children}</Providers>
+        <Providers initialAuthState={initialAuthState}>{children}</Providers>
       </body>
     </html>
   );

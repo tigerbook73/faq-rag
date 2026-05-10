@@ -8,14 +8,14 @@
 
 但以下 API 响应类型**尚未遵循此模式**，仍以手写 interface 散落在 UI 组件或缺乏显式类型：
 
-| 类型 | 当前位置 | 问题 |
-|------|---------|------|
-| `Document` | `components/knowledge/DocumentRow.tsx` | lib 层钩子从 UI 组件导入类型 |
-| `AdminDocument` | `components/admin/AdminDocumentsWorkspace.tsx` | 页面文件跨模块导入自 UI 组件 |
-| `AdminUser` | `components/admin/AdminUsersWorkspace.tsx` | 同上，且字段不完整（缺 `_count`） |
-| `PublicDocument` | `components/knowledge/PublicDocumentTable.tsx` | API 响应无显式 schema 约束 |
-| `/api/auth/me` 响应 | 无 | `auth-context.tsx` 直接 `any` 访问字段 |
-| `Citation` 再导出 | `components/chat/CitationDrawer.tsx` | 组件充当类型中转站 |
+| 类型                | 当前位置                                       | 问题                                   |
+| ------------------- | ---------------------------------------------- | -------------------------------------- |
+| `Document`          | `components/knowledge/DocumentRow.tsx`         | lib 层钩子从 UI 组件导入类型           |
+| `AdminDocument`     | `components/admin/AdminDocumentsWorkspace.tsx` | 页面文件跨模块导入自 UI 组件           |
+| `AdminUser`         | `components/admin/AdminUsersWorkspace.tsx`     | 同上，且字段不完整（缺 `_count`）      |
+| `PublicDocument`    | `components/knowledge/PublicDocumentTable.tsx` | API 响应无显式 schema 约束             |
+| `/api/auth/me` 响应 | 无                                             | `auth-context.tsx` 直接 `any` 访问字段 |
+| `Citation` 再导出   | `components/chat/CitationDrawer.tsx`           | 组件充当类型中转站                     |
 
 **不在本次范围内**（位置合理，无需移动）：
 
@@ -118,34 +118,34 @@ export type AuthMeResponse = z.infer<typeof AuthMeResponseSchema>;
 
 ### 3. 更新各消费方的导入路径
 
-| 文件 | 变更 |
-|------|------|
-| `src/components/knowledge/DocumentRow.tsx` | 删除 `export interface Document`，改从 `@/lib/schemas/document` 导入 `DocumentItem`（本地 alias 为 `Document` 保持组件内部不变） |
-| `src/components/knowledge/DocumentTable/useDocumentManagement.ts` | 从 `@/lib/schemas/document` 导入 `DocumentItem`，替换原来从 `DocumentRow.tsx` 导入的 `Document` |
-| `src/components/admin/AdminDocumentsWorkspace.tsx` | 删除 `export interface AdminDocument`，改从 `@/lib/schemas/document` 导入 `AdminDocumentItem` |
-| `src/components/admin/AdminUsersWorkspace.tsx` | 删除 `export interface AdminUser`，改从 `@/lib/schemas/user` 导入 `AdminUserItem` |
-| `src/components/knowledge/PublicDocumentTable.tsx` | 删除 `export interface PublicDocument`，改从 `@/lib/schemas/document` 导入 `PublicDocumentItem` |
-| `src/app/admin/page.tsx` | 更新 `AdminDocumentItem` 导入路径（从 schemas/ 而非 AdminDocumentsWorkspace） |
-| `src/components/chat/CitationDrawer.tsx` | 删除 `export type { Citation }` 这行再导出 |
-| 所有从 `CitationDrawer` 导入 `Citation` 的文件 | 改从 `@/lib/schemas/session` 直接导入 |
-| `src/context/auth-context.tsx` | 用 `AuthMeResponseSchema.safeParse(data)` 替换裸访问 `data.role`/`data.id` |
+| 文件                                                              | 变更                                                                                                                             |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/knowledge/DocumentRow.tsx`                        | 删除 `export interface Document`，改从 `@/lib/schemas/document` 导入 `DocumentItem`（本地 alias 为 `Document` 保持组件内部不变） |
+| `src/components/knowledge/DocumentTable/useDocumentManagement.ts` | 从 `@/lib/schemas/document` 导入 `DocumentItem`，替换原来从 `DocumentRow.tsx` 导入的 `Document`                                  |
+| `src/components/admin/AdminDocumentsWorkspace.tsx`                | 删除 `export interface AdminDocument`，改从 `@/lib/schemas/document` 导入 `AdminDocumentItem`                                    |
+| `src/components/admin/AdminUsersWorkspace.tsx`                    | 删除 `export interface AdminUser`，改从 `@/lib/schemas/user` 导入 `AdminUserItem`                                                |
+| `src/components/knowledge/PublicDocumentTable.tsx`                | 删除 `export interface PublicDocument`，改从 `@/lib/schemas/document` 导入 `PublicDocumentItem`                                  |
+| `src/app/admin/page.tsx`                                          | 更新 `AdminDocumentItem` 导入路径（从 schemas/ 而非 AdminDocumentsWorkspace）                                                    |
+| `src/components/chat/CitationDrawer.tsx`                          | 删除 `export type { Citation }` 这行再导出                                                                                       |
+| 所有从 `CitationDrawer` 导入 `Citation` 的文件                    | 改从 `@/lib/schemas/session` 直接导入                                                                                            |
+| `src/context/auth-context.tsx`                                    | 用 `AuthMeResponseSchema.safeParse(data)` 替换裸访问 `data.role`/`data.id`                                                       |
 
 ---
 
 ## 受影响文件汇总
 
-| 文件 | 变更类型 |
-|------|---------|
-| `src/lib/schemas/document.ts` | 追加 `DocumentItemSchema`、`AdminDocumentItemSchema`、`PublicDocumentItemSchema` |
-| `src/lib/schemas/user.ts` | 追加 `AdminUserItemSchema`、`AuthMeResponseSchema` |
-| `src/components/knowledge/DocumentRow.tsx` | 删除 interface，改为导入 |
-| `src/components/knowledge/DocumentTable/useDocumentManagement.ts` | 更新导入路径 |
-| `src/components/admin/AdminDocumentsWorkspace.tsx` | 删除 interface，改为导入 |
-| `src/components/admin/AdminUsersWorkspace.tsx` | 删除 interface，改为导入 |
-| `src/components/knowledge/PublicDocumentTable.tsx` | 删除 interface，改为导入 |
-| `src/app/admin/page.tsx` | 更新导入路径 |
-| `src/components/chat/CitationDrawer.tsx` | 删除 re-export |
-| `src/context/auth-context.tsx` | 用 schema 解析替换裸字段访问 |
+| 文件                                                              | 变更类型                                                                         |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/lib/schemas/document.ts`                                     | 追加 `DocumentItemSchema`、`AdminDocumentItemSchema`、`PublicDocumentItemSchema` |
+| `src/lib/schemas/user.ts`                                         | 追加 `AdminUserItemSchema`、`AuthMeResponseSchema`                               |
+| `src/components/knowledge/DocumentRow.tsx`                        | 删除 interface，改为导入                                                         |
+| `src/components/knowledge/DocumentTable/useDocumentManagement.ts` | 更新导入路径                                                                     |
+| `src/components/admin/AdminDocumentsWorkspace.tsx`                | 删除 interface，改为导入                                                         |
+| `src/components/admin/AdminUsersWorkspace.tsx`                    | 删除 interface，改为导入                                                         |
+| `src/components/knowledge/PublicDocumentTable.tsx`                | 删除 interface，改为导入                                                         |
+| `src/app/admin/page.tsx`                                          | 更新导入路径                                                                     |
+| `src/components/chat/CitationDrawer.tsx`                          | 删除 re-export                                                                   |
+| `src/context/auth-context.tsx`                                    | 用 schema 解析替换裸字段访问                                                     |
 
 ---
 

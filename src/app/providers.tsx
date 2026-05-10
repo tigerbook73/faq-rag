@@ -10,13 +10,15 @@ import { TopBar } from "@/components/layout/TopBar";
 import { PageTitleProvider } from "@/context/page-title-context";
 import { ProviderContextProvider } from "@/context/provider-context";
 import { AuthContextProvider } from "@/context/auth-context";
+import type { InitialAuthState } from "@/context/auth-context";
 import { useAuth } from "@/context/auth-context";
+import { isAdminRoute, shouldHideSidebar } from "@/lib/route-policy";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const pathname = usePathname();
-  const isAdmin = pathname.startsWith("/admin");
-  const isSignIn = pathname === "/auth/signin";
+  const isAdmin = isAdminRoute(pathname);
+  const hideSidebar = shouldHideSidebar(pathname, isAuthenticated);
 
   if (isAdmin) {
     return (
@@ -29,7 +31,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-      {!isSignIn && (isAuthenticated || isAuthLoading) && <AppSidebar />}
+      {!hideSidebar && (isAuthenticated || isAuthLoading) && <AppSidebar />}
       <SidebarInset className="flex flex-col overflow-hidden">
         <TopBar />
         {children}
@@ -39,10 +41,16 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  initialAuthState,
+}: {
+  children: React.ReactNode;
+  initialAuthState: InitialAuthState;
+}) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <AuthContextProvider>
+      <AuthContextProvider initialAuthState={initialAuthState}>
         <PageTitleProvider>
           <ProviderContextProvider>
             <TooltipProvider>

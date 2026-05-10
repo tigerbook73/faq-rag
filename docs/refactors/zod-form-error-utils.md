@@ -53,12 +53,13 @@ export function parseZodFieldErrors<T extends Record<string, unknown>>(
 
 ## 受影响文件
 
-| 文件 | 变更类型 |
-|------|---------|
-| `src/lib/form-utils.ts` | 新增（或并入现有工具文件） |
+| 文件                                           | 变更类型                                     |
+| ---------------------------------------------- | -------------------------------------------- |
+| `src/lib/form-utils.ts`                        | 新增（或并入现有工具文件）                   |
 | `src/components/admin/AdminUsersWorkspace.tsx` | 替换两处手写循环，改用 `parseZodFieldErrors` |
 
 **替换后示例**：
+
 ```typescript
 // 替换前
 const errors: { email?: string; password?: string } = {};

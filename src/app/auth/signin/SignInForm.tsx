@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { lastChat } from "@/lib/last-chat";
+import { sanitizeRedirectPath } from "@/lib/route-policy";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ const DEMO_ACCOUNTS = [
 export function SignInForm() {
   const router = useRouter();
   const explicitFrom = useSearchParams().get("from");
+  const redirectTarget = sanitizeRedirectPath(explicitFrom);
   const [email, setEmail] = useState("admin@test.com");
   const [password, setPassword] = useState("admin@123");
   const [showPassword, setShowPassword] = useState(false);
@@ -48,22 +50,8 @@ export function SignInForm() {
       return;
     }
 
-    if (explicitFrom) {
-      router.refresh();
-      router.replace(explicitFrom);
-      return;
-    }
-
-    // No explicit redirect target — check business role to determine landing page
-    try {
-      const res = await fetch("/api/auth/me");
-      const profile = await res.json().catch(() => ({}));
-      router.refresh();
-      router.replace(profile.role === "admin" ? "/admin" : "/chat/new");
-    } catch {
-      router.refresh();
-      router.replace("/chat/new");
-    }
+    router.refresh();
+    router.replace(redirectTarget);
   }
 
   return (

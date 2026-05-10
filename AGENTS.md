@@ -12,7 +12,7 @@ Before changing typography, spacing, layout widths, mobile sidebar/header behavi
 
 ## Feature Documentation System
 
-Feature work should use a discoverable lightweight documentation bundle under `Docs/features/<feature-id>/`.
+Feature work should use a discoverable lightweight documentation bundle under `docs/features/<feature-id>/`.
 
 Required structure:
 

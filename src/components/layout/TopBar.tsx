@@ -14,6 +14,7 @@ import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getLastChatHref } from "@/lib/last-chat";
+import { isSignInRoute, shouldHideSidebar } from "@/lib/route-policy";
 
 export function TopBar() {
   const { isAuthenticated, isAuthLoading, role, email } = useAuth();
@@ -29,13 +30,14 @@ export function TopBar() {
   const { subtitle } = usePageTitle();
   const { provider, setProvider } = useProvider();
 
-  const isSignIn = pathname === "/auth/signin";
+  const isSignIn = isSignInRoute(pathname);
+  const hideSidebar = shouldHideSidebar(pathname, isAuthenticated);
   const isChat = pathname.startsWith("/chat");
 
   return (
     <header className="bg-background flex h-12 shrink-0 items-center justify-between border-b px-3 sm:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        {isSignIn || (!isAuthenticated && !isAuthLoading) ? (
+        {hideSidebar || (!isAuthenticated && !isAuthLoading) ? (
           <LibraryBig className="size-6 shrink-0" />
         ) : (
           <>

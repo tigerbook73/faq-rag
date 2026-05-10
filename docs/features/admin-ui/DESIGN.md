@@ -103,11 +103,11 @@ src/app/api/admin/
 
 左侧导航包含：
 
-| 标签 | 路由 | 激活规则 | 图标建议 |
-| --- | --- | --- | --- |
-| Dashboard | `/admin` | `pathname === "/admin"` | `LayoutDashboard` |
-| Users | `/admin/users` | `pathname.startsWith("/admin/users")` | `Users` |
-| Documents | `/admin/documents` | `pathname.startsWith("/admin/documents")` | `Files` |
+| 标签      | 路由               | 激活规则                                  | 图标建议          |
+| --------- | ------------------ | ----------------------------------------- | ----------------- |
+| Dashboard | `/admin`           | `pathname === "/admin"`                   | `LayoutDashboard` |
+| Users     | `/admin/users`     | `pathname.startsWith("/admin/users")`     | `Users`           |
+| Documents | `/admin/documents` | `pathname.startsWith("/admin/documents")` | `Files`           |
 
 导航风格复用 `src/components/ui/sidebar.tsx` 的模式和密度，但组件应独立命名，例如 `AdminSidebar`，避免与主界面的 `AppSidebar` 混在一起。
 
@@ -130,6 +130,7 @@ Admin 顶部栏提供明显按钮：
 **TopBar.tsx 更新**：
 
 在 SignOut 按钮左侧插入 Email 显示：
+
 - 仅登录状态可见，小屏幕隐藏（`hidden sm:inline`）
 - SignOut 按钮 `title` 属性（tooltip）：`Sign out (${email})`
 
@@ -241,7 +242,7 @@ Server side 读取：
 z.object({
   email: z.string().email(),
   password: z.string().min(6),
-})
+});
 ```
 
 - 服务层继续调用 `createUserAccount({ role: "user" })`。
@@ -283,7 +284,7 @@ z.object({
 - 新增 `src/lib/services/update-user-password.ts`，使用 Supabase service role：
 
 ```ts
-supabase.auth.admin.updateUserById(userId, { password })
+supabase.auth.admin.updateUserById(userId, { password });
 ```
 
 响应：
