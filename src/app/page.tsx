@@ -4,10 +4,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export default async function Home() {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (session) redirect("/chat/last");
+  if (user) redirect("/chat/last");
 
   redirect("/about");
 }

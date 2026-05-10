@@ -24,16 +24,16 @@ export async function proxy(req: NextRequest) {
   });
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (isSignIn) {
-    if (!session) return NextResponse.next();
+    if (!user) return NextResponse.next();
 
     const { data: profile, error } = await supabase
       .from("user_profiles")
       .select("role")
-      .eq("id", session.user.id)
+      .eq("id", user.id)
       .maybeSingle();
 
     if (error || (profile?.role !== "admin" && profile?.role !== "user")) {
@@ -48,7 +48,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!session) {
+  if (!user) {
     const loginUrl = new URL("/auth/signin", req.url);
     loginUrl.searchParams.set("from", buildCurrentPath(pathname, search));
     return NextResponse.redirect(loginUrl);

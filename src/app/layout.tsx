@@ -23,13 +23,13 @@ export const metadata: Metadata = {
 async function getInitialAuthState(): Promise<InitialAuthState> {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return {
-    isAuthenticated: Boolean(session),
+    isAuthenticated: Boolean(user),
     role: null,
-    email: session?.user.email ?? null,
+    email: user?.email ?? null,
     id: null,
   };
 }
