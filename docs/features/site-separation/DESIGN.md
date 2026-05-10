@@ -40,14 +40,7 @@
 建议类型：
 
 ```ts
-type RouteAccess =
-  | "public"
-  | "sign-in"
-  | "user-private"
-  | "admin-private"
-  | "public-api"
-  | "user-api"
-  | "admin-api";
+type RouteAccess = "public" | "sign-in" | "user-private" | "admin-private" | "public-api" | "user-api" | "admin-api";
 ```
 
 建议 helper：

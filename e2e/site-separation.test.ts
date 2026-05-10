@@ -4,7 +4,9 @@ import { signIn, signInOnCurrentPage } from "./helpers";
 test.describe("Site separation", () => {
   test("anonymous users are redirected to the unified sign-in page with from", async ({ page }) => {
     await page.goto("/chat/last");
-    await expect(page).toHaveURL((url) => url.pathname === "/auth/signin" && url.searchParams.get("from") === "/chat/last");
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/auth/signin" && url.searchParams.get("from") === "/chat/last",
+    );
 
     await page.goto("/admin");
     await expect(page).toHaveURL((url) => url.pathname === "/auth/signin" && url.searchParams.get("from") === "/admin");

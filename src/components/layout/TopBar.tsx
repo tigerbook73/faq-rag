@@ -15,6 +15,37 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getLastChatHref } from "@/lib/last-chat";
 import { isSignInRoute, shouldHideSidebar } from "@/lib/route-policy";
 
+function AuthButton({
+  isAuthLoading,
+  isAuthenticated,
+  email,
+}: {
+  isAuthLoading: boolean;
+  isAuthenticated: boolean;
+  email: string | null;
+}) {
+  if (isAuthLoading) return <Skeleton className="h-8 w-8 rounded-full" />;
+  if (isAuthenticated)
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        title={email ? `Sign out (${email})` : "Sign out"}
+        aria-label={email ? `Sign out (${email})` : "Sign out"}
+        nativeButton={false}
+        render={<Link href="/auth/signout" />}
+      >
+        <LogOut className="h-4 w-4" />
+      </Button>
+    );
+  return (
+    <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/signin" />}>
+      <LogIn className="h-4 w-4" />
+      Sign In
+    </Button>
+  );
+}
+
 export function TopBar() {
   const { isAuthenticated, isAuthLoading, role, email } = useAuth();
   const router = useRouter();
@@ -33,12 +64,9 @@ export function TopBar() {
         {hideSidebar || (!isAuthenticated && !isAuthLoading) ? (
           <LibraryBig className="size-6 shrink-0" />
         ) : (
-          <>
-            <SidebarTrigger className="size-10 shrink-0 md:hidden">
-              <LibraryBig className="size-6" />
-            </SidebarTrigger>
-            <LibraryBig className="hidden size-6 shrink-0 md:block" />
-          </>
+          <SidebarTrigger className="size-10 shrink-0">
+            <LibraryBig className="size-6" />
+          </SidebarTrigger>
         )}
         <Link href="/chat/new" className="truncate text-base font-bold">
           FAQ-RAG
@@ -60,41 +88,28 @@ export function TopBar() {
             <Separator orientation="vertical" className="my-2 hidden self-stretch sm:block" />
           </>
         )}
-        {isSignIn ? (
-          <nav className="mr-2 hidden items-center gap-3 text-sm md:flex">
-            <Link href="/about" className="text-muted-foreground">
-              About
-            </Link>
-          </nav>
-        ) : (
-          <>
-            <nav className="mr-2 hidden items-center gap-3 text-sm md:flex">
-              {isAuthenticated && (
-                <>
-                  <Link
-                    href="/chat/last"
-                    className={isChat ? "font-medium" : "text-muted-foreground"}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      router.push(getLastChatHref());
-                    }}
-                  >
-                    Chat
-                  </Link>
-                  <Link
-                    href="/knowledge"
-                    className={pathname === "/knowledge" ? "font-medium" : "text-muted-foreground"}
-                  >
-                    Knowledge
-                  </Link>
-                </>
-              )}
-              <Link href="/about" className={pathname === "/about" ? "font-medium" : "text-muted-foreground"}>
-                About
+        <nav className="mr-2 hidden items-center gap-3 text-sm md:flex">
+          {!isSignIn && isAuthenticated && (
+            <>
+              <Link
+                href="/chat/last"
+                className={isChat ? "font-medium" : "text-muted-foreground"}
+                onClick={(event) => {
+                  event.preventDefault();
+                  router.push(getLastChatHref());
+                }}
+              >
+                Chat
               </Link>
-            </nav>
-          </>
-        )}
+              <Link href="/knowledge" className={pathname === "/knowledge" ? "font-medium" : "text-muted-foreground"}>
+                Knowledge
+              </Link>
+            </>
+          )}
+          <Link href="/about" className={pathname === "/about" ? "font-medium" : "text-muted-foreground"}>
+            About
+          </Link>
+        </nav>
         {!isSignIn && <Separator orientation="vertical" className="my-2 hidden self-stretch md:block" />}
         {!isSignIn && role === "admin" && (
           <Button
@@ -118,26 +133,7 @@ export function TopBar() {
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
         </Button>
-        {!isSignIn &&
-          (isAuthLoading ? (
-            <Skeleton className="h-8 w-8 rounded-full" />
-          ) : isAuthenticated ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              title={email ? `Sign out (${email})` : "Sign out"}
-              aria-label={email ? `Sign out (${email})` : "Sign out"}
-              nativeButton={false}
-              render={<Link href="/auth/signout" />}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/auth/signin" />}>
-              <LogIn className="h-4 w-4" />
-              Sign In
-            </Button>
-          ))}
+        {!isSignIn && <AuthButton isAuthLoading={isAuthLoading} isAuthenticated={isAuthenticated} email={email} />}
       </div>
     </header>
   );
