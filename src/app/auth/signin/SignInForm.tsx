@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { lastChat } from "@/lib/last-chat";
 import { sanitizeRedirectPath } from "@/lib/route-policy";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
@@ -37,21 +36,25 @@ export function SignInForm() {
     setPending(true);
     setError(null);
 
-    const supabase = createSupabaseBrowserClient();
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const res = await fetch("/api/auth/signin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        from: explicitFrom,
+      }),
     });
+    const body = await res.json().catch(() => null);
 
-    if (authError) {
-      setError(authError.message);
+    if (!res.ok) {
+      setError(body?.error ?? "Sign in failed");
       setPending(false);
       return;
     }
 
     router.refresh();
-    router.replace(redirectTarget);
+    router.replace(body?.redirectTo ?? redirectTarget);
   }
 
   return (

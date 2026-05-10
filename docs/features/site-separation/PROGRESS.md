@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 2: auth helper整理 implemented. Ready to continue with Phase 3 server-side sign-in.
+Phase 3: server-side sign-in implemented. Ready to continue with Phase 4 proxy, page, and shell separation.
 
 ## Last Confirmed Commit
 
-94cccc2
+033ff18
 
 ## Confirmed Decisions
 
@@ -46,6 +46,10 @@ Phase 2: auth helper整理 implemented. Ready to continue with Phase 3 server-si
 - Kept `get-current-user.ts`、`require-user.ts`、`require-admin.ts` as compatibility re-export modules.
 - Confirmed `requireUser()` accepts role=admin profiles and `requireAdmin()` rejects role=user.
 - Added `/api/auth/me` route tests confirming the auth state includes `role`.
+- Added `POST /api/auth/signin` route handler with temporary Supabase credential verification, pre-cookie profile lookup, server `setSession()`, and role-aware redirect response.
+- Updated `/auth/signin` client form to call the server endpoint instead of browser direct sign-in.
+- Updated `/auth/signin` page to redirect already-authenticated users via `resolvePostLoginRedirect(role, from)`.
+- Added `/api/auth/signin` and `/auth/signout` route handler tests.
 
 ## Known Mismatches
 
@@ -56,17 +60,19 @@ Phase 2: auth helper整理 implemented. Ready to continue with Phase 3 server-si
 
 - `pnpm test src/lib/route-policy.test.ts`
 - `pnpm test src/lib/auth/helpers.test.ts src/app/api/auth/me/route.test.ts src/lib/route-policy.test.ts`
+- `pnpm test src/app/api/auth/signin/route.test.ts src/app/auth/signout/route.test.ts src/app/api/auth/me/route.test.ts src/lib/auth/helpers.test.ts src/lib/route-policy.test.ts`
 - `pnpm exec tsc --noEmit`
 
 ## Next Entry Point
 
-Phase 3 实施从以下开始：
+Phase 4 实施从以下开始：
 
-1. 新增 `POST /api/auth/signin`，使用服务端 endpoint 登录并写 session cookie。
-2. 将 `/auth/signin` 表单从 browser direct sign-in 改为调用 endpoint。
-3. 确认或更新 `GET /auth/signout` 行为。
-4. 添加 route handler 测试。
+1. 更新 `src/proxy.ts`：`/auth/signin` 已登录时按 role redirect；admin 私有页面有 session 时放行。
+2. admin layout 调用 `requireAdmin()`；role=user 时渲染 403 UI，不重定向。
+3. 新增 `/admin/about` 页面。
+4. 确认 user TopBar / Sidebar 的 Admin 按钮按 role 条件渲染。
+5. AdminSidebar 增加 About，以及 Chat / Knowledge 等 user 功能快捷入口。
 
 建议下一个实现 commit message：
 
-`site-separation phase 3: move sign-in to server endpoint`
+`site-separation phase 4: separate proxy and admin shell`

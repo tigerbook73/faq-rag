@@ -1,18 +1,23 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { sanitizeRedirectPath } from "@/lib/route-policy";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { AuthError } from "@/lib/auth/errors";
+import { getCurrentUser } from "@/lib/auth/helpers";
+import { resolvePostLoginRedirect } from "@/lib/route-policy";
 import { SignInForm } from "./SignInForm";
 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ from?: string | string[] }> }) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { from } = await searchParams;
+  const fromParam = Array.isArray(from) ? from[0] : from;
+  let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
 
-  if (session) {
-    const { from } = await searchParams;
-    redirect(sanitizeRedirectPath(Array.isArray(from) ? from[0] : from));
+  try {
+    user = await getCurrentUser();
+  } catch (error) {
+    if (!(error instanceof AuthError)) throw error;
+  }
+
+  if (user) {
+    redirect(resolvePostLoginRedirect(user.role, fromParam));
   }
 
   return (
