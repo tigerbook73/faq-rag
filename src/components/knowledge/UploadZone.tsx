@@ -130,17 +130,22 @@ export function UploadZone() {
     <div className="space-y-3">
       <div
         {...getRootProps()}
-        className={`cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+        className={`cursor-pointer rounded-xl border-2 border-dashed p-4 text-center transition-colors md:p-8 ${
           isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
         } ${progress !== null ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <input {...getInputProps()} />
         <p className="text-muted-foreground text-sm">
-          {progress !== null
-            ? `Uploading… ${progress}%`
-            : isDragActive
-              ? "Drop files here"
-              : "Drag & drop files here, or click to select"}
+          {progress !== null ? (
+            `Uploading… ${progress}%`
+          ) : isDragActive ? (
+            "Drop files here"
+          ) : (
+            <>
+              <span className="md:hidden">Select files to upload</span>
+              <span className="hidden md:inline">Drag & drop files here, or click to select</span>
+            </>
+          )}
         </p>
         <p className="text-muted-foreground/60 mt-1 text-xs">Supports .md .txt .pdf .docx</p>
       </div>
