@@ -1,5 +1,4 @@
 export const SIGN_IN_PATH = "/auth/signin";
-export const SIGN_OUT_PATH = "/auth/signout";
 export const USER_HOME_PATH = "/chat/last";
 export const ADMIN_HOME_PATH = "/admin";
 export const SIGNED_IN_HOME_PATH = USER_HOME_PATH;
@@ -52,13 +51,6 @@ const ROUTE_POLICIES: readonly RoutePolicy[] = [
     path: SIGN_IN_PATH,
     match: "prefix",
     access: "sign-in",
-    authProxyBypass: true,
-    sidebar: "always-hide",
-  },
-  {
-    path: SIGN_OUT_PATH,
-    match: "exact",
-    access: "public",
     authProxyBypass: true,
     sidebar: "always-hide",
   },
@@ -225,7 +217,6 @@ export function sanitizeRedirectPath(from: string | null | undefined, fallback =
 
   if (url.origin !== "http://app.local") return fallback;
   if (isSignInRoute(url.pathname)) return fallback;
-  if (url.pathname === SIGN_OUT_PATH) return fallback;
   if (url.pathname === "/api" || matchesPathPrefix(url.pathname, "/api")) return fallback;
   if (url.pathname === "/_next" || matchesPathPrefix(url.pathname, "/_next")) return fallback;
   if (!isRecognizedPageRoute(url.pathname)) return fallback;

@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, preventAuthResponseCaching, validationErrorResponse } from "@/lib/auth/api";
 import { getProfile } from "@/lib/auth/helpers";
 import { resolvePostLoginRedirect } from "@/lib/route-policy";
 
@@ -43,14 +43,18 @@ export async function POST(request: Request) {
   });
 
   if (error || !data.user || !data.session?.access_token || !data.session.refresh_token) {
-    return NextResponse.json({ error: error?.message ?? "Invalid email or password" }, { status: 401 });
+    return preventAuthResponseCaching(
+      NextResponse.json({ error: error?.message ?? "Invalid email or password" }, { status: 401 }),
+    );
   }
 
   try {
     const profile = await getProfile(data.user.id);
-    let response: NextResponse = NextResponse.json({
-      redirectTo: resolvePostLoginRedirect(profile.role, parsed.data.from),
-    });
+    let response: NextResponse = preventAuthResponseCaching(
+      NextResponse.json({
+        redirectTo: resolvePostLoginRedirect(profile.role, parsed.data.from),
+      }),
+    );
     const cookieStore = await cookies();
     const supabase = createServerClient(supabaseUrl(), supabaseAnonKey(), {
       cookies: {
@@ -68,7 +72,7 @@ export async function POST(request: Request) {
     });
 
     if (sessionError) {
-      response = NextResponse.json({ error: "Unable to create session" }, { status: 401 });
+      response = preventAuthResponseCaching(NextResponse.json({ error: "Unable to create session" }, { status: 401 }));
       await supabase.auth.signOut();
       return response;
     }

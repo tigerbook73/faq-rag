@@ -24,6 +24,11 @@ function AuthButton({
   isAuthenticated: boolean;
   email: string | null;
 }) {
+  async function handleSignOut() {
+    await fetch("/api/auth/signout", { method: "POST" }).catch(() => null);
+    window.location.assign("/auth/signin");
+  }
+
   if (isAuthLoading) return <Skeleton className="h-8 w-8 rounded-full" />;
   if (isAuthenticated)
     return (
@@ -32,8 +37,7 @@ function AuthButton({
         size="icon"
         title={email ? `Sign out (${email})` : "Sign out"}
         aria-label={email ? `Sign out (${email})` : "Sign out"}
-        nativeButton={false}
-        render={<Link href="/auth/signout" />}
+        onClick={handleSignOut}
       >
         <LogOut className="h-4 w-4" />
       </Button>

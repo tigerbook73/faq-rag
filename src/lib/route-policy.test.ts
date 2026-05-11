@@ -2,7 +2,6 @@ import {
   ADMIN_ACCESS_DENIED_PATH,
   ADMIN_HOME_PATH,
   SIGN_IN_PATH,
-  SIGN_OUT_PATH,
   USER_HOME_PATH,
   buildCurrentPath,
   canBypassAuthProxy,
@@ -41,7 +40,6 @@ describe("route-policy", () => {
       expect(getRouteAccess("/")).toBe("public");
       expect(getRouteAccess("/about")).toBe("public");
       expect(getRouteAccess(SIGN_IN_PATH)).toBe("sign-in");
-      expect(getRouteAccess(SIGN_OUT_PATH)).toBe("public");
       expect(getRouteAccess("/chat")).toBe("user-private");
       expect(getRouteAccess("/chat/last")).toBe("user-private");
       expect(getRouteAccess("/knowledge")).toBe("user-private");
@@ -68,7 +66,6 @@ describe("route-policy", () => {
       expect(canBypassAuthProxy("/")).toBe(true);
       expect(canBypassAuthProxy("/about")).toBe(true);
       expect(canBypassAuthProxy("/auth/signin")).toBe(true);
-      expect(canBypassAuthProxy("/auth/signout")).toBe(true);
       expect(canBypassAuthProxy("/api/health")).toBe(true);
       expect(canBypassAuthProxy("/api/auth/signin")).toBe(true);
       expect(canBypassAuthProxy("/api/auth/me")).toBe(true);
@@ -79,6 +76,7 @@ describe("route-policy", () => {
       expect(canBypassAuthProxy("/knowledge")).toBe(false);
       expect(canBypassAuthProxy("/admin")).toBe(false);
       expect(canBypassAuthProxy("/about/team")).toBe(false);
+      expect(canBypassAuthProxy("/auth/signout")).toBe(false);
       expect(canBypassAuthProxy("/api/ingest-hook-anything")).toBe(false);
     });
   });

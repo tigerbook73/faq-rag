@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { preventAuthResponseCaching } from "@/lib/auth/api";
 import { buildCurrentPath, canBypassAuthProxy, isSignInRoute, resolvePostLoginRedirect } from "@/lib/route-policy";
 
 export async function proxy(req: NextRequest) {
@@ -28,7 +29,7 @@ export async function proxy(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (isSignIn) {
-    if (!user) return NextResponse.next();
+    if (!user) return preventAuthResponseCaching(response);
 
     const { data: profile, error } = await supabase
       .from("user_profiles")
@@ -37,24 +38,24 @@ export async function proxy(req: NextRequest) {
       .maybeSingle();
 
     if (error || (profile?.role !== "admin" && profile?.role !== "user")) {
-      return NextResponse.next();
+      return preventAuthResponseCaching(response);
     }
 
     const redirectUrl = new URL(resolvePostLoginRedirect(profile.role, req.nextUrl.searchParams.get("from")), req.url);
-    return NextResponse.redirect(redirectUrl);
+    return preventAuthResponseCaching(NextResponse.redirect(redirectUrl));
   }
 
   if (canBypassAuthProxy(pathname)) {
-    return NextResponse.next();
+    return preventAuthResponseCaching(response);
   }
 
   if (!user) {
     const loginUrl = new URL("/auth/signin", req.url);
     loginUrl.searchParams.set("from", buildCurrentPath(pathname, search));
-    return NextResponse.redirect(loginUrl);
+    return preventAuthResponseCaching(NextResponse.redirect(loginUrl));
   }
 
-  return response;
+  return preventAuthResponseCaching(response);
 }
 
 export const config = {

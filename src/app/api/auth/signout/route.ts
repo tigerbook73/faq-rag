@@ -1,11 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { preventAuthResponseCaching } from "@/lib/auth/api";
 
-export async function GET() {
-  const response = NextResponse.redirect(
-    new URL("/auth/signin", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  );
+export async function POST() {
+  const response = preventAuthResponseCaching(NextResponse.json({ ok: true }));
   const cookieStore = await cookies();
   const supabase = createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
     cookies: {
@@ -17,6 +16,7 @@ export async function GET() {
       },
     },
   });
+
   await supabase.auth.signOut();
   return response;
 }

@@ -17,28 +17,21 @@ jest.mock("next/headers", () => ({
   }),
 }));
 
-jest.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: async () => ({
-    auth: {
-      signOut: mockSignOut,
-    },
-  }),
-}));
+import { POST } from "./route";
 
-import { GET } from "./route";
-
-describe("/auth/signout", () => {
+describe("/api/auth/signout", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
     mockSignOut.mockResolvedValue(undefined);
   });
 
-  it("signs out and redirects to sign-in", async () => {
-    const res = await GET();
+  it("signs out with POST and clears auth cookies", async () => {
+    const res = await POST();
 
     expect(mockSignOut).toHaveBeenCalledTimes(1);
-    expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/auth/signin");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    expect(res.headers.get("set-cookie")).toContain("sb-test-auth-token=");
+    expect(await res.json()).toEqual({ ok: true });
   });
 });

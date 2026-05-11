@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import type { ZodError } from "zod";
 import { AuthError } from "./errors";
 
+export function preventAuthResponseCaching(response: NextResponse) {
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
+}
+
 export function authErrorResponse(error: unknown) {
   if (error instanceof AuthError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
