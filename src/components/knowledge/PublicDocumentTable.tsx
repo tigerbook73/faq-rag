@@ -11,6 +11,10 @@ import { type PublicDocumentItem as PublicDocument } from "@/lib/schemas/documen
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+function documentCountLabel(count: number) {
+  return `${count} document${count === 1 ? "" : "s"}`;
+}
+
 export function PublicDocumentTable() {
   const { data, mutate } = useSWR<{ items: PublicDocument[] }>("/api/public-documents", fetcher);
   const documents = useMemo(() => data?.items ?? [], [data]);
@@ -51,15 +55,15 @@ export function PublicDocumentTable() {
   return (
     <section className="space-y-4">
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <div>
+        <div className="flex items-center justify-between gap-3 sm:block">
           <h2 className="text-app-section">Public documents</h2>
-          <p className="text-app-muted">Select public documents from other users for retrieval.</p>
+          <span className="text-app-muted sm:block">{documentCountLabel(documents.length)}</span>
         </div>
         <Input
           placeholder="Search public documents..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="sm:ml-auto sm:max-w-xs"
+          className="hidden md:block md:ml-auto md:max-w-xs"
         />
       </div>
 

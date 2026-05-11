@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 2 待开始
-- 状态：阶段 1 已完成；Knowledge workspace tabs 已接入，UploadZone 已移入 My documents tab
-- 最后确认的实现提交：`704defc knowledge-ui-layout: confirm review decisions`
-- 下一步入口：读取 `src/components/knowledge/DocumentTable/index.tsx` 和 `src/components/knowledge/PublicDocumentTable.tsx`，实施阶段 2：列表标题、数量和 My documents toolbar
+- 当前阶段：阶段 3 待开始
+- 状态：阶段 2 已完成；列表标题、数量、桌面 search 和 My documents toolbar 已调整
+- 最后确认的实现提交：`ddd6b5c knowledge-ui-layout phase 1: add workspace tabs`
+- 下一步入口：读取 `src/components/knowledge/DocumentRow.tsx`、`src/components/knowledge/DocumentDialogs.tsx`、`src/components/knowledge/DocumentTable/useDocumentManagement.ts`，实施阶段 3：My documents Actions 菜单
 
 ## 文档结构
 
@@ -24,6 +24,12 @@
   - `UploadZone` 和 `DocumentTable` 只在 My documents tab 内展示。
   - Public documents tab 首次切换时才挂载 `PublicDocumentTable`，之后 keep mounted 以保留状态。
   - `src/app/knowledge/page.tsx` 保持 server page，仅渲染 `PageShell` 和 `KnowledgeWorkspace`。
+- 2026-05-11 阶段 2 实施：
+  - My documents / Public documents subtitle 已移除，改为标题旁/下方紧凑数量信息。
+  - My documents / Public documents search 已改为 `md` 及以上显示。
+  - My documents refresh 保留为 icon button，并补充 `aria-label`。
+  - `Rebuild All` 已移入 My documents More 菜单，rebuilding 时 header 显示 `Rebuilding done/total`，菜单项 disabled。
+  - My documents 空状态文案已改为 `No documents yet. Upload a file to get started.`
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -42,7 +48,7 @@
 ## 阶段清单
 
 - [x] 阶段 1：Knowledge workspace tabs 和 UploadZone 分区
-- [ ] 阶段 2：列表标题、数量和 My documents toolbar
+- [x] 阶段 2：列表标题、数量和 My documents toolbar
 - [ ] 阶段 3：My documents Actions 菜单
 - [ ] 阶段 4：Public documents status 移除和 selection switch
 - [ ] 阶段 5：移动端 stacked rows
@@ -99,7 +105,7 @@
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1 通过。
+- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2 通过。
 - `pnpm exec jest`：待执行，如改动触达测试覆盖路径。
 - 人工验证：待执行。
 
@@ -108,15 +114,15 @@
 - [x] 移动端 `/knowledge` 首屏展示 My documents / Public documents tabs。
 - [x] `UploadZone` 只在 My documents tab 出现。
 - [ ] `UploadZone` 在移动端和已有文档场景下完成紧凑化。
-- [ ] My documents 和 Public documents 的 subtitle 被移除或替换为紧凑数量信息。
-- [ ] My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
+- [x] My documents 和 Public documents 的 subtitle 被移除或替换为紧凑数量信息。
+- [x] My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
 - [ ] My documents 行操作统一进入 Actions 菜单。
-- [ ] `Rebuild All` 统一位于 My documents header More 菜单。
-- [ ] Rebuild All 执行中时 header 显示紧凑进度，More 菜单项 disabled。
+- [x] `Rebuild All` 统一位于 My documents header More 菜单。
+- [x] Rebuild All 执行中时 header 显示紧凑进度，More 菜单项 disabled。
 - [ ] Public documents 不展示 status 列。
 - [ ] Public documents 使用 switch/toggle 管理 selection。
 - [ ] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
-- [ ] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
+- [x] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
 - [ ] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
 
 ## 恢复协议

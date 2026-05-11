@@ -3,10 +3,20 @@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, RefreshCw } from "lucide-react";
 import { useDocumentManagement } from "./useDocumentManagement";
 import { DocumentRow } from "@/components/knowledge/DocumentRow";
 import { DeleteDialog, RebuildDialog } from "@/components/knowledge/DocumentDialogs";
+
+function documentCountLabel(count: number) {
+  return `${count} document${count === 1 ? "" : "s"}`;
+}
 
 export function DocumentTable() {
   const {
@@ -34,12 +44,12 @@ export function DocumentTable() {
   if (allDocuments.length === 0) {
     return (
       <section className="space-y-4">
-        <div>
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-app-section">My documents</h2>
-          <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
+          <span className="text-app-muted">{documentCountLabel(allDocuments.length)}</span>
         </div>
         <div className="text-muted-foreground py-12 text-center text-sm">
-          No documents yet. Upload some files above.
+          No documents yet. Upload a file to get started.
         </div>
       </section>
     );
@@ -47,35 +57,44 @@ export function DocumentTable() {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-app-section">My documents</h2>
-        <p className="text-app-muted">Manage visibility, indexing, and deletion for your documents.</p>
-      </div>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center justify-between gap-3 sm:block">
+          <h2 className="text-app-section">My documents</h2>
+          <span className="text-app-muted sm:block">{documentCountLabel(allDocuments.length)}</span>
+        </div>
         <Input
           placeholder="Search documents…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="sm:max-w-xs"
+          className="hidden md:block md:max-w-xs"
         />
         <div className="flex items-center gap-2 sm:ml-auto">
+          {rebuildProgress && (
+            <span className="text-muted-foreground mr-auto text-sm sm:mr-0">
+              Rebuilding {rebuildProgress.done}/{rebuildProgress.total}
+            </span>
+          )}
           <Button
             variant="outline"
             size="icon"
             onClick={handleManualRefresh}
             disabled={isManualRefreshing}
-            title="Refresh Table"
+            title="Refresh documents"
+            aria-label="Refresh documents"
           >
             <RefreshCw className={`h-4 w-4 ${isManualRefreshing ? "animate-spin" : ""}`} />
           </Button>
-          <Button
-            variant="outline"
-            disabled={rebuilding}
-            onClick={() => setRebuildDialogOpen(true)}
-            className="w-full sm:w-auto"
-          >
-            {rebuildProgress ? `Rebuilding ${rebuildProgress.done}/${rebuildProgress.total}…` : "Rebuild All"}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="outline" size="icon" />}>
+              <MoreHorizontal />
+              <span className="sr-only">Open My documents actions</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem disabled={rebuilding} onClick={() => setRebuildDialogOpen(true)}>
+                Rebuild All
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
