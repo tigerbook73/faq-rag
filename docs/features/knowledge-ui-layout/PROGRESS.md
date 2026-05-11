@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：规划已确认，未开始实现
-- 状态：review 待确认点已写回 REQUIREMENTS / DESIGN，待开始阶段 1
-- 最后确认的实现提交：无
-- 下一步入口：用户确认文档后，读取 `src/app/knowledge/page.tsx`、`src/components/knowledge/DocumentTable/index.tsx`、`src/components/knowledge/DocumentRow.tsx`、`src/components/knowledge/PublicDocumentTable.tsx`、`src/components/knowledge/UploadZone.tsx`
+- 当前阶段：阶段 2 待开始
+- 状态：阶段 1 已完成；Knowledge workspace tabs 已接入，UploadZone 已移入 My documents tab
+- 最后确认的实现提交：`704defc knowledge-ui-layout: confirm review decisions`
+- 下一步入口：读取 `src/components/knowledge/DocumentTable/index.tsx` 和 `src/components/knowledge/PublicDocumentTable.tsx`，实施阶段 2：列表标题、数量和 My documents toolbar
 
 ## 文档结构
 
@@ -18,6 +18,12 @@
 
 - 2026-05-10 创建 feature 文档，尚无实现提交，无一致性冲突。
 - 2026-05-11 已处理 `REVIEW.md` 待确认点，并将决策写回 `REQUIREMENTS.md` / `DESIGN.md` / `PROGRESS.md`。
+- 2026-05-11 阶段 1 实施：
+  - 新增 `src/components/ui/tabs.tsx`，基于 Base UI Tabs 封装本地 Tabs 组件。
+  - 新增 `src/components/knowledge/KnowledgeWorkspace.tsx`，默认打开 My documents。
+  - `UploadZone` 和 `DocumentTable` 只在 My documents tab 内展示。
+  - Public documents tab 首次切换时才挂载 `PublicDocumentTable`，之后 keep mounted 以保留状态。
+  - `src/app/knowledge/page.tsx` 保持 server page，仅渲染 `PageShell` 和 `KnowledgeWorkspace`。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -35,7 +41,7 @@
 
 ## 阶段清单
 
-- [ ] 阶段 1：Knowledge workspace tabs 和 UploadZone 分区
+- [x] 阶段 1：Knowledge workspace tabs 和 UploadZone 分区
 - [ ] 阶段 2：列表标题、数量和 My documents toolbar
 - [ ] 阶段 3：My documents Actions 菜单
 - [ ] 阶段 4：Public documents status 移除和 selection switch
@@ -93,14 +99,14 @@
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：待执行。
+- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1 通过。
 - `pnpm exec jest`：待执行，如改动触达测试覆盖路径。
 - 人工验证：待执行。
 
 ## 验收清单
 
-- [ ] 移动端 `/knowledge` 首屏展示 My documents / Public documents tabs。
-- [ ] `UploadZone` 只在 My documents tab 出现。
+- [x] 移动端 `/knowledge` 首屏展示 My documents / Public documents tabs。
+- [x] `UploadZone` 只在 My documents tab 出现。
 - [ ] `UploadZone` 在移动端和已有文档场景下完成紧凑化。
 - [ ] My documents 和 Public documents 的 subtitle 被移除或替换为紧凑数量信息。
 - [ ] My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
