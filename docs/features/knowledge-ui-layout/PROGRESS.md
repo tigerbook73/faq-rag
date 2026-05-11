@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 6 待开始
-- 状态：阶段 5 已完成；My documents 和 Public documents 在 `md` 以下已使用 stacked rows，`md` 及以上保留 table
-- 最后确认的实现提交：`3b16795 knowledge-ui-layout phase 4: use public selection switch`
-- 下一步入口：读取 `src/components/knowledge/UploadZone.tsx`，实施阶段 6：UploadZone 紧凑化和视口验证
+- 当前阶段：阶段 6 验证待补
+- 状态：阶段 6 代码已完成；UploadZone 已按有无文档调整密度，类型检查和生产构建通过，受本地 auth 登录未完成影响，`/knowledge` 视口截图验证待补
+- 最后确认的实现提交：`92794d3 knowledge-ui-layout phase 5: stack mobile document rows`
+- 下一步入口：本地 auth 可用后打开 `/knowledge`，补移动端和桌面视口验证
 
 ## 文档结构
 
@@ -46,6 +46,12 @@
   - My documents `md` 以下使用跨列 stacked row，展示名称、语言、chunks、visibility、status、uploaded date 和 Actions 菜单。
   - Public documents table header 和完整 table row 改为 `md` 及以上展示。
   - Public documents `md` 以下使用跨列 stacked row，展示名称、owner、语言、chunks 和 selection switch。
+- 2026-05-11 阶段 6 实施：
+  - `UploadZone` 读取同一个 `/api/documents` SWR key 判断是否已有文档。
+  - 无文档时保留原较明显 dropzone。
+  - 已有文档时移动端改为一行紧凑入口，左侧 `Add documents`，右侧 `Upload` 视觉按钮。
+  - 已有文档时桌面仍支持 drag and drop，但 padding 从 `md:p-8` 降为 `md:p-4`。
+  - 上传进度继续使用现有 progress bar。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -68,7 +74,7 @@
 - [x] 阶段 3：My documents Actions 菜单
 - [x] 阶段 4：Public documents status 移除和 selection switch
 - [x] 阶段 5：移动端 stacked rows
-- [ ] 阶段 6：UploadZone 紧凑化和视口验证
+- [ ] 阶段 6：UploadZone 紧凑化和视口验证（代码已完成，视口验证待补）
 
 ## 阶段 1 计划：Knowledge workspace tabs 和 UploadZone 分区
 
@@ -121,15 +127,16 @@
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3、阶段 4、阶段 5 通过。
+- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3、阶段 4、阶段 5、阶段 6 通过。
+- `pnpm build`：2026-05-11 通过；仍存在既有 Turbopack NFT import trace warnings，trace 指向 `next.config.ts` / generated Prisma client / `src/lib/db/client.ts` / `src/app/api/health/route.ts`，与本 UI feature 无关。
 - `pnpm exec jest`：待执行，如改动触达测试覆盖路径。
-- 人工验证：待执行。
+- 人工验证：2026-05-11 已尝试 Playwright 移动端/桌面截图；本地演示账号登录停留在 `/auth/signin?from=%2Fknowledge`，未能进入受保护的 `/knowledge` 页面，视口验证待本地 auth 可用后补。
 
 ## 验收清单
 
 - [x] 移动端 `/knowledge` 首屏展示 My documents / Public documents tabs。
 - [x] `UploadZone` 只在 My documents tab 出现。
-- [ ] `UploadZone` 在移动端和已有文档场景下完成紧凑化。
+- [x] `UploadZone` 在移动端和已有文档场景下完成紧凑化。
 - [x] My documents 和 Public documents 的 subtitle 被移除或替换为紧凑数量信息。
 - [x] My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
 - [x] My documents 行操作统一进入 Actions 菜单。
@@ -139,7 +146,7 @@
 - [x] Public documents 使用 switch/toggle 管理 selection。
 - [x] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
 - [x] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
-- [ ] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
+- [x] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
 
 ## 恢复协议
 

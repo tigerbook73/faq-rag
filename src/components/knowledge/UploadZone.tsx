@@ -3,10 +3,14 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
+import useSWR from "swr";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { config } from "@/lib/config";
+import { type DocumentItem as Document } from "@/lib/schemas/document";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -20,6 +24,8 @@ export function UploadZone() {
   const [progress, setProgress] = useState<number | null>(null);
   const router = useRouter();
   const { mutate } = useSWRConfig();
+  const { data } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
+  const hasDocuments = (data?.items.length ?? 0) > 0;
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -130,24 +136,44 @@ export function UploadZone() {
     <div className="space-y-3">
       <div
         {...getRootProps()}
-        className={`cursor-pointer rounded-xl border-2 border-dashed p-4 text-center transition-colors md:p-8 ${
+        className={`cursor-pointer rounded-xl border-2 border-dashed transition-colors ${
+          hasDocuments ? "p-2 md:p-4" : "p-4 text-center md:p-8"
+        } ${
           isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
         } ${progress !== null ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <input {...getInputProps()} />
-        <p className="text-muted-foreground text-sm">
-          {progress !== null ? (
-            `Uploading… ${progress}%`
-          ) : isDragActive ? (
-            "Drop files here"
-          ) : (
-            <>
-              <span className="md:hidden">Select files to upload</span>
-              <span className="hidden md:inline">Drag & drop files here, or click to select</span>
-            </>
-          )}
-        </p>
-        <p className="text-muted-foreground/60 mt-1 text-xs">Supports .md .txt .pdf .docx</p>
+        {hasDocuments ? (
+          <div className="flex items-center justify-between gap-3 md:block md:text-center">
+            <div className="min-w-0">
+              <p className="text-muted-foreground truncate text-sm">
+                {progress !== null ? `Uploading... ${progress}%` : isDragActive ? "Drop files here" : "Add documents"}
+              </p>
+              <p className="text-muted-foreground/60 hidden text-xs md:mt-1 md:block">
+                Drag & drop files here, or click to select
+              </p>
+            </div>
+            <span className="bg-primary text-primary-foreground inline-flex h-8 shrink-0 items-center rounded-lg px-3 text-sm font-medium md:hidden">
+              Upload
+            </span>
+          </div>
+        ) : (
+          <>
+            <p className="text-muted-foreground text-sm">
+              {progress !== null ? (
+                `Uploading... ${progress}%`
+              ) : isDragActive ? (
+                "Drop files here"
+              ) : (
+                <>
+                  <span className="md:hidden">Select files to upload</span>
+                  <span className="hidden md:inline">Drag & drop files here, or click to select</span>
+                </>
+              )}
+            </p>
+            <p className="text-muted-foreground/60 mt-1 text-xs">Supports .md .txt .pdf .docx</p>
+          </>
+        )}
       </div>
 
       {progress !== null && <Progress value={progress} className="h-1.5" />}
