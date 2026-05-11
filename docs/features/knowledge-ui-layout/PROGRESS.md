@@ -2,22 +2,24 @@
 
 ## 当前状态
 
-- 当前阶段：规划草稿，未开始
-- 状态：需求与设计文档已创建，待用户确认和修改
+- 当前阶段：规划已确认，未开始实现
+- 状态：review 待确认点已写回 REQUIREMENTS / DESIGN，待开始阶段 1
 - 最后确认的实现提交：无
 - 下一步入口：用户确认文档后，读取 `src/app/knowledge/page.tsx`、`src/components/knowledge/DocumentTable/index.tsx`、`src/components/knowledge/DocumentRow.tsx`、`src/components/knowledge/PublicDocumentTable.tsx`、`src/components/knowledge/UploadZone.tsx`
 
 ## 文档结构
 
-- `REQUIREMENTS.md`（未提交）
-- `DESIGN.md`（未提交）
-- `PROGRESS.md`（未提交，即本文件）
+- `REQUIREMENTS.md`
+- `DESIGN.md`
+- `PROGRESS.md`（本文件）
+- `REVIEW.md`
 
 ## 文档一致性检查
 
 - 2026-05-10 创建 feature 文档，尚无实现提交，无一致性冲突。
+- 2026-05-11 已处理 `REVIEW.md` 待确认点，并将决策写回 `REQUIREMENTS.md` / `DESIGN.md` / `PROGRESS.md`。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
-- 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，按 `src/components/ui/*` 现有风格新增。
+- 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
   - tabs 刷新后默认打开 My documents，不记住上次 tab。
   - My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
@@ -25,13 +27,20 @@
   - `Rebuild All` 统一放入 My documents header More 菜单。
   - 本 feature 包含 UploadZone 紧凑化。
   - `md` 以下使用 stacked row，`md` 及以上保留 table。
+  - `Rebuild All` 进度在 header 右侧展示 `Rebuilding done/total`，More 菜单项 disabled。
+  - Actions 菜单：visibility 和 delete 沿用现有所有状态可操作；reindex 仅 indexed / failed 显示。
+  - `DocumentTable` / `useDocumentManagement` 继续持有 dialog 和 mutation state；`DocumentRow` 只触发 action。
+  - Public documents lazy 加载；tab 内容保持挂载，切回时保留搜索状态。
+  - More / Actions 使用已有 `DropdownMenu`；Public selection 使用 Switch，并提供 aria-label。
 
 ## 阶段清单
 
 - [ ] 阶段 1：Knowledge workspace tabs 和 UploadZone 分区
-- [ ] 阶段 2：My documents 工具栏与 Actions 菜单
-- [ ] 阶段 3：Public documents status 移除和 selection switch
-- [ ] 阶段 4：移动端 stacked rows 和视口验证
+- [ ] 阶段 2：列表标题、数量和 My documents toolbar
+- [ ] 阶段 3：My documents Actions 菜单
+- [ ] 阶段 4：Public documents status 移除和 selection switch
+- [ ] 阶段 5：移动端 stacked rows
+- [ ] 阶段 6：UploadZone 紧凑化和视口验证
 
 ## 阶段 1 计划：Knowledge workspace tabs 和 UploadZone 分区
 
@@ -41,29 +50,46 @@
 4. 默认打开 `My documents`，刷新后不记住上次 tab。
 5. 确认桌面和移动端切换 tabs 后布局稳定。
 
-## 阶段 2 计划：My documents 工具栏与 Actions 菜单
+## 阶段 2 计划：列表标题、数量和 My documents toolbar
 
 1. 移除 My documents subtitle。
-2. My documents search 桌面保留、移动端隐藏。
-3. 保留 refresh icon button。
-4. 将 `Rebuild All` 移到 header More 菜单。
-5. 将 visibility、reindex、delete 在桌面和移动端都收进每行 Actions 菜单。
+2. 移除 Public documents subtitle。
+3. 添加紧凑标题和数量。
+4. My documents search 桌面保留、移动端隐藏。
+5. Public documents search 桌面保留、移动端隐藏。
+6. 保留 My documents refresh icon button。
+7. 将 `Rebuild All` 移到 header More 菜单；rebuilding 时 header 显示 `Rebuilding done/total`。
 
-## 阶段 3 计划：Public documents selection 优化
+## 阶段 3 计划：My documents Actions 菜单
 
-1. 移除 Public documents subtitle。
-2. Public documents search 桌面保留、移动端隐藏。
-3. 移除 status 列。
-4. 将 selection button 改为 switch/toggle。
-5. 保持现有 optimistic update 和失败回滚行为。
+1. 将 visibility、reindex、delete 在桌面和移动端都收进每行 Actions 菜单。
+2. `DocumentRow` 仅通过 props 触发 action，不持有 dialog state。
+3. `DocumentTable` / `useDocumentManagement` 继续管理 deleteTarget、reindexingId、visibilityUpdatingId、rebuild state。
+4. visibility 和 delete 沿用现有所有状态可操作；reindex 仅 indexed / failed 显示。
 
-## 阶段 4 计划：移动端 stacked rows
+## 阶段 4 计划：Public documents selection 优化
+
+1. 移除 status 列。
+2. 将 selection button 改为 switch/toggle。
+3. Switch 使用 `Use "${doc.name}" for retrieval` aria-label。
+4. 保持现有 optimistic update 和失败回滚行为。
+5. Public documents lazy 加载；tab 内容保持挂载以保留搜索状态。
+
+## 阶段 5 计划：移动端 stacked rows
 
 1. 为 My documents 添加 `md` 以下 stacked row。
 2. 为 Public documents 添加 `md` 以下 stacked row。
 3. `md` 及以上保留 table。
-4. 验证移动端无明显文本挤压、换行错位或操作目标过小。
-5. 紧凑化 `UploadZone`，尤其是移动端和已有文档场景。
+4. 同一 row 组件内并存 `md:hidden` 移动端 markup 与 `hidden md:table-row` 桌面 markup。
+5. 验证移动端无明显文本挤压、换行错位或操作目标过小。
+
+## 阶段 6 计划：UploadZone 紧凑化和视口验证
+
+1. 无文档时保留较明显 dropzone。
+2. 已有文档时移动端使用一行紧凑上传入口，左侧简短文案，右侧 `Upload` 按钮。
+3. 已有文档时桌面保留 drag and drop，但降低高度。
+4. 上传进度继续使用现有 progress bar。
+5. 完成桌面和移动端视口验证。
 
 ## 验证状态
 
@@ -80,9 +106,12 @@
 - [ ] My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
 - [ ] My documents 行操作统一进入 Actions 菜单。
 - [ ] `Rebuild All` 统一位于 My documents header More 菜单。
+- [ ] Rebuild All 执行中时 header 显示紧凑进度，More 菜单项 disabled。
 - [ ] Public documents 不展示 status 列。
 - [ ] Public documents 使用 switch/toggle 管理 selection。
 - [ ] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
+- [ ] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
+- [ ] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
 
 ## 恢复协议
 

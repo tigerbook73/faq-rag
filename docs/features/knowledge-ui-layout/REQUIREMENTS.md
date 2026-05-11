@@ -1,6 +1,6 @@
 # knowledge-ui-layout 需求
 
-> 状态：**草稿，待确认**
+> 状态：**已确认，待实现**
 > feature-id: knowledge-ui-layout
 
 ---
@@ -42,6 +42,7 @@
 - Public documents search 桌面端保留，移动端隐藏。
 - My documents 保留 refresh icon button。
 - `Rebuild All` 作为低频/高风险操作，统一放入 My documents header 的 More 菜单。
+- 当 `Rebuild All` 正在执行时，header 右侧展示紧凑进度文本，例如 `Rebuilding 2/8`；More 菜单中的 `Rebuild All` 菜单项 disabled，不通过拉长菜单项文案承载进度。
 
 ### 3.3 My documents 行操作
 
@@ -50,6 +51,9 @@
   - `Reindex`
   - `Delete`
 - 桌面端和移动端都统一使用 Actions 菜单，不再把 visibility、reindex、delete 作为行内直出控件。
+- `Make public` / `Make private` 沿用现有 PATCH 行为，所有文档状态均允许触发；请求期间对应菜单项 disabled。
+- `Reindex` 仅在 `indexed` / `failed` 状态可触发。对其他状态，Actions 菜单中不展示 `Reindex`，避免用户误以为可重新索引中间态文档。
+- `Delete` 沿用现有行为，所有文档状态均允许触发，并继续通过确认 dialog 防误删。
 - 移动端不再把 visibility select 放入 status 单元格。
 - 行内优先展示名称、状态、visibility 摘要和 metadata。
 
@@ -58,6 +62,7 @@
 - Public documents 只展示 indexed 公有文档。
 - UI 不展示 status 列。
 - Selection 改为 switch/toggle，表达该公有文档是否用于当前用户检索。
+- Switch/toggle 必须有可访问名称，例如 `Use "${doc.name}" for retrieval`。
 
 ### 3.5 移动端列表
 
@@ -65,6 +70,27 @@
 - `md` 以下使用 stacked row，`md` 及以上保留 table。
 - 不通过缩小字体来塞下所有列。
 - 关键操作目标应保持适合触控。
+
+### 3.6 UploadZone 紧凑化
+
+- `UploadZone` 只出现在 `My documents` tab。
+- 无文档时保留较明显的 dropzone，用于引导首次上传。
+- 已有文档时：
+  - 移动端改为一行紧凑上传入口：左侧简短文案，右侧 `Upload` 按钮。
+  - 桌面端仍保留 drag and drop 能力，但高度缩小，避免挤占文档列表空间。
+- 上传进度继续使用现有 progress bar。
+
+### 3.7 空状态文案
+
+- My documents 空状态文案改为 `No documents yet. Upload a file to get started.`
+- 空状态文案不得依赖 `above`、`below` 等相对位置描述，因为 UploadZone 位于 tab 内容内，后续布局可能调整。
+
+### 3.8 可访问性
+
+- Tabs 必须提供正确的 tablist / tab / tabpanel 语义和键盘导航。
+- More / Actions icon button 必须有可访问名称。
+- Public documents switch 必须有可访问名称。
+- 交互控件在移动端应保持可触控尺寸，不通过缩小字号牺牲可用性。
 
 ---
 
@@ -88,6 +114,9 @@
 - [ ] My documents 移动端不再出现 visibility 控件挤入 status 单元格导致换行的问题。
 - [ ] My documents 每行可从 Actions 菜单完成 visibility、reindex、delete 操作。
 - [ ] `Rebuild All` 统一位于 My documents header More 菜单中。
+- [ ] Rebuild All 执行中时 header 显示 `Rebuilding done/total` 紧凑进度，More 菜单项 disabled。
 - [ ] Public documents 不展示 status 列，且列表内容仅包含 indexed 公有文档。
 - [ ] Public documents 的选择状态使用 switch/toggle，可直接启用或停用检索。
 - [ ] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
+- [ ] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
+- [ ] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
