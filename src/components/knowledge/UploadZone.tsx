@@ -3,14 +3,9 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
-import useSWR from "swr";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
 import { config } from "@/lib/config";
-import { type DocumentItem as Document } from "@/lib/schemas/document";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -21,34 +16,22 @@ async function computeSHA256(file: File): Promise<string> {
 }
 
 export function UploadZone() {
-  const [progress, setProgress] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
   const { mutate } = useSWRConfig();
-  const { data } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
-  const hasDocuments = (data?.items.length ?? 0) > 0;
 
   const onDrop = useCallback(
     async (files: File[]) => {
       if (!files.length) return;
-      setProgress(0);
+      setIsUploading(true);
 
       let success = 0;
       const errors: string[] = [];
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        // Each file occupies an equal slice of 0–100%
-        const sliceStart = Math.round((i / files.length) * 100);
-        const sliceSize = Math.round(100 / files.length);
-        const pct = (localPct: number) => sliceStart + Math.round((localPct / 100) * sliceSize);
-
+      for (const file of files) {
         try {
-          // Step 1: compute SHA-256 (0–5% of slice)
-          setProgress(pct(0));
           const hash = await computeSHA256(file);
-          setProgress(pct(5));
 
-          // Step 2: request signed upload URL from server
           const prepareRes = await fetch("/api/documents/prepare", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -61,20 +44,13 @@ export function UploadZone() {
           }
 
           const { docId, signedUrl } = (await prepareRes.json()) as { docId: string; signedUrl: string };
-          setProgress(pct(10));
 
-          // Step 3: upload directly to Supabase Storage (10–90% of slice)
           await new Promise<void>((resolve, reject) => {
             const form = new FormData();
             form.append("cacheControl", "3600");
             form.append("", file); // Supabase Storage SDK format
 
             const xhr = new XMLHttpRequest();
-            xhr.upload.onprogress = (e) => {
-              if (e.lengthComputable) {
-                setProgress(pct(10 + Math.round((e.loaded / e.total) * 80)));
-              }
-            };
             xhr.onload = () => {
               if (xhr.status >= 200 && xhr.status < 300) resolve();
               else reject(new Error(`Upload failed (${xhr.status})`));
@@ -83,11 +59,8 @@ export function UploadZone() {
             xhr.open("PUT", signedUrl);
             xhr.send(form);
           });
-          setProgress(pct(90));
 
-          // Step 4: trigger indexing (A-path fallback; webhook may already handle it)
           await fetch(`/api/documents/${docId}/index`, { method: "POST" }).catch(() => {});
-          setProgress(pct(100));
 
           success++;
         } catch (err) {
@@ -95,7 +68,7 @@ export function UploadZone() {
         }
       }
 
-      setProgress(null);
+      setIsUploading(false);
 
       if (errors.length === 0) {
         toast.success(`Uploaded ${success} file(s). Indexing in background…`);
@@ -129,54 +102,32 @@ export function UploadZone() {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
     maxSize: config.embedding.maxBytesCloud,
-    disabled: progress !== null,
+    disabled: isUploading,
   });
 
   return (
     <div className="space-y-3">
       <div
         {...getRootProps()}
-        className={`cursor-pointer rounded-xl border-2 border-dashed transition-colors ${
-          hasDocuments ? "p-2 md:p-4" : "p-4 text-center md:p-8"
-        } ${
+        className={`cursor-pointer rounded-xl border-2 border-dashed p-2 transition-colors md:p-4 ${
           isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
-        } ${progress !== null ? "cursor-not-allowed opacity-50" : ""}`}
+        } ${isUploading ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <input {...getInputProps()} />
-        {hasDocuments ? (
-          <div className="flex items-center justify-between gap-3 md:block md:text-center">
-            <div className="min-w-0">
-              <p className="text-muted-foreground truncate text-sm">
-                {progress !== null ? `Uploading... ${progress}%` : isDragActive ? "Drop files here" : "Add documents"}
-              </p>
-              <p className="text-muted-foreground/60 hidden text-xs md:mt-1 md:block">
-                Drag & drop files here, or click to select
-              </p>
-            </div>
-            <span className="bg-primary text-primary-foreground inline-flex h-8 shrink-0 items-center rounded-lg px-3 text-sm font-medium md:hidden">
-              Upload
-            </span>
-          </div>
-        ) : (
-          <>
-            <p className="text-muted-foreground text-sm">
-              {progress !== null ? (
-                `Uploading... ${progress}%`
-              ) : isDragActive ? (
-                "Drop files here"
-              ) : (
-                <>
-                  <span className="md:hidden">Select files to upload</span>
-                  <span className="hidden md:inline">Drag & drop files here, or click to select</span>
-                </>
-              )}
+        <div className="flex items-center justify-between gap-3 md:block md:text-center">
+          <div className="min-w-0">
+            <p className="text-muted-foreground truncate text-sm">
+              {isUploading ? "Uploading..." : isDragActive ? "Drop files here" : "Add documents"}
             </p>
-            <p className="text-muted-foreground/60 mt-1 text-xs">Supports .md .txt .pdf .docx</p>
-          </>
-        )}
+            <p className="text-muted-foreground/60 hidden text-xs md:mt-1 md:block">
+              Drag & drop files here, or click to select
+            </p>
+          </div>
+          <span className="bg-primary text-primary-foreground inline-flex h-8 shrink-0 items-center rounded-lg px-3 text-sm font-medium md:hidden">
+            Upload
+          </span>
+        </div>
       </div>
-
-      {progress !== null && <Progress value={progress} className="h-1.5" />}
     </div>
   );
 }

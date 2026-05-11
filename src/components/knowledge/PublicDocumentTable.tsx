@@ -7,13 +7,10 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { KnowledgeSectionTitle } from "@/components/knowledge/KnowledgeSectionTitle";
 import { type PublicDocumentItem as PublicDocument } from "@/lib/schemas/document";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-function documentCountLabel(count: number) {
-  return `${count} document${count === 1 ? "" : "s"}`;
-}
 
 function chunksLabel(count: number) {
   return `${count} chunk${count === 1 ? "" : "s"}`;
@@ -58,11 +55,8 @@ export function PublicDocumentTable() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <div className="flex items-center justify-between gap-3 sm:block">
-          <h2 className="text-app-section">Public documents</h2>
-          <span className="text-app-muted sm:block">{documentCountLabel(documents.length)}</span>
-        </div>
+      <div className="space-y-2 md:flex md:items-center md:gap-3 md:space-y-0">
+        <KnowledgeSectionTitle title="Public documents" count={documents.length} />
         <Input
           placeholder="Search public documents..."
           value={search}

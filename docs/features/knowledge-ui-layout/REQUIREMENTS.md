@@ -74,11 +74,10 @@
 ### 3.6 UploadZone 紧凑化
 
 - `UploadZone` 只出现在 `My documents` tab。
-- 无文档时保留较明显的 dropzone，用于引导首次上传。
-- 已有文档时：
-  - 移动端改为一行紧凑上传入口：左侧简短文案，右侧 `Upload` 按钮。
-  - 桌面端仍保留 drag and drop 能力，但高度缩小，避免挤占文档列表空间。
-- 上传进度继续使用现有 progress bar。
+- 不根据当前是否已有文档切换布局。
+- 移动端使用一行紧凑上传入口：左侧简短文案，右侧 `Upload` 视觉按钮。
+- 桌面端仍保留 drag and drop 能力，但使用紧凑高度，避免挤占文档列表空间。
+- 上传中禁用入口并显示简短 uploading 文案；不展示 progress bar。
 
 ### 3.7 空状态文案
 

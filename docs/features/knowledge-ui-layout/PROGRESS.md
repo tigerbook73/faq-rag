@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前阶段：阶段 6 验证待补
-- 状态：阶段 6 代码已完成；UploadZone 已按有无文档调整密度，类型检查和生产构建通过，受本地 auth 登录未完成影响，`/knowledge` 视口截图验证待补
-- 最后确认的实现提交：`92794d3 knowledge-ui-layout phase 5: stack mobile document rows`
+- 状态：阶段 6 代码已完成；UploadZone 已统一为紧凑布局，不再按有无文档区分，也不展示 progress bar；类型检查和生产构建通过，受本地 auth 登录未完成影响，`/knowledge` 视口截图验证待补
+- 最后确认的实现提交：`5bbb3c9 knowledge-ui-layout phase 6: compact upload zone`
 - 下一步入口：本地 auth 可用后打开 `/knowledge`，补移动端和桌面视口验证
 
 ## 文档结构
@@ -47,11 +47,10 @@
   - Public documents table header 和完整 table row 改为 `md` 及以上展示。
   - Public documents `md` 以下使用跨列 stacked row，展示名称、owner、语言、chunks 和 selection switch。
 - 2026-05-11 阶段 6 实施：
-  - `UploadZone` 读取同一个 `/api/documents` SWR key 判断是否已有文档。
-  - 无文档时保留原较明显 dropzone。
-  - 已有文档时移动端改为一行紧凑入口，左侧 `Add documents`，右侧 `Upload` 视觉按钮。
-  - 已有文档时桌面仍支持 drag and drop，但 padding 从 `md:p-8` 降为 `md:p-4`。
-  - 上传进度继续使用现有 progress bar。
+  - `UploadZone` 不再读取 `/api/documents` 判断是否已有文档。
+  - 移动端统一使用一行紧凑入口，左侧 `Add documents`，右侧 `Upload` 视觉按钮。
+  - 桌面仍支持 drag and drop，但 padding 使用紧凑的 `md:p-4`。
+  - 上传中禁用入口并显示 `Uploading...`，不展示 progress bar。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -119,10 +118,10 @@
 
 ## 阶段 6 计划：UploadZone 紧凑化和视口验证
 
-1. 无文档时保留较明显 dropzone。
-2. 已有文档时移动端使用一行紧凑上传入口，左侧简短文案，右侧 `Upload` 按钮。
-3. 已有文档时桌面保留 drag and drop，但降低高度。
-4. 上传进度继续使用现有 progress bar。
+1. 不根据当前是否已有文档切换布局。
+2. 移动端使用一行紧凑上传入口，左侧简短文案，右侧 `Upload` 视觉按钮。
+3. 桌面保留 drag and drop，但降低高度。
+4. 上传中禁用入口并显示简短 uploading 文案；不展示 progress bar。
 5. 完成桌面和移动端视口验证。
 
 ## 验证状态
@@ -136,7 +135,7 @@
 
 - [x] 移动端 `/knowledge` 首屏展示 My documents / Public documents tabs。
 - [x] `UploadZone` 只在 My documents tab 出现。
-- [x] `UploadZone` 在移动端和已有文档场景下完成紧凑化。
+- [x] `UploadZone` 在移动端和桌面端统一使用紧凑布局，不按有无文档区分。
 - [x] My documents 和 Public documents 的 subtitle 被移除或替换为紧凑数量信息。
 - [x] My documents 和 Public documents 的 search 桌面保留、移动端隐藏。
 - [x] My documents 行操作统一进入 Actions 菜单。

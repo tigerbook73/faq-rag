@@ -13,10 +13,7 @@ import { MoreHorizontal, RefreshCw } from "lucide-react";
 import { useDocumentManagement } from "./useDocumentManagement";
 import { DocumentRow } from "@/components/knowledge/DocumentRow";
 import { DeleteDialog, RebuildDialog } from "@/components/knowledge/DocumentDialogs";
-
-function documentCountLabel(count: number) {
-  return `${count} document${count === 1 ? "" : "s"}`;
-}
+import { KnowledgeSectionTitle } from "@/components/knowledge/KnowledgeSectionTitle";
 
 export function DocumentTable() {
   const {
@@ -44,10 +41,7 @@ export function DocumentTable() {
   if (allDocuments.length === 0) {
     return (
       <section className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-app-section">My documents</h2>
-          <span className="text-app-muted">{documentCountLabel(allDocuments.length)}</span>
-        </div>
+        <KnowledgeSectionTitle title="My documents" count={allDocuments.length} />
         <div className="text-muted-foreground py-12 text-center text-sm">
           No documents yet. Upload a file to get started.
         </div>
@@ -57,20 +51,18 @@ export function DocumentTable() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <div className="flex items-center justify-between gap-3 sm:block">
-          <h2 className="text-app-section">My documents</h2>
-          <span className="text-app-muted sm:block">{documentCountLabel(allDocuments.length)}</span>
-        </div>
+      <div className="flex items-center gap-3 space-y-0 space-y-2">
+        <KnowledgeSectionTitle title="My documents" count={allDocuments.length} />
         <Input
           placeholder="Search documents…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="hidden md:block md:max-w-xs"
         />
-        <div className="flex items-center gap-2 sm:ml-auto">
+        <div className="flex-1" />
+        <div className="flex items-center gap-2 md:ml-auto">
           {rebuildProgress && (
-            <span className="text-muted-foreground mr-auto text-sm sm:mr-0">
+            <span className="text-muted-foreground mr-auto text-sm md:mr-0">
               Rebuilding {rebuildProgress.done}/{rebuildProgress.total}
             </span>
           )}
