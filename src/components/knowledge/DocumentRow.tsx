@@ -3,8 +3,14 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { type DocumentItem as Document } from "@/lib/schemas/document";
+import { MoreHorizontal } from "lucide-react";
 
 export type { Document };
 
@@ -36,6 +42,9 @@ export function DocumentRow({
   onDelete,
   onVisibilityChange,
 }: DocumentRowProps) {
+  const nextVisibility = doc.visibility === "public" ? "private" : "public";
+  const canReindex = doc.status === "indexed" || doc.status === "failed";
+
   return (
     <TableRow key={doc.id}>
       <TableCell className="max-w-32 truncate font-medium sm:max-w-50">{doc.name}</TableCell>
@@ -48,49 +57,36 @@ export function DocumentRow({
         {doc.status === "failed" && doc.errorMsg && (
           <p className="text-destructive mt-1 max-w-48 text-xs break-words">{doc.errorMsg}</p>
         )}
-        <div className="mt-2 md:hidden">
-          <Select
-            value={doc.visibility}
-            onValueChange={(value) => onVisibilityChange(doc.id, value as "private" | "public")}
-            disabled={isUpdatingVisibility}
-          >
-            <SelectTrigger size="sm" className="w-24">
-              {doc.visibility}
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="private">private</SelectItem>
-              <SelectItem value="public">public</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </TableCell>
       <TableCell className="hidden md:table-cell">
-        <Select
-          value={doc.visibility}
-          onValueChange={(value) => onVisibilityChange(doc.id, value as "private" | "public")}
-          disabled={isUpdatingVisibility}
-        >
-          <SelectTrigger size="sm" className="w-24">
-            {doc.visibility}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="private">private</SelectItem>
-            <SelectItem value="public">public</SelectItem>
-          </SelectContent>
-        </Select>
+        <Badge variant="outline">{doc.visibility}</Badge>
       </TableCell>
       <TableCell className="text-muted-foreground hidden text-xs lg:table-cell">
         {new Date(doc.createdAt).toLocaleDateString()}
       </TableCell>
-      <TableCell className="space-x-2 text-right">
-        {(doc.status === "indexed" || doc.status === "failed") && (
-          <Button variant="outline" size="sm" disabled={isReindexing} onClick={() => onReindex(doc.id)}>
-            {isReindexing ? "Reindexing…" : "Reindex"}
-          </Button>
-        )}
-        <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => onDelete(doc.id)}>
-          Delete
-        </Button>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+            <MoreHorizontal />
+            <span className="sr-only">Open actions for {doc.name}</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              disabled={isUpdatingVisibility}
+              onClick={() => onVisibilityChange(doc.id, nextVisibility)}
+            >
+              Make {nextVisibility}
+            </DropdownMenuItem>
+            {canReindex && (
+              <DropdownMenuItem disabled={isReindexing} onClick={() => onReindex(doc.id)}>
+                {isReindexing ? "Reindexing..." : "Reindex"}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem variant="destructive" disabled={isDeleting} onClick={() => onDelete(doc.id)}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
     </TableRow>
   );
