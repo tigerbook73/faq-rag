@@ -99,13 +99,13 @@ export function DocumentTable() {
       </div>
 
       <Table>
-        <TableHeader>
+        <TableHeader className="hidden md:table-header-group">
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead className="hidden sm:table-cell">Lang</TableHead>
-            <TableHead className="hidden sm:table-cell">Chunks</TableHead>
+            <TableHead>Lang</TableHead>
+            <TableHead>Chunks</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Visibility</TableHead>
+            <TableHead>Visibility</TableHead>
             <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Fragment } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,10 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function documentCountLabel(count: number) {
   return `${count} document${count === 1 ? "" : "s"}`;
+}
+
+function chunksLabel(count: number) {
+  return `${count} chunk${count === 1 ? "" : "s"}`;
 }
 
 export function PublicDocumentTable() {
@@ -70,12 +75,12 @@ export function PublicDocumentTable() {
         <div className="text-muted-foreground py-8 text-center text-sm">No public documents are available.</div>
       ) : (
         <Table>
-          <TableHeader>
+          <TableHeader className="hidden md:table-header-group">
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Owner</TableHead>
-              <TableHead className="hidden sm:table-cell">Lang</TableHead>
-              <TableHead className="hidden md:table-cell">Chunks</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Lang</TableHead>
+              <TableHead>Chunks</TableHead>
               <TableHead className="text-right">Use</TableHead>
             </TableRow>
           </TableHeader>
@@ -88,20 +93,43 @@ export function PublicDocumentTable() {
               </TableRow>
             )}
             {filteredDocuments.map((doc) => (
-              <TableRow key={doc.id}>
-                <TableCell className="max-w-36 truncate font-medium sm:max-w-64">{doc.name}</TableCell>
-                <TableCell className="hidden sm:table-cell">{doc.owner.email}</TableCell>
-                <TableCell className="hidden sm:table-cell">{doc.lang}</TableCell>
-                <TableCell className="hidden md:table-cell">{doc._count.chunks}</TableCell>
-                <TableCell className="text-right">
-                  <Switch
-                    aria-label={`Use "${doc.name}" for retrieval`}
-                    checked={doc.selected}
-                    disabled={updatingId === doc.id}
-                    onCheckedChange={(selected) => handleSelectionChange(doc.id, selected)}
-                  />
-                </TableCell>
-              </TableRow>
+              <Fragment key={doc.id}>
+                <TableRow className="md:hidden">
+                  <TableCell colSpan={5} className="whitespace-normal">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-2">
+                        <p className="truncate font-medium">{doc.name}</p>
+                        <p className="text-muted-foreground truncate text-xs">{doc.owner.email}</p>
+                        <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                          <span>{doc.lang}</span>
+                          <span>{chunksLabel(doc._count.chunks)}</span>
+                        </div>
+                      </div>
+                      <Switch
+                        aria-label={`Use "${doc.name}" for retrieval`}
+                        checked={doc.selected}
+                        disabled={updatingId === doc.id}
+                        onCheckedChange={(selected) => handleSelectionChange(doc.id, selected)}
+                        className="mt-0.5 shrink-0"
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+                <TableRow className="hidden md:table-row">
+                  <TableCell className="max-w-64 truncate font-medium">{doc.name}</TableCell>
+                  <TableCell>{doc.owner.email}</TableCell>
+                  <TableCell>{doc.lang}</TableCell>
+                  <TableCell>{doc._count.chunks}</TableCell>
+                  <TableCell className="text-right">
+                    <Switch
+                      aria-label={`Use "${doc.name}" for retrieval`}
+                      checked={doc.selected}
+                      disabled={updatingId === doc.id}
+                      onCheckedChange={(selected) => handleSelectionChange(doc.id, selected)}
+                    />
+                  </TableCell>
+                </TableRow>
+              </Fragment>
             ))}
           </TableBody>
         </Table>

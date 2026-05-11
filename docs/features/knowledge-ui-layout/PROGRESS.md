@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 5 待开始
-- 状态：阶段 4 已完成；Public documents status 列已移除，selection 已改为 switch
-- 最后确认的实现提交：`4e82c7f knowledge-ui-layout phase 3: move row actions into menu`
-- 下一步入口：读取 `src/components/knowledge/DocumentRow.tsx` 和 `src/components/knowledge/PublicDocumentTable.tsx`，实施阶段 5：移动端 stacked rows
+- 当前阶段：阶段 6 待开始
+- 状态：阶段 5 已完成；My documents 和 Public documents 在 `md` 以下已使用 stacked rows，`md` 及以上保留 table
+- 最后确认的实现提交：`3b16795 knowledge-ui-layout phase 4: use public selection switch`
+- 下一步入口：读取 `src/components/knowledge/UploadZone.tsx`，实施阶段 6：UploadZone 紧凑化和视口验证
 
 ## 文档结构
 
@@ -41,6 +41,11 @@
   - Public documents 移除 status 列。
   - Public documents selection button 改为受控 Switch，使用 `Use "${doc.name}" for retrieval` aria-label。
   - 保持现有 optimistic update、失败回滚和 pending disabled 行为。
+- 2026-05-11 阶段 5 实施：
+  - My documents table header 和完整 table row 改为 `md` 及以上展示。
+  - My documents `md` 以下使用跨列 stacked row，展示名称、语言、chunks、visibility、status、uploaded date 和 Actions 菜单。
+  - Public documents table header 和完整 table row 改为 `md` 及以上展示。
+  - Public documents `md` 以下使用跨列 stacked row，展示名称、owner、语言、chunks 和 selection switch。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -62,7 +67,7 @@
 - [x] 阶段 2：列表标题、数量和 My documents toolbar
 - [x] 阶段 3：My documents Actions 菜单
 - [x] 阶段 4：Public documents status 移除和 selection switch
-- [ ] 阶段 5：移动端 stacked rows
+- [x] 阶段 5：移动端 stacked rows
 - [ ] 阶段 6：UploadZone 紧凑化和视口验证
 
 ## 阶段 1 计划：Knowledge workspace tabs 和 UploadZone 分区
@@ -116,7 +121,7 @@
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3、阶段 4 通过。
+- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3、阶段 4、阶段 5 通过。
 - `pnpm exec jest`：待执行，如改动触达测试覆盖路径。
 - 人工验证：待执行。
 
@@ -132,7 +137,7 @@
 - [x] Rebuild All 执行中时 header 显示紧凑进度，More 菜单项 disabled。
 - [x] Public documents 不展示 status 列。
 - [x] Public documents 使用 switch/toggle 管理 selection。
-- [ ] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
+- [x] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
 - [x] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
 - [ ] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
 
