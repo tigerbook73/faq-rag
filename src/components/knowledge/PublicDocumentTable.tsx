@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { type PublicDocumentItem as PublicDocument } from "@/lib/schemas/document";
 
@@ -77,14 +76,13 @@ export function PublicDocumentTable() {
               <TableHead className="hidden sm:table-cell">Owner</TableHead>
               <TableHead className="hidden sm:table-cell">Lang</TableHead>
               <TableHead className="hidden md:table-cell">Chunks</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Selection</TableHead>
+              <TableHead className="text-right">Use</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredDocuments.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground py-8 text-center text-sm">
+                <TableCell colSpan={5} className="text-muted-foreground py-8 text-center text-sm">
                   No public documents match &ldquo;{search}&rdquo;
                 </TableCell>
               </TableRow>
@@ -95,18 +93,13 @@ export function PublicDocumentTable() {
                 <TableCell className="hidden sm:table-cell">{doc.owner.email}</TableCell>
                 <TableCell className="hidden sm:table-cell">{doc.lang}</TableCell>
                 <TableCell className="hidden md:table-cell">{doc._count.chunks}</TableCell>
-                <TableCell>
-                  <Badge>{doc.status}</Badge>
-                </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant={doc.selected ? "outline" : "default"}
-                    size="sm"
+                  <Switch
+                    aria-label={`Use "${doc.name}" for retrieval`}
+                    checked={doc.selected}
                     disabled={updatingId === doc.id}
-                    onClick={() => handleSelectionChange(doc.id, !doc.selected)}
-                  >
-                    {doc.selected ? "Selected" : "Select"}
-                  </Button>
+                    onCheckedChange={(selected) => handleSelectionChange(doc.id, selected)}
+                  />
                 </TableCell>
               </TableRow>
             ))}

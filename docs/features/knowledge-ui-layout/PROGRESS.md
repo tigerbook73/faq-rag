@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 4 待开始
-- 状态：阶段 3 已完成；My documents 行级 visibility、reindex、delete 已统一收进 Actions 菜单
-- 最后确认的实现提交：`6626b04 knowledge-ui-layout phase 2: compact list headers`
-- 下一步入口：读取 `src/components/knowledge/PublicDocumentTable.tsx`，实施阶段 4：Public documents status 移除和 selection switch
+- 当前阶段：阶段 5 待开始
+- 状态：阶段 4 已完成；Public documents status 列已移除，selection 已改为 switch
+- 最后确认的实现提交：`4e82c7f knowledge-ui-layout phase 3: move row actions into menu`
+- 下一步入口：读取 `src/components/knowledge/DocumentRow.tsx` 和 `src/components/knowledge/PublicDocumentTable.tsx`，实施阶段 5：移动端 stacked rows
 
 ## 文档结构
 
@@ -36,6 +36,11 @@
   - `Reindex` 仅在 indexed / failed 状态显示，沿用现有 reindexing disabled 状态。
   - visibility 和 delete 沿用现有所有状态可操作策略，仅在对应 mutation pending 时 disabled。
   - `DocumentRow` 仍只通过 props 触发 action，不持有 dialog 或 mutation state。
+- 2026-05-11 阶段 4 实施：
+  - 新增 `src/components/ui/switch.tsx`，基于 Base UI Switch 封装本地 Switch 组件。
+  - Public documents 移除 status 列。
+  - Public documents selection button 改为受控 Switch，使用 `Use "${doc.name}" for retrieval` aria-label。
+  - 保持现有 optimistic update、失败回滚和 pending disabled 行为。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -56,7 +61,7 @@
 - [x] 阶段 1：Knowledge workspace tabs 和 UploadZone 分区
 - [x] 阶段 2：列表标题、数量和 My documents toolbar
 - [x] 阶段 3：My documents Actions 菜单
-- [ ] 阶段 4：Public documents status 移除和 selection switch
+- [x] 阶段 4：Public documents status 移除和 selection switch
 - [ ] 阶段 5：移动端 stacked rows
 - [ ] 阶段 6：UploadZone 紧凑化和视口验证
 
@@ -111,7 +116,7 @@
 
 ## 验证状态
 
-- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3 通过。
+- `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3、阶段 4 通过。
 - `pnpm exec jest`：待执行，如改动触达测试覆盖路径。
 - 人工验证：待执行。
 
@@ -125,8 +130,8 @@
 - [x] My documents 行操作统一进入 Actions 菜单。
 - [x] `Rebuild All` 统一位于 My documents header More 菜单。
 - [x] Rebuild All 执行中时 header 显示紧凑进度，More 菜单项 disabled。
-- [ ] Public documents 不展示 status 列。
-- [ ] Public documents 使用 switch/toggle 管理 selection。
+- [x] Public documents 不展示 status 列。
+- [x] Public documents 使用 switch/toggle 管理 selection。
 - [ ] `md` 以下使用 stacked row，`md` 及以上保留 table；移动端文档行信息可读，不依赖缩小字体来塞下所有表格列。
 - [x] My documents 空状态文案为 `No documents yet. Upload a file to get started.`
 - [ ] Tabs、Switch、More 菜单和 Actions 菜单满足基础可访问性要求。
