@@ -38,7 +38,11 @@ test.describe("multi-user admin operations", () => {
     expect(selfDeleteRes.status()).toBe(400);
   });
 
-  test("admin deleting a public document removes it from user public lists", async ({ adminPage, user1Page, user2Page }) => {
+  test("admin deleting a public document removes it from user public lists", async ({
+    adminPage,
+    user1Page,
+    user2Page,
+  }) => {
     const marker = `E2E_ADMIN_DOC_${crypto.randomUUID().replaceAll("-", "_")}`;
     const document = await uploadAndIndexTextDocument(user1Page, {
       name: `e2e-admin-delete-${marker}.txt`,

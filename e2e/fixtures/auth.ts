@@ -3,11 +3,7 @@ import path from "path";
 
 const authDir = path.join(__dirname, "..", ".auth");
 
-async function withAuthenticatedPage(
-  browser: Browser,
-  stateFile: string,
-  run: (page: Page) => Promise<void>,
-) {
+async function withAuthenticatedPage(browser: Browser, stateFile: string, run: (page: Page) => Promise<void>) {
   const context = await browser.newContext({ storageState: path.join(authDir, stateFile) });
   const page = await context.newPage();
   await run(page);
