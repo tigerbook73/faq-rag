@@ -21,7 +21,7 @@ async function getChatCitations(page: import("@playwright/test").Page, question:
   return payload.citations;
 }
 
-test.describe("multi-user public document selection", () => {
+test.describe("multi-user public document selection @real-api @embed @slow", () => {
   test("user2 retrieval only includes user1 public document while selected", async ({ user1Page, user2Page }) => {
     const marker = `E2E_PUBLIC_${crypto.randomUUID().replaceAll("-", "_")}`;
     const document = await uploadAndIndexTextDocument(user1Page, {

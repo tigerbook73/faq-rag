@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { signIn, signInOnCurrentPage } from "./helpers";
 
-test.describe("Site separation", () => {
+test.describe("Site separation @smoke", () => {
   test("anonymous users are redirected to the unified sign-in page with from", async ({ page }) => {
     await page.goto("/chat/last");
     await expect(page).toHaveURL(

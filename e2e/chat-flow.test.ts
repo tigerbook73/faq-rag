@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { signIn } from "./helpers";
 
-test.describe("Chat flow", () => {
+test.describe("Chat flow @real-api @slow", () => {
   test("sends a message and receives a streamed response with citation", async ({ page }) => {
     await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");

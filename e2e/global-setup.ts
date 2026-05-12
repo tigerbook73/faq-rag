@@ -11,15 +11,29 @@ const STORAGE_STATE: Record<DemoAccount, string> = {
   user2: path.join(AUTH_DIR, "user2.json"),
 };
 
+function getAuthAccounts() {
+  const raw = process.env.E2E_AUTH_ACCOUNTS;
+  if (!raw) return Object.keys(STORAGE_STATE) as DemoAccount[];
+
+  return raw.split(",").map((account) => {
+    const trimmed = account.trim();
+    if (!(trimmed in STORAGE_STATE)) {
+      throw new Error(`Unknown E2E auth account: ${trimmed}`);
+    }
+    return trimmed as DemoAccount;
+  });
+}
+
 async function globalSetup(config: FullConfig) {
   const project = config.projects[0];
   const baseURL = (project.use.baseURL as string | undefined) ?? "http://localhost:3000";
+  const accounts = getAuthAccounts();
 
   await fs.mkdir(AUTH_DIR, { recursive: true });
 
   const browser = await chromium.launch();
   try {
-    for (const account of Object.keys(STORAGE_STATE) as DemoAccount[]) {
+    for (const account of accounts) {
       const context = await browser.newContext({ baseURL });
       const page = await context.newPage();
       await signIn(page, account);

@@ -38,7 +38,7 @@ test.describe("multi-user admin operations", () => {
     expect(selfDeleteRes.status()).toBe(400);
   });
 
-  test("admin deleting a public document removes it from user public lists", async ({
+  test("admin deleting a public document removes it from user public lists @embed @slow", async ({
     adminPage,
     user1Page,
     user2Page,
