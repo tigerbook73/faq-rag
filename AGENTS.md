@@ -16,6 +16,8 @@ Feature work should use a discoverable lightweight documentation bundle under `d
 
 Use `<feature-id>/` for in-progress features and `-<feature-id>/` for completed features. The leading `-` is part of the directory name and is required only after the feature is completed.
 
+The same completion marker applies to project documents under `docs/issues/` and `docs/refactors/`. If an issue or refactor is represented by a single markdown file, use `<item-id>.md` while it is active and `-<item-id>.md` after it is completed. If it is represented by a directory, use `<item-id>/` while active and `-<item-id>/` after completion. The leading `-` means the issue/refactor/project has been completed.
+
 Required structure:
 
 - `REQUIREMENTS.md`: product goals, roles, use cases, business rules, and acceptance criteria.
