@@ -97,4 +97,18 @@ describe("/api/documents/prepare", () => {
     expect(mockCreatePendingDocumentForOwner).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ error: "Duplicate file — already indexed" });
   });
+
+  it("returns structured validation errors for invalid input", async () => {
+    const res = await POST(jsonRequest({ name: "", size: 0, mime: "text/plain", hash: "bad" }) as never);
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: "Validation failed",
+      fieldErrors: expect.objectContaining({
+        name: expect.any(Array),
+        size: expect.any(Array),
+        hash: expect.any(Array),
+      }),
+    });
+  });
 });

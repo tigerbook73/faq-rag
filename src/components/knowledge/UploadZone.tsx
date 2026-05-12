@@ -6,7 +6,7 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
-import { type DocumentItem } from "@/lib/schemas/document";
+import { PrepareUploadOutputSchema, type DocumentItem } from "@/lib/schemas/document";
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -44,11 +44,7 @@ export function UploadZone() {
             throw new Error((data as { error?: string }).error ?? `Prepare failed (${prepareRes.status})`);
           }
 
-          const { docId, signedUrl, document } = (await prepareRes.json()) as {
-            docId: string;
-            signedUrl: string;
-            document: DocumentItem;
-          };
+          const { docId, signedUrl, document } = PrepareUploadOutputSchema.parse(await prepareRes.json());
 
           await new Promise<void>((resolve, reject) => {
             const form = new FormData();

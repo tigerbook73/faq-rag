@@ -160,6 +160,10 @@ export function useStreamingChat({
         body: JSON.stringify({ question, provider, history }),
       });
 
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error((errorBody as { error?: string }).error ?? `Chat failed (${res.status})`);
+      }
       if (!res.body) throw new Error("No response body");
 
       const reader = res.body.getReader();

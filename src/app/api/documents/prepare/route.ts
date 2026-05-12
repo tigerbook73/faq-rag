@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { z } from "zod";
-import { authErrorResponse } from "@/lib/auth/api";
+import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
 import { requireUser } from "@/lib/auth/require-user";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/storage";
@@ -26,9 +25,12 @@ const ALLOWED_MIME_TYPES = new Set([
 export async function POST(req: NextRequest) {
   try {
     const actor = await requireUser();
-    const body = PrepareUploadInputSchema.parse(await req.json());
+    const parsed = PrepareUploadInputSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return validationErrorResponse(parsed.error);
+    }
 
-    const { name, size, mime, hash } = body;
+    const { name, size, mime, hash } = parsed.data;
 
     const ext = path.extname(name).toLowerCase();
     if (!ALLOWED_EXTS.has(ext)) {
@@ -76,9 +78,6 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-    }
     return authErrorResponse(error);
   }
 }

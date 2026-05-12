@@ -9,11 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageShell } from "@/components/layout/PageShell";
 import { type AdminDocumentItem as AdminDocument } from "@/lib/schemas/document";
-
-interface DashboardUser {
-  id: string;
-  role: string;
-}
+import { type AdminUserItem as AdminUser } from "@/lib/schemas/user";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -31,7 +27,7 @@ function StatCard({ title, value }: { title: string; value: number }) {
 }
 
 export default function AdminDashboardPage() {
-  const { data: usersData } = useSWR<{ items: DashboardUser[] }>("/api/admin/users", fetcher);
+  const { data: usersData } = useSWR<{ items: AdminUser[] }>("/api/admin/users", fetcher);
   const { data: docsData } = useSWR<{ items: AdminDocument[]; total: number }>(
     "/api/admin/documents?pageSize=5",
     fetcher,

@@ -42,6 +42,15 @@ export const DocumentItemSchema = z.object({
 });
 export type DocumentItem = z.infer<typeof DocumentItemSchema>;
 
+// POST /api/documents/prepare
+export const PrepareUploadOutputSchema = z.object({
+  docId: z.string(),
+  signedUrl: z.string(),
+  token: z.string(),
+  document: DocumentItemSchema,
+});
+export type PrepareUploadOutput = z.infer<typeof PrepareUploadOutputSchema>;
+
 // GET /api/admin/documents
 export const AdminDocumentItemSchema = z.object({
   id: z.string(),
