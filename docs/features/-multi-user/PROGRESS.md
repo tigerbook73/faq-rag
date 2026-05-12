@@ -20,9 +20,9 @@
 ## 历史提交映射
 
 - `e1f82da` `docs: add multi-user feature requirements`
-  - 新增产品需求来源：`Docs/FEATURE-multi-user.md`，现已迁移为 `Docs/features/multi-user/REQUIREMENTS.md`。
+  - 新增产品需求来源：`Docs/FEATURE-multi-user.md`，现已迁移为 `docs/features/-multi-user/REQUIREMENTS.md`。
 - `8d1d620` `docs: add multi-user design`
-  - 新增初版技术设计：`Docs/DESIGN-multi-user.md`，现已迁移为 `Docs/features/multi-user/DESIGN.md`。
+  - 新增初版技术设计：`Docs/DESIGN-multi-user.md`，现已迁移为 `docs/features/-multi-user/DESIGN.md`。
 - `d072122` `docs: phase multi-user implementation plan`
   - 增加分阶段实施、迁移、测试、风险和发布策略。
 - `97a561f` `feat: add multi-user data foundation`

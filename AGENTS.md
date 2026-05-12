@@ -12,7 +12,9 @@ Before changing typography, spacing, layout widths, mobile sidebar/header behavi
 
 ## Feature Documentation System
 
-Feature work should use a discoverable lightweight documentation bundle under `docs/features/<feature-id>[ (completed)] /`, where [] is required only for completed features.
+Feature work should use a discoverable lightweight documentation bundle under `docs/features/<feature-dir>/`.
+
+Use `<feature-id>/` for in-progress features and `-<feature-id>/` for completed features. The leading `-` is part of the directory name and is required only after the feature is completed.
 
 Required structure:
 

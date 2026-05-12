@@ -16,7 +16,7 @@
 
 ## 文档一致性检查
 
-- 2026-05-12 检查：`docs/features/admin-ui/REQUIREMENTS.md`、`DESIGN.md`、`PROGRESS.md` 均已纳入 git 跟踪；旧的未追踪文档说明已过期。
+- 2026-05-12 检查：`docs/features/-admin-ui/REQUIREMENTS.md`、`DESIGN.md`、`PROGRESS.md` 均已纳入 git 跟踪；旧的未追踪文档说明已过期。
 - `REQUIREMENTS.md` 已更新：新增 UI 语言约定、Admin 入口可见性要求、Email 显示、Dialog 创建用户、文档列表空状态，状态仍为草稿。
 - `DESIGN.md` 已同步更新：与 REQUIREMENTS.md 逐项对齐。
 - 阶段 1–5 实现提交：`14e0587`→`23fb816`→`252d821`→`5b5b098`→`c6b6f17`。

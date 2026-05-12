@@ -33,8 +33,8 @@ Phase 5: verification and cleanup implemented. Feature is implementation-complet
 
 ## Completed Work
 
-- Created `docs/features/site-separation/REQUIREMENTS.md`.
-- Created `docs/features/site-separation/DESIGN.md`.
+- Created `docs/features/-site-separation/REQUIREMENTS.md`.
+- Created `docs/features/-site-separation/DESIGN.md`.
 - Created this `PROGRESS.md`.
 - Iterated design from dual-session → single-session + dual sign-in → single-session + single sign-in.
 - Refined implementation plan to keep `route-policy.ts` and Supabase/auth helpers as focused single-file extensions where practical.
@@ -65,7 +65,7 @@ Phase 5: verification and cleanup implemented. Feature is implementation-complet
 
 ## Known Mismatches
 
-- Existing `docs/features/admin-ui/REQUIREMENTS.md` 仍包含关于站点自由切换、user UI 显示 admin 入口的旧假设；`site-separation` 明确覆盖这些条目。
+- Existing `docs/features/-admin-ui/REQUIREMENTS.md` 仍包含关于站点自由切换、user UI 显示 admin 入口的旧假设；`site-separation` 明确覆盖这些条目。
 
 ## Verification Status
 
@@ -80,4 +80,4 @@ Phase 5: verification and cleanup implemented. Feature is implementation-complet
 
 ## Next Entry Point
 
-Feature implementation is complete. Future cleanup can reconcile old `docs/features/admin-ui/REQUIREMENTS.md` assumptions with this feature's final behavior.
+Feature implementation is complete. Future cleanup can reconcile old `docs/features/-admin-ui/REQUIREMENTS.md` assumptions with this feature's final behavior.
