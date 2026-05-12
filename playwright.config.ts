@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+const isRemote = !!process.env.E2E_BASE_URL;
+
 export default defineConfig({
   testDir: "./e2e/specs",
   globalSetup: "./e2e/global-setup.ts",
@@ -7,7 +10,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     headless: true,
     trace: "on-first-retry",
   },
@@ -17,10 +20,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000/about",
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: isRemote
+    ? undefined
+    : {
+        command: "pnpm dev",
+        url: `${baseURL}/about`,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });

@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 2 完成，待阶段 3 Chat mock
-- 状态：E2E 命令/标签基础和目录迁移已实施；默认 E2E 已排除真实 provider、embedding、slow、prod smoke 测试
-- 最后确认的实现提交：`f730254 e2e-test-architecture phase 1: add test tags and commands`
-- 下一步入口：阶段 3 — Chat mock
+- 当前阶段：阶段 4 完成，待阶段 5 验证与收口
+- 状态：E2E 命令/标签基础、目录迁移、Chat mock、Remote/Prod 入口已实施
+- 最后确认的实现提交：`5e63d10 e2e-test-architecture phase 2: reorganize e2e specs`（阶段 3-4 实施中，待统一提交）
+- 下一步入口：阶段 5 — 验证与收口
 
 ## 文档结构
 
@@ -17,8 +17,8 @@
 
 - [x] 阶段 1：MVP 命令和标签基础
 - [x] 阶段 2：目录迁移
-- [ ] 阶段 3：Chat mock
-- [ ] 阶段 4：Remote/Prod 入口
+- [x] 阶段 3：Chat mock
+- [x] 阶段 4：Remote/Prod 入口
 - [ ] 阶段 5：验证与收口
 
 ## 已完成工作
@@ -36,6 +36,12 @@
 - 拆分 `basic.test.ts` 为 `smoke/public-pages.test.ts` 和 `smoke/signin.test.ts`。
 - 拆分 `admin-operations.test.ts` 为 `admin/users.test.ts` 和 `admin/documents.test.ts`。
 - 更新 `playwright.config.ts` 的 `testDir` 为 `./e2e/specs`。
+- 新增 `e2e/mocks/chat.ts`：SSE mock，返回 citations、token、done 三个事件，answer 包含 `[1]` 引用。
+- 新增 `e2e/specs/chat/chat-ui.mock.test.ts`：2 个 mock 测试（基础响应 `@smoke` + citation 渲染）。
+- 真实 chat provider 测试保留在 `chat-real-api.test.ts`，已标记 `@real-api @slow`。
+- `playwright.config.ts` 支持 `E2E_BASE_URL`：remote 时跳过 webServer，baseURL 从环境变量读取。
+- `e2e/global-setup.ts` 增加 `validateProdEnv`：E2E_ENV=prod 时强制要求 E2E_BASE_URL、禁止 localhost、可选 E2E_PROD_URL_ALLOWLIST。
+- `package.json` 新增 `e2e:remote`（grep @smoke）和 `e2e:prod:smoke`（E2E_ENV=prod grep @prod-smoke）。
 
 ## 已确认决策
 
@@ -59,13 +65,14 @@
 - `pnpm e2e:real-api --list`：列出 5 个真实 provider / embedding opt-in 测试。
 - `pnpm e2e`：通过，16 passed。
 - 阶段 2 迁移后复验：`pnpm e2e --list` 仍列出 16 个默认测试；`pnpm e2e:smoke --list` 仍列出 8 个 smoke 测试；`pnpm e2e:real-api --list` 仍列出 5 个 opt-in 测试；`pnpm e2e` 通过，16 passed。
+- 阶段 3 新增后：`pnpm e2e --list` 列出 18 个默认测试；`pnpm e2e:smoke --list` 列出 9 个 smoke 测试；tsc、lint 通过。
+- 阶段 4 实施后：默认列表仍为 18 个测试；`pnpm e2e:prod:smoke --list` 列出 0 个（无 @prod-smoke 测试属预期）；prod 保护逻辑（无 E2E_BASE_URL、localhost、allowlist 不匹配）均正确抛错；tsc、lint 通过。
 - 备注：当前执行环境的 Node 本地网络访问在默认沙箱下会被拦截，Playwright webServer 探测需要在允许 localhost 访问的环境中运行；用户手工启动 `pnpm dev` 后已完成验证。
 
 ## 下一步
 
-启动阶段 3：
+启动阶段 5（验证与收口）：
 
-1. 新增 `e2e/mocks/chat.ts`。
-2. 将 chat UI 默认测试改为 mock `/api/chat` SSE。
-3. 保留真实 chat provider 测试为 `@real-api @slow`。
-4. 不在本阶段 mock upload/index。
+1. 用户手工运行 `pnpm e2e`（需要本地 `pnpm dev` 运行中），确认 18 个测试全部通过。
+2. 确认 `pnpm e2e:smoke` 9 个测试通过。
+3. 标记特性为完成，将目录从 `e2e-test-architecture/` 重命名为 `-e2e-test-architecture/`（添加前缀 `-`）。
