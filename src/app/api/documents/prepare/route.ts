@@ -71,7 +71,10 @@ export async function POST(req: NextRequest) {
 
     await setDocumentFileRef(doc.id, storagePath);
 
-    return NextResponse.json({ docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token }, { status: 201 });
+    return NextResponse.json(
+      { docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token, document: doc },
+      { status: 201 },
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });

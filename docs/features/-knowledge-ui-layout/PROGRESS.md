@@ -58,7 +58,7 @@
 - 2026-05-12 收尾：
   - 用户确认 `/knowledge` 桌面和移动端视口验证完成。
   - 将未提交的 `e2e/knowledge.test.ts` selector 精确化改动归档到本 feature，作为 Knowledge table E2E 稳定性处理。
-- 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
+- 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/-knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
   - tabs 刷新后默认打开 My documents，不记住上次 tab。

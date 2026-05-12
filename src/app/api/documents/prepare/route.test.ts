@@ -43,7 +43,13 @@ describe("/api/documents/prepare", () => {
     jest.clearAllMocks();
     mockRequireUser.mockResolvedValue({ id: "user-1", role: "user" });
     mockFindDuplicateDocumentForOwner.mockResolvedValue(null);
-    mockCreatePendingDocumentForOwner.mockResolvedValue({ id: "doc-1" });
+    mockCreatePendingDocumentForOwner.mockResolvedValue({
+      id: "doc-1",
+      name: "FAQ Doc.md",
+      status: "pending",
+      visibility: "private",
+      _count: { chunks: 0 },
+    });
     mockSetDocumentFileRef.mockResolvedValue({});
     mockCreateSignedUploadUrl.mockResolvedValue({
       data: { signedUrl: "https://upload.test", token: "upload-token" },
@@ -71,6 +77,13 @@ describe("/api/documents/prepare", () => {
       docId: "doc-1",
       signedUrl: "https://upload.test",
       token: "upload-token",
+      document: {
+        id: "doc-1",
+        name: "FAQ Doc.md",
+        status: "pending",
+        visibility: "private",
+        _count: { chunks: 0 },
+      },
     });
   });
 

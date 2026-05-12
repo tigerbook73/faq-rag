@@ -6,6 +6,7 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
+import { type DocumentItem } from "@/lib/schemas/document";
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -43,7 +44,11 @@ export function UploadZone() {
             throw new Error((data as { error?: string }).error ?? `Prepare failed (${prepareRes.status})`);
           }
 
-          const { docId, signedUrl } = (await prepareRes.json()) as { docId: string; signedUrl: string };
+          const { docId, signedUrl, document } = (await prepareRes.json()) as {
+            docId: string;
+            signedUrl: string;
+            document: DocumentItem;
+          };
 
           await new Promise<void>((resolve, reject) => {
             const form = new FormData();
@@ -59,6 +64,16 @@ export function UploadZone() {
             xhr.open("PUT", signedUrl);
             xhr.send(form);
           });
+
+          await mutate<{ items: DocumentItem[] }>(
+            "/api/documents",
+            (current) => {
+              if (!current) return { items: [document] };
+              if (current.items.some((item) => item.id === document.id)) return current;
+              return { ...current, items: [document, ...current.items] };
+            },
+            false,
+          );
 
           await fetch(`/api/documents/${docId}/index`, { method: "POST" }).catch(() => {});
 

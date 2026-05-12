@@ -71,6 +71,7 @@ export async function createPendingDocumentForOwner(input: {
       status: "pending",
       visibility: "private",
     },
+    include: { _count: { select: { chunks: true } } },
   });
 }
 

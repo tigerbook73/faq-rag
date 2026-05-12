@@ -48,7 +48,7 @@ export function useDocumentManagement() {
     }
   }, [mutateDocuments]);
 
-  const hasActiveDocs = documents.some((d) => ACTIVE_STATUSES.has(d.status));
+  const hasActiveDocs = baseDocuments.some((d) => ACTIVE_STATUSES.has(d.status));
 
   // Use SWR's built-in refreshInterval for polling when there are active docs
   useSWR<{ items: Document[] }>(hasActiveDocs ? "/api/documents" : null, fetcher, {
