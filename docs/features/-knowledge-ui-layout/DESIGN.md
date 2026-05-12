@@ -18,19 +18,19 @@ PublicDocumentTable
 
 主要组件：
 
-| 文件 | 当前责任 |
-| --- | --- |
-| `src/app/knowledge/page.tsx` | 渲染 Knowledge 页面结构 |
-| `src/components/knowledge/UploadZone.tsx` | 上传入口和上传进度 |
-| `src/components/knowledge/DocumentTable/index.tsx` | My documents 标题、搜索、刷新、Rebuild All、表格和 dialogs |
-| `src/components/knowledge/DocumentRow.tsx` | My documents 单行，包含 status、visibility、reindex、delete |
-| `src/components/knowledge/PublicDocumentTable.tsx` | Public documents 搜索、表格、selection button |
+| 文件                                               | 当前责任                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| `src/app/knowledge/page.tsx`                       | 渲染 Knowledge 页面结构                                     |
+| `src/components/knowledge/UploadZone.tsx`          | 上传入口和上传进度                                          |
+| `src/components/knowledge/DocumentTable/index.tsx` | My documents 标题、搜索、刷新、Rebuild All、表格和 dialogs  |
+| `src/components/knowledge/DocumentRow.tsx`         | My documents 单行，包含 status、visibility、reindex、delete |
+| `src/components/knowledge/PublicDocumentTable.tsx` | Public documents 搜索、表格、selection button               |
 
 后端 `listSelectablePublicDocuments()` 已过滤：
 
 ```ts
-visibility: "public"
-status: "indexed"
+visibility: "public";
+status: "indexed";
 ```
 
 因此 Public documents UI 中的 status 列不是必要信息。
@@ -65,15 +65,15 @@ Public documents:
 
 建议新增 workspace 组件承载 tab 状态：
 
-| 文件 | 责任 |
-| --- | --- |
-| `src/app/knowledge/page.tsx` | 保持 server page，渲染 `PageShell` 和 workspace |
-| `src/components/knowledge/KnowledgeWorkspace.tsx` | `"use client"` 组件；管理 tabs，决定展示 `UploadZone`、`DocumentTable`、`PublicDocumentTable` |
-| `src/components/knowledge/DocumentTable/index.tsx` | My documents 标题、工具栏、桌面表格、移动端 stacked rows |
-| `src/components/knowledge/DocumentRow.tsx` | My documents 单行展示和 Actions 菜单 |
-| `src/components/knowledge/DocumentDialogs.tsx` | 继续承载 delete / rebuild dialogs；dialog open state 由 `DocumentTable` 管理 |
-| `src/components/knowledge/useDocumentManagement.ts` | 继续管理 documents SWR、deleteTarget、reindexingId、visibilityUpdatingId、rebuild state |
-| `src/components/knowledge/PublicDocumentTable.tsx` | Public documents 标题、桌面表格、移动端 stacked rows、selection switch |
+| 文件                                                | 责任                                                                                          |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/app/knowledge/page.tsx`                        | 保持 server page，渲染 `PageShell` 和 workspace                                               |
+| `src/components/knowledge/KnowledgeWorkspace.tsx`   | `"use client"` 组件；管理 tabs，决定展示 `UploadZone`、`DocumentTable`、`PublicDocumentTable` |
+| `src/components/knowledge/DocumentTable/index.tsx`  | My documents 标题、工具栏、桌面表格、移动端 stacked rows                                      |
+| `src/components/knowledge/DocumentRow.tsx`          | My documents 单行展示和 Actions 菜单                                                          |
+| `src/components/knowledge/DocumentDialogs.tsx`      | 继续承载 delete / rebuild dialogs；dialog open state 由 `DocumentTable` 管理                  |
+| `src/components/knowledge/useDocumentManagement.ts` | 继续管理 documents SWR、deleteTarget、reindexingId、visibilityUpdatingId、rebuild state       |
+| `src/components/knowledge/PublicDocumentTable.tsx`  | Public documents 标题、桌面表格、移动端 stacked rows、selection switch                        |
 
 `KnowledgeWorkspace` 必须是 client component，因为 tab 状态属于客户端交互状态。`src/app/knowledge/page.tsx` 保持 server page。
 
@@ -127,14 +127,14 @@ My documents                         [refresh] [more]
 
 建议列：
 
-| 列 | 说明 |
-| --- | --- |
-| Name | 文件名，允许截断 |
-| Status | status badge，failed 时展示错误摘要 |
-| Visibility | badge 或菜单中状态摘要 |
-| Chunks | chunk 数量；indexing 时显示 `done / total` |
-| Uploaded | 桌面显示，移动端 metadata 显示 |
-| Actions | 右对齐更多菜单 |
+| 列         | 说明                                       |
+| ---------- | ------------------------------------------ |
+| Name       | 文件名，允许截断                           |
+| Status     | status badge，failed 时展示错误摘要        |
+| Visibility | badge 或菜单中状态摘要                     |
+| Chunks     | chunk 数量；indexing 时显示 `done / total` |
+| Uploaded   | 桌面显示，移动端 metadata 显示             |
+| Actions    | 右对齐更多菜单                             |
 
 ### 5.4 移动端 row
 
@@ -169,13 +169,13 @@ Embedding provider error...
 
 桌面端保留 search，移动端隐藏 search。移除 status 列。建议列：
 
-| 列 | 说明 |
-| --- | --- |
-| Name | 公有文档名 |
-| Owner | owner email |
-| Lang | 语言 |
-| Chunks | chunk 数量 |
-| Use | selection switch/toggle |
+| 列     | 说明                    |
+| ------ | ----------------------- |
+| Name   | 公有文档名              |
+| Owner  | owner email             |
+| Lang   | 语言                    |
+| Chunks | chunk 数量              |
+| Use    | selection switch/toggle |
 
 ### 6.2 移动端 row
 

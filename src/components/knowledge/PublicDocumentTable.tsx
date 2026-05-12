@@ -61,7 +61,7 @@ export function PublicDocumentTable() {
           placeholder="Search public documents..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="hidden md:block md:ml-auto md:max-w-xs"
+          className="hidden md:ml-auto md:block md:max-w-xs"
         />
       </div>
 
