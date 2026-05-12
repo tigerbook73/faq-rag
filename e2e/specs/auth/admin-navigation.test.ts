@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures/auth";
-import { signInOnCurrentPage } from "../helpers";
+import { test, expect } from "../../fixtures/auth";
+import { signInOnCurrentPage } from "../../helpers";
 
 test.describe("multi-user admin navigation", () => {
   test("admin default login lands on dashboard and from target is respected", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signIn, signInOnCurrentPage } from "./helpers";
+import { signIn, signInOnCurrentPage } from "../../helpers";
 
 test.describe("Site separation @smoke", () => {
   test("anonymous users are redirected to the unified sign-in page with from", async ({ page }) => {

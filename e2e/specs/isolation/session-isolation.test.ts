@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures/auth";
+import { test, expect } from "../../fixtures/auth";
 
 test.describe("multi-user session isolation", () => {
   test("user2 cannot list or load user1 sessions", async ({ user1Page, user2Page }) => {

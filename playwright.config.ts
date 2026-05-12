@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: "./e2e/specs",
   globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   retries: 0,

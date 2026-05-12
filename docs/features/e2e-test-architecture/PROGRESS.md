@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 1 完成，待阶段 2 目录迁移
-- 状态：MVP 命令和标签基础已实施；默认 E2E 已排除真实 provider、embedding、slow、prod smoke 测试
-- 最后确认的实现提交：无
-- 下一步入口：阶段 2 — 目录迁移
+- 当前阶段：阶段 2 完成，待阶段 3 Chat mock
+- 状态：E2E 命令/标签基础和目录迁移已实施；默认 E2E 已排除真实 provider、embedding、slow、prod smoke 测试
+- 最后确认的实现提交：`f730254 e2e-test-architecture phase 1: add test tags and commands`
+- 下一步入口：阶段 3 — Chat mock
 
 ## 文档结构
 
@@ -16,7 +16,7 @@
 ## 阶段清单
 
 - [x] 阶段 1：MVP 命令和标签基础
-- [ ] 阶段 2：目录迁移
+- [x] 阶段 2：目录迁移
 - [ ] 阶段 3：Chat mock
 - [ ] 阶段 4：Remote/Prod 入口
 - [ ] 阶段 5：验证与收口
@@ -32,6 +32,10 @@
 - 给现有 smoke、real provider、embedding/slow 测试补充 Playwright grep 标签。
 - 为 `globalSetup` 增加 `E2E_AUTH_ACCOUNTS`，默认仍生成三个账号的 storage state，后续命令可按需收窄账号集合。
 - 将 Playwright webServer readiness URL 调整为 `/about`，避免根路径重定向影响服务就绪判断。
+- 将 E2E spec 迁移到 `e2e/specs/{smoke,auth,chat,knowledge,admin,isolation}`。
+- 拆分 `basic.test.ts` 为 `smoke/public-pages.test.ts` 和 `smoke/signin.test.ts`。
+- 拆分 `admin-operations.test.ts` 为 `admin/users.test.ts` 和 `admin/documents.test.ts`。
+- 更新 `playwright.config.ts` 的 `testDir` 为 `./e2e/specs`。
 
 ## 已确认决策
 
@@ -54,13 +58,14 @@
 - `pnpm e2e:smoke --list`：列出 8 个 smoke 测试。
 - `pnpm e2e:real-api --list`：列出 5 个真实 provider / embedding opt-in 测试。
 - `pnpm e2e`：通过，16 passed。
+- 阶段 2 迁移后复验：`pnpm e2e --list` 仍列出 16 个默认测试；`pnpm e2e:smoke --list` 仍列出 8 个 smoke 测试；`pnpm e2e:real-api --list` 仍列出 5 个 opt-in 测试；`pnpm e2e` 通过，16 passed。
 - 备注：当前执行环境的 Node 本地网络访问在默认沙箱下会被拦截，Playwright webServer 探测需要在允许 localhost 访问的环境中运行；用户手工启动 `pnpm dev` 后已完成验证。
 
 ## 下一步
 
-启动阶段 2：
+启动阶段 3：
 
-1. 将现有 E2E 文件迁移到精简目标目录：`fixtures/`、`mocks/`、`specs/{smoke,auth,chat,knowledge,admin,isolation}`。
-2. 更新相对 imports 和 Playwright test discovery。
-3. 保持阶段 1 标签和命令行为不变。
-4. 验证默认、smoke、real-api/embed 测试集合不变。
+1. 新增 `e2e/mocks/chat.ts`。
+2. 将 chat UI 默认测试改为 mock `/api/chat` SSE。
+3. 保留真实 chat provider 测试为 `@real-api @slow`。
+4. 不在本阶段 mock upload/index。

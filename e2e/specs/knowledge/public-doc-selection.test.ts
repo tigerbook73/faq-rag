@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures/auth";
-import { deleteDocumentIfExists, setDocumentVisibility, uploadAndIndexTextDocument } from "../fixtures/documents";
+import { test, expect } from "../../fixtures/auth";
+import { deleteDocumentIfExists, setDocumentVisibility, uploadAndIndexTextDocument } from "../../fixtures/documents";
 
 async function getChatCitations(page: import("@playwright/test").Page, question: string) {
   const res = await page.request.post("/api/chat", {

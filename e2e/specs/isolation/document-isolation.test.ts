@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures/auth";
-import { createPendingDocument, deleteDocumentIfExists, listDocuments } from "../fixtures/documents";
+import { test, expect } from "../../fixtures/auth";
+import { createPendingDocument, deleteDocumentIfExists, listDocuments } from "../../fixtures/documents";
 
 test.describe("multi-user document isolation", () => {
   test("user2 cannot list or delete user1 private documents", async ({ user1Page, user2Page }) => {

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signIn } from "./helpers";
+import { signIn } from "../../helpers";
 
 test.describe("Chat flow @real-api @slow", () => {
   test("sends a message and receives a streamed response with citation", async ({ page }) => {

@@ -6,7 +6,7 @@
 
 ## 2. 当前状态
 
-当前 E2E 结构：
+阶段 0 前的 E2E 结构：
 
 ```text
 e2e/
@@ -141,6 +141,7 @@ e2e/
     auth/
       route-access.test.ts
       admin-navigation.test.ts
+      auth-fixtures.test.ts
     chat/
       chat-ui.mock.test.ts
       chat-real-api.test.ts
@@ -164,6 +165,7 @@ e2e/
 | `basic.test.ts` | `specs/smoke/public-pages.test.ts` + `specs/smoke/signin.test.ts` |
 | `site-separation.test.ts` | `specs/auth/route-access.test.ts` |
 | `multi-user/admin-navigation.test.ts` | `specs/auth/admin-navigation.test.ts` |
+| `multi-user/auth-fixtures.test.ts` | `specs/auth/auth-fixtures.test.ts` |
 | `multi-user/session-isolation.test.ts` | `specs/isolation/session-isolation.test.ts` |
 | `multi-user/document-isolation.test.ts` | `specs/isolation/document-isolation.test.ts` |
 | `multi-user/admin-operations.test.ts` | `specs/admin/users.test.ts` + `specs/admin/documents.test.ts` |
