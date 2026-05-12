@@ -94,9 +94,16 @@ export const test = base.extend<{
 ### 6.4 `admin-operations.test.ts`
 
 - Admin 页面用户列表包含 user1 和 user2。
-- Admin 删除 user2 后，user2 再次登录得到错误（重新使用 Supabase signIn 断言失败或 403）。
+- Admin 创建并删除临时测试用户后，该用户再次登录得到错误（避免破坏 seed user2 账号）。
 - Admin 页面删除自己的按钮不可用或点击后返回错误提示。
 - Admin 删除 user1 某个公开文档后，user2 公开列表中不再出现该文档。
+
+### 6.5 `admin-navigation.test.ts`
+
+- Admin 默认登录后进入 `/admin` Dashboard。
+- Admin 从带 `from` 参数的登录流程进入被重定向页面。
+- Admin 可以从 Admin shell 切换到普通用户页面。
+- Admin 可以从普通用户页面回到 Admin 页面。
 
 ---
 
@@ -131,13 +138,14 @@ export const test = base.extend<{
 ### 阶段 4：Admin 操作测试
 
 - 新增 `admin-operations.test.ts`。
-- 验证：删除用户、文档、自删保护逻辑均测试通过。
+- 新增 `admin-navigation.test.ts`。
+- 验证：删除用户、文档、自删保护、Admin 登录跳转和 Admin/User shell 切换逻辑均测试通过。
 
 ---
 
 ## 9. 风险和注意事项
 
 - 阶段 3 的检索测试依赖索引完成，CI 中需要保证 Supabase + DB 可用，否则跳过该文件。
-- `user2` 删除测试会修改 Auth 状态，需要在 `afterAll` 重建 user2（调用 admin API 重新创建）。
+- 删除用户测试使用临时测试用户，不删除 seed admin/user1/user2，避免影响 globalSetup storageState 和后续测试。
 - Playwright storageState 只保存 cookie，不保存应用状态；每个测试需要自行设置前置数据。
 - 避免测试之间的执行顺序依赖，每个 test 应自包含前置数据准备。
