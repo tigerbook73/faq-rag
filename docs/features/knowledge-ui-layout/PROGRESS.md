@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 6 验证待补
-- 状态：阶段 6 代码已完成；UploadZone 已统一为紧凑布局，不再按有无文档区分，也不展示 progress bar；类型检查和生产构建通过，受本地 auth 登录未完成影响，`/knowledge` 视口截图验证待补
-- 最后确认的实现提交：`5bbb3c9 knowledge-ui-layout phase 6: compact upload zone`
-- 下一步入口：本地 auth 可用后打开 `/knowledge`，补移动端和桌面视口验证
+- 当前阶段：阶段 6 已完成
+- 状态：阶段 6 代码已完成，并在后续 checkpoint 中进一步简化 header 与 UploadZone；类型检查、生产构建和 `/knowledge` 桌面/移动端视口确认均已完成
+- 最后确认的实现提交：`4c02728 knowledge-ui-layout checkpoint: simplify headers and upload zone`
+- 下一步入口：无；后续如调整 Knowledge UI，从新的产品或回归项开始
 
 ## 文档结构
 
@@ -51,6 +51,13 @@
   - 移动端统一使用一行紧凑入口，左侧 `Add documents`，右侧 `Upload` 视觉按钮。
   - 桌面仍支持 drag and drop，但 padding 使用紧凑的 `md:p-4`。
   - 上传中禁用入口并显示 `Uploading...`，不展示 progress bar。
+- 2026-05-11 checkpoint 实施（`4c02728`）：
+  - 新增 `KnowledgeSectionTitle` 复用 My documents / Public documents 标题和数量布局。
+  - 进一步简化 `UploadZone` 文案和视觉层级。
+  - 同步更新 REQUIREMENTS / DESIGN / PROGRESS 以反映 header 与 upload zone 的最终布局。
+- 2026-05-12 收尾：
+  - 用户确认 `/knowledge` 桌面和移动端视口验证完成。
+  - 将未提交的 `e2e/knowledge.test.ts` selector 精确化改动归档到本 feature，作为 Knowledge table E2E 稳定性处理。
 - 本 feature 独立于 `knowledge-upload`；不要修改 `docs/features/knowledge-upload/*` 来记录本 feature 的 UI layout 规划。
 - 实施前需确认 tabs 和 switch 组件是否已存在；若不存在，优先使用 shadcn 生成，输出不匹配时按 `src/components/ui/*` 现有风格新增。
 - 2026-05-10 用户已确认关键取舍：
@@ -73,7 +80,7 @@
 - [x] 阶段 3：My documents Actions 菜单
 - [x] 阶段 4：Public documents status 移除和 selection switch
 - [x] 阶段 5：移动端 stacked rows
-- [ ] 阶段 6：UploadZone 紧凑化和视口验证（代码已完成，视口验证待补）
+- [x] 阶段 6：UploadZone 紧凑化和视口验证
 
 ## 阶段 1 计划：Knowledge workspace tabs 和 UploadZone 分区
 
@@ -128,8 +135,9 @@
 
 - `pnpm exec tsc --noEmit`：2026-05-11 阶段 1、阶段 2、阶段 3、阶段 4、阶段 5、阶段 6 通过。
 - `pnpm build`：2026-05-11 通过；仍存在既有 Turbopack NFT import trace warnings，trace 指向 `next.config.ts` / generated Prisma client / `src/lib/db/client.ts` / `src/app/api/health/route.ts`，与本 UI feature 无关。
-- `pnpm exec jest`：待执行，如改动触达测试覆盖路径。
-- 人工验证：2026-05-11 已尝试 Playwright 移动端/桌面截图；本地演示账号登录停留在 `/auth/signin?from=%2Fknowledge`，未能进入受保护的 `/knowledge` 页面，视口验证待本地 auth 可用后补。
+- `pnpm exec jest`：未执行；本次收尾只更新 feature 进度文档和 Playwright selector 稳定性。
+- 人工验证：2026-05-12 用户确认 `/knowledge` 桌面和移动端视口验证完成。
+- E2E 稳定性：2026-05-12 `e2e/knowledge.test.ts` selector 精确化改动已归档到本 feature，避免 Knowledge table 桌面/移动端并存 markup 时命中隐藏行或宽泛状态文本。
 
 ## 验收清单
 

@@ -12,8 +12,8 @@ test.describe("Knowledge base", () => {
     await fileInput.setInputFiles(path.join(__dirname, "fixtures/sample.txt"));
 
     // The indexing worker can lag in local e2e; this verifies the upload is accepted and listed.
-    const row = page.locator("tr", { hasText: "sample.txt" });
-    await expect(row.getByRole("cell", { name: "sample.txt" })).toBeVisible({ timeout: 15_000 });
-    await expect(row.getByText(/uploaded|indexing|indexed/)).toBeVisible({ timeout: 15_000 });
+    const row = page.locator("tr:visible", { hasText: "sample.txt" });
+    await expect(row.getByRole("cell", { name: "sample.txt", exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(row.getByRole("cell", { name: /^(uploaded|indexing|indexed)$/ })).toBeVisible({ timeout: 15_000 });
   });
 });

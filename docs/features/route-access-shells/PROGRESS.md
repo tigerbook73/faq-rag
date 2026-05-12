@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 1-5 implementation complete in the working tree. Changes are verified locally but not committed.
+Phase 1-5 implementation complete and committed.
 
 ## Last Confirmed Commit
 
-5fec0b0
+48a43c8 `route-access-shells phase 1: implement route access policy`
 
 ## Confirmed Decisions
 
@@ -38,7 +38,7 @@ Phase 1-5 implementation complete in the working tree. Changes are verified loca
 
 ## Verification Status
 
-Verified locally.
+Verified locally before commit.
 
 Completed verification:
 
@@ -53,8 +53,4 @@ Notes:
 
 ## Next Entry Point
 
-Next step is review and commit.
-
-Suggested commit message:
-
-`route-access-shells phase 1: implement route access policy`
+Feature implementation is complete. Future work should start from a new product or regression item.

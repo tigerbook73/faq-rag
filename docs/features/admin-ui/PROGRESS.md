@@ -10,18 +10,17 @@
 
 当前 feature 文档结构为：
 
-- `REQUIREMENTS.md`（已提交）
-- `DESIGN-codex.md`（已提交，参考版）
-- `PROGRESS-codex.md`（已提交，参考版）
-- `DESIGN.md`（未提交，规范版，内容已与需求对齐）
-- `PROGRESS.md`（未提交，规范版，即本文件）
+- `REQUIREMENTS.md`
+- `DESIGN.md`
+- `PROGRESS.md`（本文件）
 
 ## 文档一致性检查
 
-- `git status`（2026-05-07）：`DESIGN.md`、`PROGRESS.md` 为 untracked（未追踪）；`REQUIREMENTS.md`、`DESIGN-codex.md`、`PROGRESS-codex.md` 均已在提交 `35ae5a3`（codex-version）中提交。
+- 2026-05-12 检查：`docs/features/admin-ui/REQUIREMENTS.md`、`DESIGN.md`、`PROGRESS.md` 均已纳入 git 跟踪；旧的未追踪文档说明已过期。
 - `REQUIREMENTS.md` 已更新：新增 UI 语言约定、Admin 入口可见性要求、Email 显示、Dialog 创建用户、文档列表空状态，状态仍为草稿。
 - `DESIGN.md` 已同步更新：与 REQUIREMENTS.md 逐项对齐。
 - 阶段 1–5 实现提交：`14e0587`→`23fb816`→`252d821`→`5b5b098`→`c6b6f17`。
+- 阶段 6 实现提交：`ec7aa69`。
 
 ## 阶段清单
 
@@ -76,9 +75,9 @@
 - `pnpm exec tsc --noEmit`：通过，0 错误。
 - `pnpm exec jest`：83 个测试，81 个通过；2 个预存失败（`documents/[id]/reindex` 和 `documents/[id]/index`），与本 feature 无关。
 
-## 已知实现问题（阶段 6 待修复）
+## 已修复实现问题（阶段 6）
 
-以下问题在阶段 1–5 完成后经分析发现，需在阶段 6 修复：
+以下问题在阶段 1–5 完成后经分析发现，并已在阶段 6 修复：
 
 | #   | 问题                                                                       | 类型      | 影响文件                                                                                   |
 | --- | -------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------ |
