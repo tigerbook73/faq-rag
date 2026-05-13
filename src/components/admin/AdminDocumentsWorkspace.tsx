@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { type AdminDocumentItem as AdminDocument } from "@/lib/schemas/document";
+import { deleteAdminDocument } from "@/lib/admin-api";
 
 const SWR_KEY = "/api/admin/documents?pageSize=100";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -29,11 +30,7 @@ export function AdminDocumentsWorkspace() {
     if (!deleteTarget) return;
     setDeletingId(deleteTarget.id);
     try {
-      const res = await fetch(`/api/admin/documents/${deleteTarget.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Failed to delete document (${res.status})`);
-      }
+      await deleteAdminDocument(deleteTarget.id);
       setDeleteTarget(null);
       await mutate();
       toast.success("Document deleted");

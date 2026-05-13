@@ -8,6 +8,8 @@ import { STORAGE_KEYS } from "@/lib/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
 import type { Citation } from "@/lib/schemas/session";
+import type { Provider } from "@/lib/llm/providers";
+import { startChatStream } from "@/lib/session-api";
 
 // ── Draft persistence ──────────────────────────────────────────────────────────
 // Manages the textarea input value and its localStorage draft backup.
@@ -86,7 +88,7 @@ interface UseStreamingChatParams {
   setMessages: Dispatch<SetStateAction<Message[]>>;
   session: ChatSession | null;
   setSession: Dispatch<SetStateAction<ChatSession | null>>;
-  provider: string;
+  provider: Provider;
   input: string;
   setInput: Dispatch<SetStateAction<string>>;
   draftKey: string;
@@ -154,11 +156,7 @@ export function useStreamingChat({
     const sessionAtSend = session;
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, provider, history }),
-      });
+      const res = await startChatStream({ question, provider, history });
 
       if (!res.ok) {
         const errorBody = await res.json().catch(() => ({}));

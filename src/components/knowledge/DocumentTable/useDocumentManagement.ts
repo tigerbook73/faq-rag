@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
 import { type DocumentItem as Document } from "@/lib/schemas/document";
+import { deleteDocument, reindexDocument, updateDocumentVisibility } from "@/lib/documents-api";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 
@@ -59,7 +60,7 @@ export function useDocumentManagement() {
     mutateDocuments((current) => (current ? { items: current.items.filter((d) => d.id !== id) } : current), false);
     setDeletingId(id);
     try {
-      await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      await deleteDocument(id);
       await mutateDocuments();
     } catch {
       await mutateDocuments();
@@ -79,11 +80,7 @@ export function useDocumentManagement() {
     );
     setReindexingId(id);
     try {
-      const res = await fetch(`/api/documents/${id}/reindex`, { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Reindex failed (${res.status})`);
-      }
+      await reindexDocument(id);
       await mutateDocuments();
     } catch (err) {
       await mutateDocuments();
@@ -103,15 +100,7 @@ export function useDocumentManagement() {
     );
     setVisibilityUpdatingId(id);
     try {
-      const res = await fetch(`/api/documents/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visibility }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Visibility update failed (${res.status})`);
-      }
+      await updateDocumentVisibility(id, visibility);
       await mutateDocuments();
       toast.success(`Document is now ${visibility}`);
     } catch (err) {
@@ -128,8 +117,7 @@ export function useDocumentManagement() {
     let failed = 0;
     try {
       for (let i = 0; i < documents.length; i++) {
-        const res = await fetch(`/api/documents/${documents[i].id}/reindex`, { method: "POST" });
-        if (!res.ok) failed++;
+        try { await reindexDocument(documents[i].id); } catch { failed++; }
         setRebuildProgress({ done: i + 1, total: documents.length });
       }
       await mutateDocuments();

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateUserInputSchema, type AdminUserItem as AdminUser } from "@/lib/schemas/user";
+import { createUser, deleteUser, updateUserPassword } from "@/lib/admin-api";
 import { useAuth } from "@/context/auth-context";
 
 const SWR_KEY = "/api/admin/users";
@@ -69,13 +70,7 @@ export function AdminUsersWorkspace() {
     setCreateErrors({});
     setCreating(true);
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: createEmail, password: createPassword }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? `Failed to create user (${res.status})`);
+      await createUser({ email: createEmail, password: createPassword });
       setCreateOpen(false);
       await mutate();
       toast.success("User created");
@@ -90,11 +85,7 @@ export function AdminUsersWorkspace() {
     if (!deleteTarget) return;
     setDeletingId(deleteTarget.id);
     try {
-      const res = await fetch(`/api/admin/users/${deleteTarget.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Failed to delete user (${res.status})`);
-      }
+      await deleteUser(deleteTarget.id);
       setDeleteTarget(null);
       await mutate();
       toast.success("User deleted");
@@ -115,15 +106,7 @@ export function AdminUsersWorkspace() {
     setPasswordError(undefined);
     setChangingPasswordId(passwordTarget.id);
     try {
-      const res = await fetch(`/api/admin/users/${passwordTarget.id}/password`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newPassword }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Failed to update password (${res.status})`);
-      }
+      await updateUserPassword(passwordTarget.id, { password: newPassword });
       setPasswordTarget(null);
       setNewPassword("");
       toast.success("Password updated");

@@ -6,7 +6,8 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/config";
-import { PrepareUploadOutputSchema, type DocumentItem } from "@/lib/schemas/document";
+import { type DocumentItem } from "@/lib/schemas/document";
+import { prepareUpload, confirmIndex } from "@/lib/documents-api";
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -33,18 +34,7 @@ export function UploadZone() {
         try {
           const hash = await computeSHA256(file);
 
-          const prepareRes = await fetch("/api/documents/prepare", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: file.name, size: file.size, mime: file.type, hash }),
-          });
-
-          if (!prepareRes.ok) {
-            const data = await prepareRes.json().catch(() => ({}));
-            throw new Error((data as { error?: string }).error ?? `Prepare failed (${prepareRes.status})`);
-          }
-
-          const { docId, signedUrl, document } = PrepareUploadOutputSchema.parse(await prepareRes.json());
+          const { docId, signedUrl, document } = await prepareUpload({ name: file.name, size: file.size, mime: file.type, hash });
 
           await new Promise<void>((resolve, reject) => {
             const form = new FormData();
@@ -71,7 +61,7 @@ export function UploadZone() {
             false,
           );
 
-          await fetch(`/api/documents/${docId}/index`, { method: "POST" }).catch(() => {});
+          await confirmIndex(docId).catch(() => {});
 
           success++;
         } catch (err) {

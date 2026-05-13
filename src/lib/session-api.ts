@@ -6,6 +6,7 @@ import {
   type Citation,
   type UpdateSessionInput,
 } from "./schemas/session";
+import type { ChatRequestInput } from "./schemas/chat";
 
 export type { Message, Citation };
 
@@ -76,4 +77,12 @@ export async function updateSessionTitle(id: string, title: string): Promise<voi
 
 export async function apiDeleteSession(id: string): Promise<void> {
   await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+}
+
+export async function startChatStream(input: ChatRequestInput): Promise<Response> {
+  return fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 }
