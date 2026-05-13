@@ -20,7 +20,7 @@ describe("/api/public-documents", () => {
   it("lists selectable public documents for the current user", async () => {
     mockListSelectablePublicDocuments.mockResolvedValue([{ id: "doc-1", selected: false }]);
 
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/public-documents") as never);
 
     expect(res.status).toBe(200);
     expect(mockListSelectablePublicDocuments).toHaveBeenCalledWith("user-2");

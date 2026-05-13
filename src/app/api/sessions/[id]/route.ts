@@ -1,49 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { UpdateSessionInputSchema } from "@/lib/shared/schemas/session";
-import { authErrorResponse, notFoundResponse, validationErrorResponse } from "@/lib/server/auth/api";
-import { requireUser } from "@/lib/server/auth/require-user";
+import { notFoundResponse, validationErrorResponse, withUser } from "@/lib/server/auth/api";
 import { deleteSessionForUser, getSessionForUser, upsertSessionForUser } from "@/lib/server/data/sessions";
 
-type Params = { params: Promise<{ id: string }> };
+type P = { id: string };
 
-export async function GET(_req: NextRequest, { params }: Params) {
-  try {
-    const actor = await requireUser();
-    const { id } = await params;
-    const session = await getSessionForUser(actor.id, id);
-    if (!session) return notFoundResponse();
-    return NextResponse.json(session);
-  } catch (error) {
-    return authErrorResponse(error);
+export const GET = withUser<P>(async (actor, _req, { params }) => {
+  const { id } = await params;
+  const session = await getSessionForUser(actor.id, id);
+  if (!session) return notFoundResponse();
+  return NextResponse.json(session);
+});
+
+export const PATCH = withUser<P>(async (actor, req, { params }) => {
+  const { id } = await params;
+  const parsed = UpdateSessionInputSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error);
   }
-}
+  const session = await upsertSessionForUser(actor.id, id, parsed.data);
+  if (!session) return notFoundResponse();
+  return NextResponse.json(session);
+});
 
-export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    const actor = await requireUser();
-    const { id } = await params;
-
-    const parsed = UpdateSessionInputSchema.safeParse(await req.json());
-    if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
-    }
-
-    const session = await upsertSessionForUser(actor.id, id, parsed.data);
-    if (!session) return notFoundResponse();
-
-    return NextResponse.json(session);
-  } catch (error) {
-    return authErrorResponse(error);
-  }
-}
-
-export async function DELETE(_req: NextRequest, { params }: Params) {
-  try {
-    const actor = await requireUser();
-    const { id } = await params;
-    await deleteSessionForUser(actor.id, id);
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    return authErrorResponse(error);
-  }
-}
+export const DELETE = withUser<P>(async (actor, _req, { params }) => {
+  const { id } = await params;
+  await deleteSessionForUser(actor.id, id);
+  return new NextResponse(null, { status: 204 });
+});

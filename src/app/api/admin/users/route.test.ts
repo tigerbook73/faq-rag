@@ -34,7 +34,7 @@ describe("/api/admin/users", () => {
   it("requires admin and lists users", async () => {
     mockListUsers.mockResolvedValue([{ id: "user-1", email: "user1@test.com" }]);
 
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/admin/users") as never);
 
     expect(res.status).toBe(200);
     expect(mockRequireAdmin).toHaveBeenCalledTimes(1);
@@ -45,7 +45,7 @@ describe("/api/admin/users", () => {
   it("rejects non-admin users", async () => {
     mockRequireAdmin.mockRejectedValue(new AuthError("Admin privileges required", 403));
 
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/admin/users") as never);
 
     expect(res.status).toBe(403);
     expect(mockListUsers).not.toHaveBeenCalled();

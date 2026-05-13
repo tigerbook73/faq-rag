@@ -1,28 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
-import { requireAdmin } from "@/lib/server/auth/require-admin";
+import { NextResponse } from "next/server";
+import { validationErrorResponse, withAdmin } from "@/lib/server/auth/api";
 import { updateUserPassword } from "@/lib/server/services/update-user-password";
 import { UpdatePasswordInputSchema } from "@/lib/shared/schemas/user";
 
-type Params = { params: Promise<{ id: string }> };
-
-export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    await requireAdmin();
-    const { id } = await params;
-
-    const parsed = UpdatePasswordInputSchema.safeParse(await req.json());
-    if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
-    }
-
-    const result = await updateUserPassword(id, parsed.data.password);
-    if (!result.found) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    return authErrorResponse(error);
+export const PATCH = withAdmin<{ id: string }>(async (_actor, req, { params }) => {
+  const { id } = await params;
+  const parsed = UpdatePasswordInputSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error);
   }
-}
+  const result = await updateUserPassword(id, parsed.data.password);
+  if (!result.found) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+  return new NextResponse(null, { status: 204 });
+});

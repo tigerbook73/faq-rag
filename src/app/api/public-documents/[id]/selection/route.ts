@@ -1,32 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, notFoundResponse } from "@/lib/server/auth/api";
-import { requireUser } from "@/lib/server/auth/require-user";
+import { NextResponse } from "next/server";
+import { notFoundResponse, withUser } from "@/lib/server/auth/api";
 import { selectPublicDocumentForUser, unselectPublicDocumentForUser } from "@/lib/server/data/public-documents";
 
-type Params = { params: Promise<{ id: string }> };
+type P = { id: string };
 
-export async function POST(_req: NextRequest, { params }: Params) {
-  try {
-    const actor = await requireUser();
-    const { id } = await params;
-    const selection = await selectPublicDocumentForUser(actor.id, id);
-    if (!selection) {
-      return notFoundResponse();
-    }
+export const POST = withUser<P>(async (actor, _req, { params }) => {
+  const { id } = await params;
+  const selection = await selectPublicDocumentForUser(actor.id, id);
+  if (!selection) return notFoundResponse();
+  return NextResponse.json(selection, { status: 201 });
+});
 
-    return NextResponse.json(selection, { status: 201 });
-  } catch (error) {
-    return authErrorResponse(error);
-  }
-}
-
-export async function DELETE(_req: NextRequest, { params }: Params) {
-  try {
-    const actor = await requireUser();
-    const { id } = await params;
-    await unselectPublicDocumentForUser(actor.id, id);
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    return authErrorResponse(error);
-  }
-}
+export const DELETE = withUser<P>(async (actor, _req, { params }) => {
+  const { id } = await params;
+  await unselectPublicDocumentForUser(actor.id, id);
+  return new NextResponse(null, { status: 204 });
+});

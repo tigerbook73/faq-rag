@@ -30,7 +30,7 @@ describe("/api/sessions", () => {
   it("lists sessions for the current user", async () => {
     mockListSessionsForUser.mockResolvedValue([{ id: "session-1", title: "Mine" }]);
 
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/sessions") as never);
 
     expect(res.status).toBe(200);
     expect(mockListSessionsForUser).toHaveBeenCalledWith("user-1");
