@@ -5,7 +5,7 @@ import { logger } from "../logger";
 let worker: Worker | null = null;
 
 function createWorker(): Worker {
-  const workerPath = path.resolve(process.cwd(), "src/lib/ingest/indexing-worker.ts");
+  const workerPath = path.resolve(process.cwd(), "src/lib/server/ingest/indexing-worker.ts");
   const w = new Worker(workerPath, {
     execArgv: ["-r", "tsx/cjs"],
   });
