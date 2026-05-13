@@ -10,7 +10,7 @@ export async function GET() {
       {
         status: "error",
         message: "Database unavailable",
-        error: err instanceof Error ? { name: err.name, message: err.message, ...err } : err,
+        error: err instanceof Error ? { ...err, name: err.name, message: err.message } : err,
       },
       { status: 503 }
     );
