@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageShell } from "@/components/layout/PageShell";
-import { type AdminDocumentItem as AdminDocument } from "@/lib/schemas/document";
-import { type AdminUserItem as AdminUser } from "@/lib/schemas/user";
+import { type AdminDocumentItem as AdminDocument } from "@/lib/shared/schemas/document";
+import { type AdminUserItem as AdminUser } from "@/lib/shared/schemas/user";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 

@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { retrieve } from "@/lib/retrieval/query";
-import { sanitizeChunkContent } from "@/lib/retrieval/utils";
-import { getProvider } from "@/lib/llm/router";
-import { SYSTEM_PROMPT } from "@/lib/llm/prompts";
-import { truncateHistory } from "@/lib/llm/truncate";
-import { logger } from "@/lib/logger";
-import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/schemas/chat";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { retrieve } from "@/lib/server/retrieval/query";
+import { sanitizeChunkContent } from "@/lib/server/retrieval/utils";
+import { getProvider } from "@/lib/server/llm/router";
+import { SYSTEM_PROMPT } from "@/lib/server/llm/prompts";
+import { truncateHistory } from "@/lib/server/llm/truncate";
+import { logger } from "@/lib/server/logger";
+import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/shared/schemas/chat";
 
 export async function POST(req: NextRequest) {
   let actor: Awaited<ReturnType<typeof requireUser>>;

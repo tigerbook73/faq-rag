@@ -1,11 +1,11 @@
 const mockRequireAdmin = jest.fn();
 const mockListAdminDocuments = jest.fn();
 
-jest.mock("@/lib/auth/require-admin", () => ({
+jest.mock("@/lib/server/auth/require-admin", () => ({
   requireAdmin: () => mockRequireAdmin(),
 }));
 
-jest.mock("@/lib/data/documents", () => ({
+jest.mock("@/lib/server/data/documents", () => ({
   listAdminDocuments: (...args: unknown[]) => mockListAdminDocuments(...args),
 }));
 

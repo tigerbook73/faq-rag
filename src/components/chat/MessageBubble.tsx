@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import { Button } from "@/components/ui/button";
-import type { Citation } from "@/lib/schemas/session";
+import type { Citation } from "@/lib/shared/schemas/session";
 
 interface Props {
   role: "user" | "assistant";

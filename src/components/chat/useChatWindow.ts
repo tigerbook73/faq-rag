@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type Dispatch, type SetStateAction } from "react";
-import { upsertSession, type Message, type ChatSession } from "@/lib/session-api";
-import { lastChat } from "@/lib/last-chat";
+import { upsertSession, type Message, type ChatSession } from "@/lib/client/session-api";
+import { lastChat } from "@/lib/client/last-chat";
 import { mutate as swrMutate } from "swr";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { STORAGE_KEYS } from "@/lib/client/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
-import type { Citation } from "@/lib/schemas/session";
-import type { Provider } from "@/lib/llm/providers";
-import { startChatStream } from "@/lib/session-api";
+import type { Citation } from "@/lib/shared/schemas/session";
+import type { Provider } from "@/lib/server/llm/providers";
+import { startChatStream } from "@/lib/client/session-api";
 
 // ── Draft persistence ──────────────────────────────────────────────────────────
 // Manages the textarea input value and its localStorage draft backup.

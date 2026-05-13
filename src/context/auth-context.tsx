@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { AuthMeResponseSchema } from "@/lib/schemas/user";
+import { createSupabaseBrowserClient } from "@/lib/server/supabase/browser";
+import { AuthMeResponseSchema } from "@/lib/shared/schemas/user";
 
 interface AuthContextValue {
   isAuthenticated: boolean;

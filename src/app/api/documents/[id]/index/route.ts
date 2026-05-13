@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { config } from "@/lib/config";
-import { getDocumentForWrite, setDocumentUploaded } from "@/lib/data/documents";
-import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
-import { processDocument } from "@/lib/ingest/pipeline";
+import { authErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { config } from "@/lib/shared/config";
+import { getDocumentForWrite, setDocumentUploaded } from "@/lib/server/data/documents";
+import { enqueueIndexing } from "@/lib/server/ingest/indexing-queue";
+import { processDocument } from "@/lib/server/ingest/pipeline";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

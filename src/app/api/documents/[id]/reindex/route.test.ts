@@ -3,16 +3,16 @@ const mockGetDocumentForWrite = jest.fn();
 const mockResetDocumentForReindex = jest.fn();
 const mockProcessDocument = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/documents", () => ({
+jest.mock("@/lib/server/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
   resetDocumentForReindex: (...args: unknown[]) => mockResetDocumentForReindex(...args),
 }));
 
-jest.mock("@/lib/ingest/pipeline", () => ({
+jest.mock("@/lib/server/ingest/pipeline", () => ({
   processDocument: (...args: unknown[]) => mockProcessDocument(...args),
 }));
 

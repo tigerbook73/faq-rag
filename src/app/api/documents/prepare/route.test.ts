@@ -5,18 +5,18 @@ const mockSetDocumentFileRef = jest.fn();
 const mockDeleteDocumentById = jest.fn();
 const mockCreateSignedUploadUrl = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/documents", () => ({
+jest.mock("@/lib/server/data/documents", () => ({
   findDuplicateDocumentForOwner: (...args: unknown[]) => mockFindDuplicateDocumentForOwner(...args),
   createPendingDocumentForOwner: (...args: unknown[]) => mockCreatePendingDocumentForOwner(...args),
   setDocumentFileRef: (...args: unknown[]) => mockSetDocumentFileRef(...args),
   deleteDocumentById: (...args: unknown[]) => mockDeleteDocumentById(...args),
 }));
 
-jest.mock("@/lib/supabase/server", () => ({
+jest.mock("@/lib/server/supabase/server", () => ({
   createSupabaseServiceClient: () => ({
     storage: {
       from: () => ({

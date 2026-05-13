@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
-import { config } from "@/lib/config";
-import { type DocumentItem } from "@/lib/schemas/document";
-import { prepareUpload, confirmIndex } from "@/lib/documents-api";
+import { config } from "@/lib/shared/config";
+import { type DocumentItem } from "@/lib/shared/schemas/document";
+import { prepareUpload, confirmIndex } from "@/lib/client/documents-api";
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();

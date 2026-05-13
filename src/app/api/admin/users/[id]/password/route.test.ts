@@ -1,16 +1,16 @@
 const mockRequireAdmin = jest.fn();
 const mockUpdateUserPassword = jest.fn();
 
-jest.mock("@/lib/auth/require-admin", () => ({
+jest.mock("@/lib/server/auth/require-admin", () => ({
   requireAdmin: () => mockRequireAdmin(),
 }));
 
-jest.mock("@/lib/services/update-user-password", () => ({
+jest.mock("@/lib/server/services/update-user-password", () => ({
   updateUserPassword: (...args: unknown[]) => mockUpdateUserPassword(...args),
 }));
 
 import { PATCH } from "./route";
-import { AuthError } from "@/lib/auth/errors";
+import { AuthError } from "@/lib/server/auth/errors";
 
 function patchRequest(id: string, body: unknown) {
   return new Request(`http://localhost/api/admin/users/${id}/password`, {

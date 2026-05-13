@@ -2,11 +2,11 @@ const mockRequireUser = jest.fn();
 const mockListSessionsForUser = jest.fn();
 const mockCreateSessionForUser = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/sessions", () => ({
+jest.mock("@/lib/server/data/sessions", () => ({
   listSessionsForUser: (...args: unknown[]) => mockListSessionsForUser(...args),
   createSessionForUser: (...args: unknown[]) => mockCreateSessionForUser(...args),
 }));

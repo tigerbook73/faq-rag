@@ -1,11 +1,11 @@
 const mockRequireUser = jest.fn();
 const mockListDocumentsPageForOwner = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/documents", () => ({
+jest.mock("@/lib/server/data/documents", () => ({
   listDocumentsPageForOwner: (...args: unknown[]) => mockListDocumentsPageForOwner(...args),
 }));
 

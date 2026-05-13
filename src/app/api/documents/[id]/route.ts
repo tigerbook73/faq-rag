@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/data/documents";
-import { deleteDocument } from "@/lib/services/delete-document";
-import { UpdateDocumentInputSchema } from "@/lib/schemas/document";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/server/data/documents";
+import { deleteDocument } from "@/lib/server/services/delete-document";
+import { UpdateDocumentInputSchema } from "@/lib/shared/schemas/document";
 
 type Params = { params: Promise<{ id: string }> };
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { selectPublicDocumentForUser, unselectPublicDocumentForUser } from "@/lib/data/public-documents";
+import { authErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { selectPublicDocumentForUser, unselectPublicDocumentForUser } from "@/lib/server/data/public-documents";
 
 type Params = { params: Promise<{ id: string }> };
 

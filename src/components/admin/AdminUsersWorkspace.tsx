@@ -16,8 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CreateUserInputSchema, type AdminUserItem as AdminUser } from "@/lib/schemas/user";
-import { createUser, deleteUser, updateUserPassword } from "@/lib/admin-api";
+import { CreateUserInputSchema, type AdminUserItem as AdminUser } from "@/lib/shared/schemas/user";
+import { createUser, deleteUser, updateUserPassword } from "@/lib/client/admin-api";
 import { useAuth } from "@/context/auth-context";
 
 const SWR_KEY = "/api/admin/users";

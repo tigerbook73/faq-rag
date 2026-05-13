@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { sanitizeFilename } from "@/lib/storage";
-import { mimeFromExt } from "@/lib/ingest/parse";
-import { config } from "@/lib/config";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { createSupabaseServiceClient } from "@/lib/server/supabase/server";
+import { sanitizeFilename } from "@/lib/server/storage";
+import { mimeFromExt } from "@/lib/server/ingest/parse";
+import { config } from "@/lib/shared/config";
 import {
   createPendingDocumentForOwner,
   deleteDocumentById,
   findDuplicateDocumentForOwner,
   setDocumentFileRef,
-} from "@/lib/data/documents";
-import { PrepareUploadInputSchema } from "@/lib/schemas/document";
+} from "@/lib/server/data/documents";
+import { PrepareUploadInputSchema } from "@/lib/shared/schemas/document";
 
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
 const ALLOWED_MIME_TYPES = new Set([

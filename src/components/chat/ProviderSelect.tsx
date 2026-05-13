@@ -2,8 +2,8 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PROVIDER, PROVIDER_LABEL, type Provider } from "@/lib/llm/providers";
-import { cn } from "@/lib/utils";
+import { PROVIDER, PROVIDER_LABEL, type Provider } from "@/lib/server/llm/providers";
+import { cn } from "@/lib/shared/utils";
 
 interface Props {
   value: Provider;

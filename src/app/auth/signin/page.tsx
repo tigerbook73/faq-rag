@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { AuthError } from "@/lib/auth/errors";
-import { getCurrentUser } from "@/lib/auth/helpers";
-import { resolvePostLoginRedirect } from "@/lib/route-policy";
+import { AuthError } from "@/lib/server/auth/errors";
+import { getCurrentUser } from "@/lib/server/auth/helpers";
+import { resolvePostLoginRedirect } from "@/lib/server/route-policy";
 import { SignInForm } from "./SignInForm";
 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ from?: string | string[] }> }) {

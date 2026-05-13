@@ -12,8 +12,8 @@ import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getLastChatHref } from "@/lib/last-chat";
-import { isSignInRoute, shouldHideSidebar } from "@/lib/route-policy";
+import { getLastChatHref } from "@/lib/client/last-chat";
+import { isSignInRoute, shouldHideSidebar } from "@/lib/server/route-policy";
 
 function AuthButton({
   isAuthLoading,

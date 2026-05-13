@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/require-admin";
-import { AuthError } from "@/lib/auth/errors";
-import { SIGN_IN_PATH } from "@/lib/route-policy";
+import { requireAdmin } from "@/lib/server/auth/require-admin";
+import { AuthError } from "@/lib/server/auth/errors";
+import { SIGN_IN_PATH } from "@/lib/server/route-policy";
 import { PageShell } from "@/components/layout/PageShell";
 import { AdminShell } from "@/components/admin/AdminShell";
 

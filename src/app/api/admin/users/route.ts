@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireAdmin } from "@/lib/auth/require-admin";
-import { listUsers } from "@/lib/data/users";
-import { createUserAccount } from "@/lib/services/create-user";
-import { CreateUserInputSchema } from "@/lib/schemas/user";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireAdmin } from "@/lib/server/auth/require-admin";
+import { listUsers } from "@/lib/server/data/users";
+import { createUserAccount } from "@/lib/server/services/create-user";
+import { CreateUserInputSchema } from "@/lib/shared/schemas/user";
 
 export async function GET() {
   try {

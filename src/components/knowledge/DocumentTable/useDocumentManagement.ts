@@ -3,9 +3,9 @@
 import { useState, useMemo, useCallback } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
-import { config } from "@/lib/config";
-import { type DocumentItem as Document } from "@/lib/schemas/document";
-import { deleteDocument, reindexDocument, updateDocumentVisibility } from "@/lib/documents-api";
+import { config } from "@/lib/shared/config";
+import { type DocumentItem as Document } from "@/lib/shared/schemas/document";
+import { deleteDocument, reindexDocument, updateDocumentVisibility } from "@/lib/client/documents-api";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 

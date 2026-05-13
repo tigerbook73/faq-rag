@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { preventAuthResponseCaching } from "@/lib/auth/api";
+import { preventAuthResponseCaching } from "@/lib/server/auth/api";
 
 export async function POST() {
   const response = preventAuthResponseCaching(NextResponse.json({ ok: true }));

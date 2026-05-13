@@ -12,7 +12,7 @@ import { ProviderContextProvider } from "@/context/provider-context";
 import { AuthContextProvider } from "@/context/auth-context";
 import type { InitialAuthState } from "@/context/auth-context";
 import { useAuth } from "@/context/auth-context";
-import { isAdminRoute, shouldHideSidebar } from "@/lib/route-policy";
+import { isAdminRoute, shouldHideSidebar } from "@/lib/server/route-policy";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAuthLoading } = useAuth();

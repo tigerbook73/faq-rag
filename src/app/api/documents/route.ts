@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { listDocumentsPageForOwner } from "@/lib/data/documents";
-import { DocumentListQuerySchema } from "@/lib/schemas/document";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { listDocumentsPageForOwner } from "@/lib/server/data/documents";
+import { DocumentListQuerySchema } from "@/lib/shared/schemas/document";
 
 export async function GET(req: NextRequest) {
   try {

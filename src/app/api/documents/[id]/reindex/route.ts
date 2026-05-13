@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { getDocumentForWrite, resetDocumentForReindex } from "@/lib/data/documents";
-import { processDocument } from "@/lib/ingest/pipeline";
+import { authErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { getDocumentForWrite, resetDocumentForReindex } from "@/lib/server/data/documents";
+import { processDocument } from "@/lib/server/ingest/pipeline";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

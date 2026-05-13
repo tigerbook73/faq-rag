@@ -3,16 +3,16 @@ const mockGetDocumentForWrite = jest.fn();
 const mockUpdateDocumentVisibilityForOwner = jest.fn();
 const mockDeleteDocument = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/documents", () => ({
+jest.mock("@/lib/server/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
   updateDocumentVisibilityForOwner: (...args: unknown[]) => mockUpdateDocumentVisibilityForOwner(...args),
 }));
 
-jest.mock("@/lib/services/delete-document", () => ({
+jest.mock("@/lib/server/services/delete-document", () => ({
   deleteDocument: (...args: unknown[]) => mockDeleteDocument(...args),
 }));
 

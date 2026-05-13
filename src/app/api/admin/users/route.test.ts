@@ -2,20 +2,20 @@ const mockRequireAdmin = jest.fn();
 const mockListUsers = jest.fn();
 const mockCreateUserAccount = jest.fn();
 
-jest.mock("@/lib/auth/require-admin", () => ({
+jest.mock("@/lib/server/auth/require-admin", () => ({
   requireAdmin: () => mockRequireAdmin(),
 }));
 
-jest.mock("@/lib/data/users", () => ({
+jest.mock("@/lib/server/data/users", () => ({
   listUsers: (...args: unknown[]) => mockListUsers(...args),
 }));
 
-jest.mock("@/lib/services/create-user", () => ({
+jest.mock("@/lib/server/services/create-user", () => ({
   createUserAccount: (...args: unknown[]) => mockCreateUserAccount(...args),
 }));
 
 import { GET, POST } from "./route";
-import { AuthError } from "@/lib/auth/errors";
+import { AuthError } from "@/lib/server/auth/errors";
 
 function jsonRequest(body: unknown) {
   return new Request("http://localhost/api/admin/users", {

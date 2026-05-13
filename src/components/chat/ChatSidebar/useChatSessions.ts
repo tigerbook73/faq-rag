@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import useSWR from "swr";
-import { apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/session-api";
-import { getLastChatHref } from "@/lib/last-chat";
+import { apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/client/session-api";
+import { getLastChatHref } from "@/lib/client/last-chat";
 import { useSidebar } from "@/components/ui/sidebar";
 
 const SWR_KEY = "/api/sessions";

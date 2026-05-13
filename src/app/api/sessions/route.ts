@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CreateSessionInputSchema } from "@/lib/schemas/session";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { createSessionForUser, listSessionsForUser } from "@/lib/data/sessions";
+import { CreateSessionInputSchema } from "@/lib/shared/schemas/session";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { createSessionForUser, listSessionsForUser } from "@/lib/server/data/sessions";
 
 export async function GET() {
   try {

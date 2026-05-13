@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db/client";
-import { config } from "@/lib/config";
-import { enqueueIndexing } from "@/lib/ingest/indexing-queue";
-import { processDocument } from "@/lib/ingest/pipeline";
-import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/server/db/client";
+import { config } from "@/lib/shared/config";
+import { enqueueIndexing } from "@/lib/server/ingest/indexing-queue";
+import { processDocument } from "@/lib/server/ingest/pipeline";
+import { logger } from "@/lib/server/logger";
 
 // Payload sent by the storage_notify_indexing trigger
 // (prisma/migrations/20260430120000_ingest_hook_trigger/migration.sql):

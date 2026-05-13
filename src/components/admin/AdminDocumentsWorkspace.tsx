@@ -14,8 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { type AdminDocumentItem as AdminDocument } from "@/lib/schemas/document";
-import { deleteAdminDocument } from "@/lib/admin-api";
+import { type AdminDocumentItem as AdminDocument } from "@/lib/shared/schemas/document";
+import { deleteAdminDocument } from "@/lib/client/admin-api";
 
 const SWR_KEY = "/api/admin/documents?pageSize=100";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());

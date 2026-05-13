@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { LibraryBig, Sun, Moon, LogOut, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { getLastChatHref } from "@/lib/last-chat";
+import { getLastChatHref } from "@/lib/client/last-chat";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/auth-context";
 

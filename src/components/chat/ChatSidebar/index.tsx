@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SquarePen, Info, BookOpen, MessageSquare, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { type ChatSession } from "@/lib/session-api";
+import { type ChatSession } from "@/lib/client/session-api";
 import { useAuth } from "@/context/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 

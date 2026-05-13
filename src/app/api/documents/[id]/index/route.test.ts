@@ -4,24 +4,24 @@ const mockSetDocumentUploaded = jest.fn();
 const mockEnqueueIndexing = jest.fn();
 const mockProcessDocument = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/documents", () => ({
+jest.mock("@/lib/server/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
   setDocumentUploaded: (...args: unknown[]) => mockSetDocumentUploaded(...args),
 }));
 
-jest.mock("@/lib/config", () => ({
+jest.mock("@/lib/shared/config", () => ({
   config: { embedding: { useOpenAI: false } },
 }));
 
-jest.mock("@/lib/ingest/indexing-queue", () => ({
+jest.mock("@/lib/server/ingest/indexing-queue", () => ({
   enqueueIndexing: (...args: unknown[]) => mockEnqueueIndexing(...args),
 }));
 
-jest.mock("@/lib/ingest/pipeline", () => ({
+jest.mock("@/lib/server/ingest/pipeline", () => ({
   processDocument: (...args: unknown[]) => mockProcessDocument(...args),
 }));
 

@@ -1,11 +1,11 @@
 const mockRequireAdmin = jest.fn();
 const mockDeleteUserAccount = jest.fn();
 
-jest.mock("@/lib/auth/require-admin", () => ({
+jest.mock("@/lib/server/auth/require-admin", () => ({
   requireAdmin: () => mockRequireAdmin(),
 }));
 
-jest.mock("@/lib/services/delete-user", () => ({
+jest.mock("@/lib/server/services/delete-user", () => ({
   deleteUserAccount: (...args: unknown[]) => mockDeleteUserAccount(...args),
 }));
 

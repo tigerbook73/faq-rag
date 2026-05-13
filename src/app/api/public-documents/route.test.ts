@@ -1,11 +1,11 @@
 const mockRequireUser = jest.fn();
 const mockListSelectablePublicDocuments = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/data/public-documents", () => ({
+jest.mock("@/lib/server/data/public-documents", () => ({
   listSelectablePublicDocuments: (...args: unknown[]) => mockListSelectablePublicDocuments(...args),
 }));
 

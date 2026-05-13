@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { preventAuthResponseCaching } from "@/lib/auth/api";
-import { buildCurrentPath, canBypassAuthProxy, isSignInRoute, resolvePostLoginRedirect } from "@/lib/route-policy";
+import { preventAuthResponseCaching } from "@/lib/server/auth/api";
+import { buildCurrentPath, canBypassAuthProxy, isSignInRoute, resolvePostLoginRedirect } from "@/lib/server/route-policy";
 
 export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;

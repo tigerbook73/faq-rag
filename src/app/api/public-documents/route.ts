@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
-import { listSelectablePublicDocuments } from "@/lib/data/public-documents";
+import { authErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
+import { listSelectablePublicDocuments } from "@/lib/server/data/public-documents";
 
 export async function GET() {
   try {

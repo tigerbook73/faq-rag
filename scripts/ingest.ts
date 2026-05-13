@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
-import { ingestFile } from "../src/lib/ingest/pipeline";
+import { ingestFile } from "../src/lib/server/ingest/pipeline";
 
 async function main() {
   const target = process.argv[2];

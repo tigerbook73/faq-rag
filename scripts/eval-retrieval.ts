@@ -6,8 +6,8 @@
  * Each entry: { question, expectedDoc } where expectedDoc is a substring of document name.
  */
 
-import { retrieve } from "../src/lib/retrieval/query";
-import { DEFAULT_ADMIN_USER_ID } from "../src/lib/default-users";
+import { retrieve } from "../src/lib/server/retrieval/query";
+import { DEFAULT_ADMIN_USER_ID } from "../src/lib/server/default-users";
 
 interface GoldenEntry {
   question: string;

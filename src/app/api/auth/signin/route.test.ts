@@ -29,7 +29,7 @@ jest.mock("next/headers", () => ({
   }),
 }));
 
-jest.mock("@/lib/supabase/server", () => ({
+jest.mock("@/lib/server/supabase/server", () => ({
   createSupabaseServerClient: async () => ({
     auth: {
       setSession: mockSetSession,
@@ -38,12 +38,12 @@ jest.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-jest.mock("@/lib/auth/helpers", () => ({
+jest.mock("@/lib/server/auth/helpers", () => ({
   getProfile: (...args: unknown[]) => mockGetProfile(...args),
 }));
 
 import { POST } from "./route";
-import { AuthError } from "@/lib/auth/errors";
+import { AuthError } from "@/lib/server/auth/errors";
 
 function request(body: unknown) {
   return new Request("http://localhost/api/auth/signin", {

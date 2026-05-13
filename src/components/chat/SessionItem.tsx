@@ -1,7 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
-import { type ChatSession } from "@/lib/session-api";
+import { type ChatSession } from "@/lib/client/session-api";
 import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 function relativeDate(ts: number): string {

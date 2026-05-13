@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { lastChat } from "@/lib/last-chat";
-import { sanitizeRedirectPath } from "@/lib/route-policy";
+import { lastChat } from "@/lib/client/last-chat";
+import { sanitizeRedirectPath } from "@/lib/server/route-policy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";

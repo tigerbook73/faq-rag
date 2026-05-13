@@ -1,11 +1,11 @@
 const mockRequireUser = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
 import { GET } from "./route";
-import { AuthError } from "@/lib/auth/errors";
+import { AuthError } from "@/lib/server/auth/errors";
 
 describe("/api/auth/me", () => {
   beforeEach(() => {

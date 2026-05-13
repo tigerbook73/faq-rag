@@ -2,15 +2,15 @@ const mockRequireUser = jest.fn();
 const mockRetrieve = jest.fn();
 const mockChat = jest.fn();
 
-jest.mock("@/lib/auth/require-user", () => ({
+jest.mock("@/lib/server/auth/require-user", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-jest.mock("@/lib/retrieval/query", () => ({
+jest.mock("@/lib/server/retrieval/query", () => ({
   retrieve: (...args: unknown[]) => mockRetrieve(...args),
 }));
 
-jest.mock("@/lib/llm/router", () => ({
+jest.mock("@/lib/server/llm/router", () => ({
   getProvider: () => ({
     chat: (...args: unknown[]) => mockChat(...args),
   }),

@@ -3,9 +3,9 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authErrorResponse, preventAuthResponseCaching, validationErrorResponse } from "@/lib/auth/api";
-import { getProfile } from "@/lib/auth/helpers";
-import { resolvePostLoginRedirect } from "@/lib/route-policy";
+import { authErrorResponse, preventAuthResponseCaching, validationErrorResponse } from "@/lib/server/auth/api";
+import { getProfile } from "@/lib/server/auth/helpers";
+import { resolvePostLoginRedirect } from "@/lib/server/route-policy";
 
 const SignInInputSchema = z.object({
   email: z.string().email(),

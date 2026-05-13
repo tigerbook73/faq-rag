@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, validationErrorResponse } from "@/lib/auth/api";
-import { requireAdmin } from "@/lib/auth/require-admin";
-import { updateUserPassword } from "@/lib/services/update-user-password";
-import { UpdatePasswordInputSchema } from "@/lib/schemas/user";
+import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { requireAdmin } from "@/lib/server/auth/require-admin";
+import { updateUserPassword } from "@/lib/server/services/update-user-password";
+import { UpdatePasswordInputSchema } from "@/lib/shared/schemas/user";
 
 type Params = { params: Promise<{ id: string }> };
 

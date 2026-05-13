@@ -9,7 +9,7 @@
 import { config as loadEnv } from "dotenv";
 import { createClient, type User } from "@supabase/supabase-js";
 import { PrismaClient, type UserRole } from "../src/generated/prisma";
-import { DEFAULT_ADMIN_USER_ID, DEFAULT_DEMO_USERS } from "../src/lib/default-users";
+import { DEFAULT_ADMIN_USER_ID, DEFAULT_DEMO_USERS } from "../src/lib/server/default-users";
 
 interface SeedUser {
   id: string;

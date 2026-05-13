@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { InitialAuthState } from "@/context/auth-context";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/server/supabase/server";
 import { Providers } from "./providers";
 import "./globals.css";
 

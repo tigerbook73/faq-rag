@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
-import { requireUser } from "@/lib/auth/require-user";
+import { authErrorResponse } from "@/lib/server/auth/api";
+import { requireUser } from "@/lib/server/auth/require-user";
 
 export async function GET() {
   try {

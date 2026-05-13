@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { type DocumentItem as Document } from "@/lib/schemas/document";
+import { type DocumentItem as Document } from "@/lib/shared/schemas/document";
 import { MoreHorizontal } from "lucide-react";
 
 export type { Document };

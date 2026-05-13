@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 export function PageShell({ children, className }: { children: React.ReactNode; className?: string }) {
   return (

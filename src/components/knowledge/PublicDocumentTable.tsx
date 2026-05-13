@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { KnowledgeSectionTitle } from "@/components/knowledge/KnowledgeSectionTitle";
-import { type PublicDocumentItem as PublicDocument } from "@/lib/schemas/document";
+import { type PublicDocumentItem as PublicDocument } from "@/lib/shared/schemas/document";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 

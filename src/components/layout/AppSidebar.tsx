@@ -18,7 +18,7 @@ import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
 import { Info, MessageSquare, BookOpen } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getLastChatHref } from "@/lib/last-chat";
+import { getLastChatHref } from "@/lib/client/last-chat";
 
 export function AppSidebar() {
   const { isAuthenticated, email } = useAuth();

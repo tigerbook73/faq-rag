@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/auth/api";
-import { requireAdmin } from "@/lib/auth/require-admin";
-import { deleteDocument } from "@/lib/services/delete-document";
+import { authErrorResponse } from "@/lib/server/auth/api";
+import { requireAdmin } from "@/lib/server/auth/require-admin";
+import { deleteDocument } from "@/lib/server/services/delete-document";
 
 type Params = { params: Promise<{ id: string }> };
 
