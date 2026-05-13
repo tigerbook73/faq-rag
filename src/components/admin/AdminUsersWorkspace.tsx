@@ -20,6 +20,7 @@ import { CreateUserInputSchema, type AdminUserItem as AdminUser } from "@/lib/sh
 import { createUser, deleteUser, updateUserPassword } from "@/lib/client/admin-api";
 import { useAuth } from "@/context/auth-context";
 import { fetcher } from "@/lib/client/swr";
+import { parseZodFieldErrors } from "@/lib/shared/form-utils";
 
 const SWR_KEY = "/api/admin/users";
 
@@ -58,13 +59,7 @@ export function AdminUsersWorkspace() {
     event.preventDefault();
     const result = CreateUserInputSchema.safeParse({ email: createEmail, password: createPassword });
     if (!result.success) {
-      const errors: { email?: string; password?: string } = {};
-      for (const issue of result.error.issues) {
-        const field = issue.path[0] as string;
-        if (field === "email") errors.email = issue.message;
-        if (field === "password") errors.password = issue.message;
-      }
-      setCreateErrors(errors);
+      setCreateErrors(parseZodFieldErrors<{ email: string; password: string }>(result.error));
       return;
     }
     setCreateErrors({});
