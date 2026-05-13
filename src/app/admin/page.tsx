@@ -10,8 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PageShell } from "@/components/layout/PageShell";
 import { type AdminDocumentItem as AdminDocument } from "@/lib/shared/schemas/document";
 import { type AdminUserItem as AdminUser } from "@/lib/shared/schemas/user";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+import { fetcher } from "@/lib/client/swr";
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (

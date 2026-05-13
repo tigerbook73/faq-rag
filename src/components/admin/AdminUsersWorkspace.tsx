@@ -19,9 +19,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CreateUserInputSchema, type AdminUserItem as AdminUser } from "@/lib/shared/schemas/user";
 import { createUser, deleteUser, updateUserPassword } from "@/lib/client/admin-api";
 import { useAuth } from "@/context/auth-context";
+import { fetcher } from "@/lib/client/swr";
 
 const SWR_KEY = "/api/admin/users";
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function AdminUsersWorkspace() {
   const { id: actorId } = useAuth();

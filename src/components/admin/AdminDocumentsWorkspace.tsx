@@ -16,9 +16,9 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { type AdminDocumentItem as AdminDocument } from "@/lib/shared/schemas/document";
 import { deleteAdminDocument } from "@/lib/client/admin-api";
+import { fetcher } from "@/lib/client/swr";
 
 const SWR_KEY = "/api/admin/documents?pageSize=100";
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function AdminDocumentsWorkspace() {
   const { data, mutate } = useSWR<{ items: AdminDocument[] }>(SWR_KEY, fetcher);

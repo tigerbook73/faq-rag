@@ -6,10 +6,9 @@ import { toast } from "sonner";
 import { config } from "@/lib/shared/config";
 import { type DocumentItem as Document } from "@/lib/shared/schemas/document";
 import { deleteDocument, reindexDocument, updateDocumentVisibility } from "@/lib/client/documents-api";
+import { fetcher } from "@/lib/client/swr";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function useDocumentManagement() {
   const { data, mutate: mutateDocuments } = useSWR<{ items: Document[] }>("/api/documents", fetcher);

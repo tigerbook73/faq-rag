@@ -6,12 +6,9 @@ import useSWR from "swr";
 import { apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/client/session-api";
 import { getLastChatHref } from "@/lib/client/last-chat";
 import { useSidebar } from "@/components/ui/sidebar";
+import { fetcher } from "@/lib/client/swr";
 
 const SWR_KEY = "/api/sessions";
-const fetcher = (url: string) =>
-  fetch(url)
-    .then((r) => r.json())
-    .then((data) => data as ChatSession[]);
 
 export function useChatSessions() {
   const router = useRouter();
