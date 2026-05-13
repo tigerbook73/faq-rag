@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { authErrorResponse, notFoundResponse, validationErrorResponse } from "@/lib/server/auth/api";
 import { requireUser } from "@/lib/server/auth/require-user";
 import { getDocumentForWrite, updateDocumentVisibilityForOwner } from "@/lib/server/data/documents";
 import { deleteDocument } from "@/lib/server/services/delete-document";
@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const document = await updateDocumentVisibilityForOwner(actor.id, id, parsed.data.visibility);
     if (!document) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return notFoundResponse();
     }
 
     return NextResponse.json(document);
@@ -34,7 +34,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
     const doc = await getDocumentForWrite(actor, id);
     if (!doc) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return notFoundResponse();
     }
 
     await deleteDocument(id);

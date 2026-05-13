@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/server/auth/api";
+import { authErrorResponse, notFoundResponse } from "@/lib/server/auth/api";
 import { requireUser } from "@/lib/server/auth/require-user";
 import { selectPublicDocumentForUser, unselectPublicDocumentForUser } from "@/lib/server/data/public-documents";
 
@@ -11,7 +11,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     const { id } = await params;
     const selection = await selectPublicDocumentForUser(actor.id, id);
     if (!selection) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return notFoundResponse();
     }
 
     return NextResponse.json(selection, { status: 201 });

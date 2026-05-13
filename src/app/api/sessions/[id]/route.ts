@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { UpdateSessionInputSchema } from "@/lib/shared/schemas/session";
-import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
+import { authErrorResponse, notFoundResponse, validationErrorResponse } from "@/lib/server/auth/api";
 import { requireUser } from "@/lib/server/auth/require-user";
 import { deleteSessionForUser, getSessionForUser, upsertSessionForUser } from "@/lib/server/data/sessions";
 
@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const actor = await requireUser();
     const { id } = await params;
     const session = await getSessionForUser(actor.id, id);
-    if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!session) return notFoundResponse();
     return NextResponse.json(session);
   } catch (error) {
     return authErrorResponse(error);
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const session = await upsertSessionForUser(actor.id, id, parsed.data);
-    if (!session) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!session) return notFoundResponse();
 
     return NextResponse.json(session);
   } catch (error) {

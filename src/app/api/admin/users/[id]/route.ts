@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authErrorResponse } from "@/lib/server/auth/api";
+import { authErrorResponse, notFoundResponse } from "@/lib/server/auth/api";
 import { requireAdmin } from "@/lib/server/auth/require-admin";
 import { deleteUserAccount } from "@/lib/server/services/delete-user";
 
@@ -16,7 +16,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
     const user = await deleteUserAccount(id);
     if (!user) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return notFoundResponse();
     }
 
     return new NextResponse(null, { status: 204 });
