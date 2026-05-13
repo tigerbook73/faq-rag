@@ -17,21 +17,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { type AdminDocumentItem as AdminDocument } from "@/lib/shared/schemas/document";
 import { deleteAdminDocument } from "@/lib/client/admin-api";
 import { fetcher } from "@/lib/client/swr";
+import { useDialog } from "@/hooks/useDialog";
 
 const SWR_KEY = "/api/admin/documents?pageSize=100";
 
 export function AdminDocumentsWorkspace() {
   const { data, mutate } = useSWR<{ items: AdminDocument[] }>(SWR_KEY, fetcher);
   const documents = data?.items ?? [];
-  const [deleteTarget, setDeleteTarget] = useState<AdminDocument | null>(null);
+  const deleteDialog = useDialog<AdminDocument>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDeleteDocument() {
-    if (!deleteTarget) return;
-    setDeletingId(deleteTarget.id);
+    if (!deleteDialog.data) return;
+    setDeletingId(deleteDialog.data.id);
     try {
-      await deleteAdminDocument(deleteTarget.id);
-      setDeleteTarget(null);
+      await deleteAdminDocument(deleteDialog.data.id);
+      deleteDialog.close();
       await mutate();
       toast.success("Document deleted");
     } catch (error) {
@@ -86,7 +87,7 @@ export function AdminDocumentsWorkspace() {
                     variant="destructive"
                     size="sm"
                     disabled={deletingId === doc.id}
-                    onClick={() => setDeleteTarget(doc)}
+                    onClick={() => deleteDialog.openWith(doc)}
                   >
                     Delete
                   </Button>
@@ -97,17 +98,17 @@ export function AdminDocumentsWorkspace() {
         </TableBody>
       </Table>
 
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <Dialog open={deleteDialog.open} onOpenChange={deleteDialog.onOpenChange}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Delete Document?</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>{deleteTarget?.name}</strong> including its index chunks, stored
+              This will permanently delete <strong>{deleteDialog.data?.name}</strong> including its index chunks, stored
               file, and all public selection records. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+            <Button variant="outline" onClick={deleteDialog.close}>
               Cancel
             </Button>
             <Button variant="destructive" disabled={!!deletingId} onClick={handleDeleteDocument}>

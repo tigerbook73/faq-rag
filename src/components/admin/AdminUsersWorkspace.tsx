@@ -21,6 +21,7 @@ import { createUser, deleteUser, updateUserPassword } from "@/lib/client/admin-a
 import { useAuth } from "@/context/auth-context";
 import { fetcher } from "@/lib/client/swr";
 import { parseZodFieldErrors } from "@/lib/shared/form-utils";
+import { useDialog } from "@/hooks/useDialog";
 
 const SWR_KEY = "/api/admin/users";
 
@@ -29,30 +30,31 @@ export function AdminUsersWorkspace() {
   const { data, mutate } = useSWR<{ items: AdminUser[] }>(SWR_KEY, fetcher);
   const users = data?.items ?? [];
 
-  // Create user dialog
-  const [createOpen, setCreateOpen] = useState(false);
+  const createDialog = useDialog();
+  const deleteDialog = useDialog<AdminUser>();
+  const passwordDialog = useDialog<AdminUser>();
+
+  // Create user form fields
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [createErrors, setCreateErrors] = useState<{ email?: string; password?: string }>({});
   const [creating, setCreating] = useState(false);
 
-  // Delete dialog
-  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  // Loading states for async operations
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [changingPasswordId, setChangingPasswordId] = useState<string | null>(null);
 
-  // Change password dialog
-  const [passwordTarget, setPasswordTarget] = useState<AdminUser | null>(null);
+  // Change password form fields
   const [newPassword, setNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | undefined>();
-  const [changingPasswordId, setChangingPasswordId] = useState<string | null>(null);
 
   function handleCreateDialogChange(open: boolean) {
     if (!open) {
       setCreateEmail("");
       setCreatePassword("");
       setCreateErrors({});
+      createDialog.close();
     }
-    setCreateOpen(open);
   }
 
   async function handleCreateUser(event: React.FormEvent) {
@@ -66,7 +68,7 @@ export function AdminUsersWorkspace() {
     setCreating(true);
     try {
       await createUser({ email: createEmail, password: createPassword });
-      setCreateOpen(false);
+      createDialog.close();
       await mutate();
       toast.success("User created");
     } catch (error) {
@@ -77,11 +79,11 @@ export function AdminUsersWorkspace() {
   }
 
   async function handleDeleteUser() {
-    if (!deleteTarget) return;
-    setDeletingId(deleteTarget.id);
+    if (!deleteDialog.data) return;
+    setDeletingId(deleteDialog.data.id);
     try {
-      await deleteUser(deleteTarget.id);
-      setDeleteTarget(null);
+      await deleteUser(deleteDialog.data.id);
+      deleteDialog.close();
       await mutate();
       toast.success("User deleted");
     } catch (error) {
@@ -92,17 +94,17 @@ export function AdminUsersWorkspace() {
   }
 
   async function handleChangePassword() {
-    if (!passwordTarget) return;
+    if (!passwordDialog.data) return;
     const result = CreateUserInputSchema.shape.password.safeParse(newPassword);
     if (!result.success) {
       setPasswordError(result.error.issues[0]?.message);
       return;
     }
     setPasswordError(undefined);
-    setChangingPasswordId(passwordTarget.id);
+    setChangingPasswordId(passwordDialog.data.id);
     try {
-      await updateUserPassword(passwordTarget.id, { password: newPassword });
-      setPasswordTarget(null);
+      await updateUserPassword(passwordDialog.data.id, { password: newPassword });
+      passwordDialog.close();
       setNewPassword("");
       toast.success("Password updated");
     } catch (error) {
@@ -116,7 +118,7 @@ export function AdminUsersWorkspace() {
     <>
       <div className="flex items-center justify-between">
         <h2 className="text-app-section">Users</h2>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={createDialog.openEmpty}>
           Add User
         </Button>
       </div>
@@ -146,7 +148,7 @@ export function AdminUsersWorkspace() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setPasswordTarget(user);
+                      passwordDialog.openWith(user);
                       setNewPassword("");
                       setPasswordError(undefined);
                     }}
@@ -157,7 +159,7 @@ export function AdminUsersWorkspace() {
                     variant="destructive"
                     size="sm"
                     disabled={user.id === actorId || deletingId === user.id}
-                    onClick={() => setDeleteTarget(user)}
+                    onClick={() => deleteDialog.openWith(user)}
                   >
                     Delete
                   </Button>
@@ -169,7 +171,7 @@ export function AdminUsersWorkspace() {
       </Table>
 
       {/* Add User Dialog */}
-      <Dialog open={createOpen} onOpenChange={handleCreateDialogChange}>
+      <Dialog open={createDialog.open} onOpenChange={handleCreateDialogChange}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Add User</DialogTitle>
@@ -201,7 +203,7 @@ export function AdminUsersWorkspace() {
               {createErrors.password && <p className="text-destructive text-sm">{createErrors.password}</p>}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" disabled={creating} onClick={() => setCreateOpen(false)}>
+              <Button type="button" variant="outline" disabled={creating} onClick={createDialog.close}>
                 Cancel
               </Button>
               <Button type="submit" disabled={creating}>
@@ -213,17 +215,17 @@ export function AdminUsersWorkspace() {
       </Dialog>
 
       {/* Delete User Dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <Dialog open={deleteDialog.open} onOpenChange={deleteDialog.onOpenChange}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Delete User?</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>{deleteTarget?.email}</strong>&apos;s account, documents, sessions,
-              and all associated data. This action cannot be undone.
+              This will permanently delete <strong>{deleteDialog.data?.email}</strong>&apos;s account, documents,
+              sessions, and all associated data. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+            <Button variant="outline" onClick={deleteDialog.close}>
               Cancel
             </Button>
             <Button variant="destructive" disabled={!!deletingId} onClick={handleDeleteUser}>
@@ -235,10 +237,10 @@ export function AdminUsersWorkspace() {
 
       {/* Change Password Dialog */}
       <Dialog
-        open={!!passwordTarget}
+        open={passwordDialog.open}
         onOpenChange={(open) => {
           if (!open) {
-            setPasswordTarget(null);
+            passwordDialog.close();
             setNewPassword("");
             setPasswordError(undefined);
           }
@@ -248,7 +250,7 @@ export function AdminUsersWorkspace() {
           <DialogHeader>
             <DialogTitle>Change Password</DialogTitle>
             <DialogDescription>
-              Set a new password for <strong>{passwordTarget?.email}</strong>.
+              Set a new password for <strong>{passwordDialog.data?.email}</strong>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1 py-2">
@@ -266,7 +268,7 @@ export function AdminUsersWorkspace() {
             <Button
               variant="outline"
               onClick={() => {
-                setPasswordTarget(null);
+                passwordDialog.close();
                 setNewPassword("");
                 setPasswordError(undefined);
               }}
