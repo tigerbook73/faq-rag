@@ -6,6 +6,13 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`;
     return NextResponse.json({ status: "ok" });
   } catch (err) {
-    return NextResponse.json({ status: "error", message: String(err) }, { status: 503 });
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "Database unavailable",
+        error: err instanceof Error ? { name: err.name, message: err.message, ...err } : err,
+      },
+      { status: 503 }
+    );
   }
 }
