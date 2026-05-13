@@ -2,10 +2,10 @@
 
 ## 当前状态
 
-- 当前阶段：阶段 4 完成，待阶段 5 验证与收口
-- 状态：E2E 命令/标签基础、目录迁移、Chat mock、Remote/Prod 入口已实施
-- 最后确认的实现提交：`5e63d10 e2e-test-architecture phase 2: reorganize e2e specs`（阶段 3-4 实施中，待统一提交）
-- 下一步入口：阶段 5 — 验证与收口
+- 当前阶段：阶段 5 完成，特性已收口
+- 状态：全部阶段完成，验证通过
+- 最后确认的实现提交：`37e115d e2e-test-architecture phase 3+4: chat mock and remote/prod entry points`
+- 下一步入口：无（特性完成）
 
 ## 文档结构
 
@@ -19,7 +19,7 @@
 - [x] 阶段 2：目录迁移
 - [x] 阶段 3：Chat mock
 - [x] 阶段 4：Remote/Prod 入口
-- [ ] 阶段 5：验证与收口
+- [x] 阶段 5：验证与收口
 
 ## 已完成工作
 
@@ -68,11 +68,8 @@
 - 阶段 3 新增后：`pnpm e2e --list` 列出 18 个默认测试；`pnpm e2e:smoke --list` 列出 9 个 smoke 测试；tsc、lint 通过。
 - 阶段 4 实施后：默认列表仍为 18 个测试；`pnpm e2e:prod:smoke --list` 列出 0 个（无 @prod-smoke 测试属预期）；prod 保护逻辑（无 E2E_BASE_URL、localhost、allowlist 不匹配）均正确抛错；tsc、lint 通过。
 - 备注：当前执行环境的 Node 本地网络访问在默认沙箱下会被拦截，Playwright webServer 探测需要在允许 localhost 访问的环境中运行；用户手工启动 `pnpm dev` 后已完成验证。
+- 阶段 5 验证：`pnpm e2e` 18 passed；`pnpm e2e:smoke` 9 passed；`pnpm e2e:real-api` 5 passed。特性全部通过。
 
 ## 下一步
 
-启动阶段 5（验证与收口）：
-
-1. 用户手工运行 `pnpm e2e`（需要本地 `pnpm dev` 运行中），确认 18 个测试全部通过。
-2. 确认 `pnpm e2e:smoke` 9 个测试通过。
-3. 标记特性为完成，将目录从 `e2e-test-architecture/` 重命名为 `-e2e-test-architecture/`（添加前缀 `-`）。
+无。特性已完成，目录已重命名为 `-e2e-test-architecture/`。
