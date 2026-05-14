@@ -133,6 +133,8 @@ const ROUTE_POLICIES: readonly RoutePolicy[] = [
   },
 ];
 
+const URL_PARSE_ORIGIN = "http://app.local"; // Sentinel origin for parsing relative redirect paths.
+
 function matchesPathPrefix(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
@@ -210,12 +212,12 @@ export function sanitizeRedirectPath(from: string | null | undefined, fallback =
 
   let url: URL;
   try {
-    url = new URL(from, "http://app.local");
+    url = new URL(from, URL_PARSE_ORIGIN);
   } catch {
     return fallback;
   }
 
-  if (url.origin !== "http://app.local") return fallback;
+  if (url.origin !== URL_PARSE_ORIGIN) return fallback;
   if (isSignInRoute(url.pathname)) return fallback;
   if (url.pathname === "/api" || matchesPathPrefix(url.pathname, "/api")) return fallback;
   if (url.pathname === "/_next" || matchesPathPrefix(url.pathname, "/_next")) return fallback;
@@ -227,7 +229,7 @@ export function sanitizeRedirectPath(from: string | null | undefined, fallback =
 export function resolvePostLoginRedirect(role: UserRole, from: string | null | undefined) {
   const homePath = role === "admin" ? ADMIN_HOME_PATH : USER_HOME_PATH;
   const redirectPath = sanitizeRedirectPath(from, homePath);
-  const redirectUrl = new URL(redirectPath, "http://app.local");
+  const redirectUrl = new URL(redirectPath, URL_PARSE_ORIGIN);
 
   if (role !== "admin" && isAdminPrivateRoute(redirectUrl.pathname)) {
     return homePath;
