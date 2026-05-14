@@ -8,7 +8,7 @@ import { getProfile } from "@/lib/server/auth/helpers";
 import { resolvePostLoginRedirect } from "@/lib/server/route-policy";
 
 const SignInInputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1),
   from: z.string().optional().nullable(),
 });
