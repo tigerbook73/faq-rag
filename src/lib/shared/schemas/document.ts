@@ -6,12 +6,6 @@ export const DocumentListQuerySchema = z.object({
 });
 export type DocumentListQuery = z.infer<typeof DocumentListQuerySchema>;
 
-export const AdminDocumentListQuerySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  pageSize: z.coerce.number().min(1).max(100).default(50),
-});
-export type AdminDocumentListQuery = z.infer<typeof AdminDocumentListQuerySchema>;
-
 export const UpdateDocumentInputSchema = z.object({
   visibility: z.enum(["private", "public"]),
 });

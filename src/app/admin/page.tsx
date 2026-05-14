@@ -43,10 +43,7 @@ function UserStatCard({ adminCount, userCount, url }: { adminCount: number; user
 
 export default function AdminDashboardPage() {
   const { data: usersData } = useSWR<{ items: AdminUser[] }>("/api/admin/users", fetcher);
-  const { data: docsData } = useSWR<{ items: AdminDocument[]; total: number }>(
-    "/api/admin/documents?pageSize=1",
-    fetcher,
-  );
+  const { data: docsData } = useSWR<{ items: AdminDocument[]; total: number }>("/api/admin/documents", fetcher);
 
   const users = usersData?.items ?? [];
   const documents = docsData ?? { items: [], total: 0 };

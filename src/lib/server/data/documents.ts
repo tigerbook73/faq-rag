@@ -31,11 +31,9 @@ export async function listDocumentsPageForOwner(ownerUserId: string, input: { sk
   return { items, total };
 }
 
-export async function listAdminDocuments(input: { skip: number; take: number }) {
+export async function listAdminDocuments() {
   const [items, total] = await Promise.all([
     prisma.document.findMany({
-      skip: input.skip,
-      take: input.take,
       orderBy: { createdAt: "desc" },
       include: {
         owner: { select: { email: true } },

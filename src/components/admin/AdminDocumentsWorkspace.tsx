@@ -19,7 +19,7 @@ import { deleteAdminDocument } from "@/lib/client/admin-api";
 import { fetcher } from "@/lib/client/swr";
 import { useDialog } from "@/hooks/useDialog";
 
-const SWR_KEY = "/api/admin/documents?pageSize=100";
+const SWR_KEY = "/api/admin/documents";
 
 export function AdminDocumentsWorkspace() {
   const { data, mutate } = useSWR<{ items: AdminDocument[] }>(SWR_KEY, fetcher);
