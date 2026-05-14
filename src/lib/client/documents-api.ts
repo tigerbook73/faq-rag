@@ -34,7 +34,10 @@ export async function reindexDocument(id: string): Promise<void> {
   }
 }
 
-export async function updateDocumentVisibility(id: string, visibility: UpdateDocumentInput["visibility"]): Promise<void> {
+export async function updateDocumentVisibility(
+  id: string,
+  visibility: UpdateDocumentInput["visibility"],
+): Promise<void> {
   const input: UpdateDocumentInput = { visibility };
   const res = await fetch(`/api/documents/${id}`, {
     method: "PATCH",

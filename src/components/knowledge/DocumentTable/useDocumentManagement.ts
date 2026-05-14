@@ -116,7 +116,11 @@ export function useDocumentManagement() {
     let failed = 0;
     try {
       for (let i = 0; i < documents.length; i++) {
-        try { await reindexDocument(documents[i].id); } catch { failed++; }
+        try {
+          await reindexDocument(documents[i].id);
+        } catch {
+          failed++;
+        }
         setRebuildProgress({ done: i + 1, total: documents.length });
       }
       await mutateDocuments();

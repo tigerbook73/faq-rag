@@ -12,7 +12,7 @@ export async function GET() {
         message: "Database unavailable",
         error: err instanceof Error ? { ...err, name: err.name, message: err.message } : err,
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 }

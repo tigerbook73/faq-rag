@@ -34,7 +34,12 @@ export function UploadZone() {
         try {
           const hash = await computeSHA256(file);
 
-          const { docId, signedUrl, document } = await prepareUpload({ name: file.name, size: file.size, mime: file.type, hash });
+          const { docId, signedUrl, document } = await prepareUpload({
+            name: file.name,
+            size: file.size,
+            mime: file.type,
+            hash,
+          });
 
           await new Promise<void>((resolve, reject) => {
             const form = new FormData();
