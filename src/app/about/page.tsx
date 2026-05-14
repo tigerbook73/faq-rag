@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 
 export default function AboutPage() {
@@ -42,9 +42,9 @@ export default function AboutPage() {
           Claude · DeepSeek · Jest · Playwright
         </p>
       </div>
-      <Button nativeButton={false} render={<Link href="/chat/last" />}>
+      <Link href="/chat/last" className={buttonVariants()}>
         Go to Chat
-      </Button>
+      </Link>
     </PageShell>
   );
 }
