@@ -64,15 +64,32 @@ Next.js Route Handlers (src/app/api/)
   └── GET /api/health
 
 Service Layer (src/lib/)
-  ├── auth/            requireUser.ts, requireAdmin.ts, api.ts (authErrorResponse, validationErrorResponse), errors.ts
+  server/
+  ├── auth/            requireUser.ts, requireAdmin.ts, api.ts (withUser/withAdmin wrappers), errors.ts, get-current-user.ts, helpers.ts
   ├── data/            documents.ts, public-documents.ts, sessions.ts, users.ts — DB query helpers
-  ├── schemas/         Zod schemas: chat.ts, document.ts, session.ts, user.ts
-  ├── chat-storage.ts  session API wrappers (localStorage for last-chat-id only; full sessions in DB)
+  ├── services/        create-user.ts, delete-document.ts, delete-user.ts, update-user-password.ts
+  ├── db/              client.ts — Prisma singleton
   ├── ingest/          parse → semantic split → embed → pgvector ($executeRaw); worker thread isolated
   ├── retrieval/       detect lang → translate + HyDE → embed → vector search (ownership-scoped) → rerank
-  ├── llm/             provider abstraction (claude.ts, deepseek.ts, router.ts, providers.ts, truncate.ts)
+  ├── llm/             provider abstraction (claude.ts, deepseek.ts, router.ts, providers.ts, truncate.ts, prompts.ts)
   ├── embeddings/      bge.ts — local bge-m3 singleton + getEmbeddingsBatch()
-  └── lang/            detect.ts — franc-min wrapper
+  ├── lang/            detect.ts — franc-min wrapper
+  ├── storage/         index.ts — Supabase Storage helpers
+  ├── supabase/        server.ts (SSR + service-role clients), browser.ts (factory)
+  ├── route-policy.ts  route classification, redirect helpers, SIGN_IN_PATH / ADMIN_ACCESS_DENIED_PATH
+  └── logger.ts        server-side logger
+  client/
+  ├── session-api.ts   session API wrappers + ChatSession / Message types
+  ├── documents-api.ts document API wrappers
+  ├── admin-api.ts     admin API wrappers
+  ├── last-chat.ts     sessionStorage helper for last-chat-id (LAST_CHAT key)
+  ├── swr.ts           shared SWR fetcher
+  └── constants.ts     client-side constants (STORAGE_KEYS, etc.)
+  shared/
+  ├── schemas/         Zod schemas: chat.ts, document.ts, session.ts, user.ts
+  ├── config.ts        Central constants (TOP_K, CHUNK_SIZE, POLL_INTERVAL_MS, etc.)
+  ├── form-utils.ts    shared form helpers
+  └── utils.ts         shared utility functions
 
 PostgreSQL + pgvector
 ```
