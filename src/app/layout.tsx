@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   description: "Knowledge base Q&A powered by RAG",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
+};
+
 async function getInitialAuthState(): Promise<InitialAuthState> {
   const supabase = await createSupabaseServerClient();
   const {
