@@ -7,7 +7,7 @@
 
 ## Document Index
 
-- (no documents yet; entries added here as requirements and design documents are created)
+- [requirements.md](requirements.md) — 性能瓶颈分析、需求范围与验收标准
 
 ## Current Phase
 
@@ -21,7 +21,7 @@ requirements (in_progress)
 
 - status: in_progress
 - notes:
-  - dev-task just created, requirements pending
+  - requirements.md 已完成，待用户确认后进入 design 阶段
 
 ## Design Phase
 
