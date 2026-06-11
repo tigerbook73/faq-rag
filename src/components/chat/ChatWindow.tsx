@@ -113,11 +113,11 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask a question… (Ctrl+Enter / ⌘+Enter to send)"
-            className="max-h-50 min-h-(--spacing-app-composer) flex-1 resize-none"
+            className="min-h-app-composer max-h-50 flex-1 resize-none"
             rows={2}
             disabled={loading}
           />
-          <Button onClick={send} disabled={loading} className="h-(--spacing-app-composer) px-6">
+          <Button onClick={send} disabled={loading} className="h-app-composer px-6">
             {loading ? "Thinking…" : "Send"}
           </Button>
         </div>
