@@ -1,0 +1,21 @@
+pre-commit:
+  commands:
+    no-commit-to-main:
+      run: |
+        branch=$(git rev-parse --abbrev-ref HEAD)
+        if [ "$branch" = "main" ]; then
+          echo "Direct commits to main are not allowed. Please use a feature branch."
+          exit 1
+        fi
+    format:
+      glob: "*.{ts,tsx,js,jsx,json,css,md,yaml,yml}"
+      run: pnpm exec prettier --write {staged_files}
+      stage_fixed: true
+    lint:
+      glob: "*.{ts,tsx}"
+      run: pnpm exec eslint --fix {staged_files}
+      stage_fixed: true
+    aisk-test-review-gate-check-reviewed-by-commit-marker:
+      run: node .aisk/test-review-gate/scripts/check-reviewed-by-commit-marker.js {staged_files}
+    aisk-test-review-gate-check-test-cases-match-it:
+      run: node .aisk/test-review-gate/scripts/check-test-cases-match-it.js {staged_files}
