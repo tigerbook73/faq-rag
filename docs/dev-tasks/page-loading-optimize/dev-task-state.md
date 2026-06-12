@@ -8,28 +8,31 @@
 ## Document Index
 
 - [requirements.md](requirements.md) — 性能瓶颈分析、需求范围与验收标准
+- [design.md](design.md) — 技术设计、四步实现方案、验收条件
 
 ## Current Phase
 
-requirements (in_progress)
+implementation (in_progress)
 
 ## Current Step
 
-—
+step-2
 
 ## Requirements Phase
 
-- status: in_progress
-- notes:
-  - requirements.md 已完成，待用户确认后进入 design 阶段
+- status: done
 
 ## Design Phase
 
-- status: pending
+- status: done
 
 ## Implementation Phase
 
-- status: pending
+- status: in_progress
+- step-1: middleware header 注入 + 根路由重定向 + layout header 读取 (R1, R3) | type: final | status: done | auto-check: passed | manual-check: — | commit: —
+- step-2: layout Suspense + Prisma role 预取 + auth-context 优化 (R2, R4) | type: final | status: in_progress
+- step-3: chat layout 会话列表 Server-side 预取 (R5) | type: final | status: pending
+- step-4: ChatWindow SWR 缓存 (R6) | type: final | status: pending
 
 ## Dev-Task Acceptance
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import type { InitialAuthState } from "@/context/auth-context";
-import { createSupabaseServerClient } from "@/lib/server/supabase/server";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -27,15 +27,17 @@ export const viewport = {
 };
 
 async function getInitialAuthState(): Promise<InitialAuthState> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const headersList = await headers();
+  const userId = headersList.get("x-auth-id");
+
+  if (!userId) {
+    return { isAuthenticated: false, role: null, email: null, id: null };
+  }
 
   return {
-    isAuthenticated: Boolean(user),
+    isAuthenticated: true,
     role: null,
-    email: user?.email ?? null,
+    email: headersList.get("x-auth-email") ?? null,
     id: null,
   };
 }
