@@ -31,9 +31,9 @@ A multi-user FAQ question-answering system. Users upload documents (Chinese or E
 
 ```
 Browser
-  └── / → redirect to /chat/new
+  └── / → redirect handled by proxy.ts middleware (→ /chat/last if logged in, /about if not)
   └── /auth/signin       ← Supabase email/password sign-in (public)
-  └── /chat/layout       ← passthrough (global layout lives in providers.tsx)
+  └── /chat/layout       ← async SC: prefetches session list, injects SWR fallback via SWRBootstrap
       ├── /chat/new      ← ChatWindow with chatId=null (new ephemeral session)
       ├── /chat/[id]     ← ChatWindow with chatId from URL (client-side hydration via SWR)
       └── /chat/last     ← client redirect to last active chat
@@ -153,7 +153,8 @@ interface Message {
 - Sessions older than 2 days are pruned on layout mount (`pruneOldSessions` calls `DELETE /api/sessions/[id]`).
 - `ChatSidebar` fetches the session list via `GET /api/sessions` using SWR; updates propagate via SWR `mutate()` after any write — no custom events.
 - On `/chat/new`, `chatId` prop is `null`; a UUID is generated at send-time and the URL is replaced with `/chat/<id>` after the first message.
-- `ChatWindow` fetches the session client-side via SWR on mount — there is no server-side hydration.
+- `ChatWindow` fetches the session via SWR (`/api/sessions/${chatId}`, `revalidateIfStale: false`); cached on navigation so revisiting a chat skips the network call.
+- `ChatSidebar` session list is prefetched server-side in `chat/layout.tsx` and injected as SWR `fallback` via `SWRBootstrap.tsx` — immediately visible after hydration, no loading flash.
 
 ---
 
@@ -223,7 +224,8 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 - **Ingestion is async**: `POST /api/documents` returns the document ID immediately; indexing runs in the background in a worker thread. Poll `status` field.
 - **System prompt**: written in English to avoid biasing the LLM toward any specific response language.
 - **localStorage is client-only**: `chat-storage.ts` uses localStorage only for `chat:last`. Full session data is in PostgreSQL.
-- **Session sync**: after any session write, call SWR's `mutate()` on the `/api/sessions` key — do not dispatch custom events.
+- **Auth header injection**: `proxy.ts` strips any client-supplied `x-auth-id`/`x-auth-email` headers, then re-injects them after `getUser()` succeeds. Server Components read these via `next/headers` — do NOT call `getUser()` again in layout or page components; the only verified call per request is in middleware.
+- **Session sync**: after any session write, call `swrMutate("/api/sessions")` (list) AND `swrMutate(\`/api/sessions/${id}\`, updated, { revalidate: false })` (per-session cache) — do not dispatch custom events. Failing to update the per-session key causes stale data when navigating back to a chat.
 - **Document ownership**: every document belongs to `ownerUserId`. API handlers enforce ownership via `requireUser()`. `vectorSearch` is scoped to the caller's own docs plus public docs they have selected.
 - **Document visibility**: `private` (owner-only) vs `public`. Public docs become searchable to a user only after an admin adds them to `PublicDocumentSelection` for that user.
 - **API auth helpers**: `requireUser()` throws `AuthError(401)` if unauthenticated; `requireAdmin()` throws `AuthError(403)` if role ≠ admin. Wrap all protected handlers with these.
@@ -243,8 +245,8 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 
 | Path                                                   | Purpose                                                                                                                        |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `proxy.ts`                                             | Next.js 16 middleware — auth guard (public: /auth/signin, /about, /api/ingest-hook); uses `getSession()`                       |
-| `src/app/layout.tsx`                                   | Root layout — sync, no server-side auth; delegates entirely to `<Providers>`                                                   |
+| `proxy.ts`                                             | Next.js 16 middleware — auth guard; calls `getUser()` once, injects `x-auth-id`/`x-auth-email` headers; handles `/` redirect   |
+| `src/app/layout.tsx`                                   | Root layout — reads `x-auth-id` header, fetches role via Prisma, passes `initialAuthState` (incl. role) to `<Providers>`       |
 | `src/app/providers.tsx`                                | Client shell — `AppLayout` renders sidebar/topbar for non-admin routes; hides sidebar on /auth/signin and when unauthenticated |
 | `src/app/api/chat/route.ts`                            | Chat endpoint — retrieval (ownership-scoped) + LLM streaming (SSE)                                                             |
 | `src/app/api/documents/prepare/route.ts`               | POST: validate file, create pending doc, return Supabase signed upload URL                                                     |
@@ -259,7 +261,8 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 | `src/app/api/admin/users/route.ts`                     | Admin: GET user list / POST create account                                                                                     |
 | `src/app/api/admin/users/[id]/route.ts`                | Admin: PATCH role / DELETE user                                                                                                |
 | `src/app/api/admin/users/[id]/password/route.ts`       | Admin: reset password                                                                                                          |
-| `src/app/chat/layout.tsx`                              | Chat layout — passthrough `<>{children}</>`                                                                                    |
+| `src/app/chat/layout.tsx`                              | Chat layout — async SC; prefetches session list via `listSessionsForUser`, wraps children in `<SWRBootstrap>`                  |
+| `src/components/chat/SWRBootstrap.tsx`                 | Client component wrapping `<SWRConfig fallback>` to hydrate SWR with server-prefetched session list                            |
 | `src/app/chat/[id]/page.tsx`                           | Renders ChatWindow with chatId from URL (no server hydration)                                                                  |
 | `src/app/admin/page.tsx`                               | Admin dashboard — user + document stats                                                                                        |
 | `src/app/admin/documents/page.tsx`                     | Admin document management — list all, delete, visibility                                                                       |
