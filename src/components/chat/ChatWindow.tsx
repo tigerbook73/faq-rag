@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer } from "./CitationDrawer";
 import { type Citation } from "@/lib/shared/schemas/session";
@@ -15,13 +16,19 @@ import { useDraftPersistence, useChatScroll, useStreamingChat } from "./useChatW
 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const { provider } = useProvider();
   const { setSubtitle } = usePageTitle();
   const [session, setSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isSessionLoading, setIsSessionLoading] = useState(chatId !== null);
+
+  const { data: sessionData, isLoading: isSessionLoading } = useSWR<ChatSession | null>(
+    chatId ? `/api/sessions/${chatId}` : null,
+    (url) => fetchSession(url.split("/").pop()!),
+    { revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false },
+  );
 
   const { input, setInput, draftKey } = useDraftPersistence(chatId);
   const { bottomRef, scrollContainerRef } = useChatScroll(messages, chatId, 0);
@@ -38,19 +45,18 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
   });
 
   useEffect(() => {
-    if (!chatId) return;
-    fetchSession(chatId)
-      .then((loaded) => {
-        if (!loaded) {
-          router.replace("/chat/new");
-          return;
-        }
-        setSession(loaded);
-        setMessages(loaded.messages);
-        lastChat.set(chatId);
-      })
-      .finally(() => setIsSessionLoading(false));
-  }, [chatId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (isSessionLoading) return;
+    if (sessionData === null) {
+      router.replace("/chat/new");
+      return;
+    }
+    if (!sessionData) return;
+    startTransition(() => {
+      setSession(sessionData);
+      setMessages(sessionData.messages);
+    });
+    if (chatId) lastChat.set(chatId);
+  }, [chatId, sessionData, isSessionLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setSubtitle(session?.title ?? "New Chat");
