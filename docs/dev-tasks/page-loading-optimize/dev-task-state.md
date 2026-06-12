@@ -16,7 +16,7 @@ implementation (in_progress)
 
 ## Current Step
 
-step-2
+—
 
 ## Requirements Phase
 
@@ -29,10 +29,10 @@ step-2
 ## Implementation Phase
 
 - status: in_progress
-- step-1: middleware header 注入 + 根路由重定向 + layout header 读取 (R1, R3) | type: final | status: done | auto-check: passed | manual-check: — | commit: —
-- step-2: layout Suspense + Prisma role 预取 + auth-context 优化 (R2, R4) | type: final | status: in_progress
-- step-3: chat layout 会话列表 Server-side 预取 (R5) | type: final | status: pending
-- step-4: ChatWindow SWR 缓存 (R6) | type: final | status: pending
+- step-1: middleware header 注入 + 根路由重定向 + layout header 读取 (R1, R3) | type: final | status: done | auto-check: passed | manual-check: — | commit: 192b2cc
+- step-2: layout Suspense + Prisma role 预取 + auth-context 优化 (R2, R4) | type: final | status: done | auto-check: passed | manual-check: — | commit: d7024c1
+- step-3: chat layout 会话列表 Server-side 预取 (R5) | type: final | status: done | auto-check: passed | manual-check: — | commit: 4602654
+- step-4: ChatWindow SWR 缓存 (R6) | type: final | status: done | auto-check: passed | manual-check: — | commit: a7ce43b
 
 ## Dev-Task Acceptance
 
