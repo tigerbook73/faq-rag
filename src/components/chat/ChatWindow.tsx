@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer } from "./CitationDrawer";
 import { type Citation } from "@/lib/shared/schemas/session";
@@ -11,20 +12,27 @@ import { type Message, type ChatSession, fetchSession } from "@/lib/client/sessi
 import { lastChat } from "@/lib/client/last-chat";
 import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDraftPersistence, useChatScroll, useStreamingChat } from "./useChatWindow";
 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const { provider } = useProvider();
   const { setSubtitle } = usePageTitle();
   const [session, setSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isSessionLoading, setIsSessionLoading] = useState(chatId !== null);
+
+  const { data: sessionData, isLoading: isSessionLoading } = useSWR<ChatSession | null>(
+    chatId ? `/api/sessions/${chatId}` : null,
+    (url) => fetchSession(url.split("/").pop()!),
+    { revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false },
+  );
 
   const { input, setInput, draftKey } = useDraftPersistence(chatId);
-  const { bottomRef, scrollContainerRef } = useChatScroll(messages, chatId, 0);
+  const { bottomRef, scrollContainerRef } = useChatScroll(messages, chatId, messages.length);
   const { loading, send, textareaRef } = useStreamingChat({
     chatId,
     messages,
@@ -38,19 +46,18 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
   });
 
   useEffect(() => {
-    if (!chatId) return;
-    fetchSession(chatId)
-      .then((loaded) => {
-        if (!loaded) {
-          router.replace("/chat/new");
-          return;
-        }
-        setSession(loaded);
-        setMessages(loaded.messages);
-        lastChat.set(chatId);
-      })
-      .finally(() => setIsSessionLoading(false));
-  }, [chatId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (isSessionLoading) return;
+    if (sessionData === null) {
+      router.replace("/chat/new");
+      return;
+    }
+    if (!sessionData) return;
+    startTransition(() => {
+      setSession(sessionData);
+      setMessages(sessionData.messages);
+    });
+    if (chatId) lastChat.set(chatId);
+  }, [chatId, sessionData, isSessionLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setSubtitle(session?.title ?? "New Chat");
@@ -72,11 +79,27 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
     [send],
   );
 
-  if (isSessionLoading) {
+  if (isSessionLoading || isPending) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-(--container-app-chat) px-4 py-4" />
+          <div className="mx-auto w-full max-w-(--container-app-chat) space-y-6 px-4 py-4">
+            <div className="flex justify-end">
+              <Skeleton className="h-10 w-48 rounded-2xl" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-10 w-36 rounded-2xl" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-3/5" />
+            </div>
+          </div>
         </div>
       </div>
     );

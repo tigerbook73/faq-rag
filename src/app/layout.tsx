@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import type { InitialAuthState } from "@/context/auth-context";
-import { createSupabaseServerClient } from "@/lib/server/supabase/server";
+import { getUserProfile } from "@/lib/server/data/users";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -27,16 +29,20 @@ export const viewport = {
 };
 
 async function getInitialAuthState(): Promise<InitialAuthState> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const headersList = await headers();
+  const userId = headersList.get("x-auth-id");
+
+  if (!userId) {
+    return { isAuthenticated: false, role: null, email: null, id: null };
+  }
+
+  const profile = await getUserProfile(userId);
 
   return {
-    isAuthenticated: Boolean(user),
-    role: null,
-    email: user?.email ?? null,
-    id: null,
+    isAuthenticated: true,
+    role: profile?.role ?? null,
+    email: headersList.get("x-auth-email") ?? null,
+    id: userId,
   };
 }
 
@@ -54,7 +60,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex h-full flex-col overflow-hidden">
-        <Providers initialAuthState={initialAuthState}>{children}</Providers>
+        <Providers initialAuthState={initialAuthState}>
+          <Suspense>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   );

@@ -43,6 +43,7 @@ export function AuthContextProvider({
   const [id, setId] = useState<string | null>(initialAuthState.id);
   const [isAuthLoading, setIsAuthLoading] = useState(initialAuthState.isAuthenticated && !initialAuthState.role);
   const authRequestIdRef = useRef(0);
+  const skipFirstRoleFetchRef = useRef(initialAuthState.role !== null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -72,8 +73,12 @@ export function AuthContextProvider({
       if (session) {
         setIsAuthenticated(true);
         setEmail(session.user.email ?? null);
-        setIsAuthLoading(true);
-        await fetchRole(requestId);
+        if (skipFirstRoleFetchRef.current) {
+          skipFirstRoleFetchRef.current = false;
+        } else {
+          setIsAuthLoading(true);
+          await fetchRole(requestId);
+        }
       } else {
         setIsAuthenticated(false);
         setRole(null);
