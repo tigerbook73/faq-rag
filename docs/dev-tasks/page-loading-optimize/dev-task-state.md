@@ -29,12 +29,12 @@ implementation (in_progress)
 ## Implementation Phase
 
 - status: in_progress
-- step-1: middleware header 注入 + 根路由重定向 + layout header 读取 (R1, R3) | type: final | status: done | auto-check: passed | manual-check: — | commit: 192b2cc
-- step-2: layout Suspense + Prisma role 预取 + auth-context 优化 (R2, R4) | type: final | status: done | auto-check: passed | manual-check: — | commit: d7024c1
-- step-3: chat layout 会话列表 Server-side 预取 (R5) | type: final | status: done | auto-check: passed | manual-check: — | commit: 4602654
-- step-4: ChatWindow SWR 缓存 (R6) | type: final | status: done | auto-check: passed | manual-check: — | commit: a7ce43b
+- step-1: middleware header 注入 + 根路由重定向 + layout header 读取 (R1, R3) | type: final | status: done | auto-check: passed | manual-check: passed | commit: 192b2cc
+- step-2: layout Suspense + Prisma role 预取 + auth-context 优化 (R2, R4) | type: final | status: done | auto-check: passed | manual-check: passed | commit: d7024c1
+- step-3: chat layout 会话列表 Server-side 预取 (R5) | type: final | status: done | auto-check: passed | manual-check: passed | commit: 4602654
+- step-4: ChatWindow SWR 缓存 (R6) | type: final | status: done | auto-check: passed | manual-check: passed | commit: a7ce43b
 
 ## Dev-Task Acceptance
 
-- auto-check: —
-- manual-check: —
+- auto-check: passed (pnpm tsc: pass; pnpm jest: 1 pre-existing failure in admin/documents unrelated to this dev-task)
+- manual-check: passed (covered by per-step manual verifications)
