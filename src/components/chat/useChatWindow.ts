@@ -129,6 +129,7 @@ export function useStreamingChat({
       lastChat.set(idToUse);
       await upsertSession(next);
       void swrMutate("/api/sessions");
+      void swrMutate(`/api/sessions/${idToUse}`, next, { revalidate: false });
     },
     [setSession],
   );
