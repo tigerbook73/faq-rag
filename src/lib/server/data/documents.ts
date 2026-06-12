@@ -31,7 +31,7 @@ export async function listDocumentsPageForOwner(ownerUserId: string, input: { sk
   return { items, total };
 }
 
-export async function listAdminDocuments() {
+export async function listAdminDocuments(opts?: { skip?: number; take?: number }) {
   const [items, total] = await Promise.all([
     prisma.document.findMany({
       orderBy: { createdAt: "desc" },
@@ -39,6 +39,8 @@ export async function listAdminDocuments() {
         owner: { select: { email: true } },
         _count: { select: { chunks: true, selections: true } },
       },
+      skip: opts?.skip,
+      take: opts?.take,
     }),
     prisma.document.count(),
   ]);
