@@ -7,11 +7,12 @@
 
 ## Document Index
 
-- (no documents yet; entries added here as requirements and design documents are created)
+- [requirements.md](requirements.md)
+- [design.md](design.md)
 
 ## Current Phase
 
-requirements (in_progress)
+design (in_progress)
 
 ## Current Step
 
@@ -19,13 +20,15 @@ requirements (in_progress)
 
 ## Requirements Phase
 
-- status: in_progress
+- status: done
 - notes:
-  - dev-task just created, requirements pending
+  - 单用户、无登录、保留 Supabase Storage + Database
 
 ## Design Phase
 
-- status: pending
+- status: in_progress
+- notes:
+  - 四阶段设计文档完成，待确认后进入实施
 
 ## Implementation Phase
 
