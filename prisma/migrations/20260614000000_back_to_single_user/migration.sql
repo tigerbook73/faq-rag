@@ -4,8 +4,22 @@
 ALTER TABLE "documents" DROP CONSTRAINT IF EXISTS "documents_owner_user_id_fkey";
 ALTER TABLE "sessions" DROP CONSTRAINT IF EXISTS "sessions_user_id_fkey";
 
--- Drop per-owner unique index, restore global content-hash uniqueness.
+-- Drop per-owner unique index.
 DROP INDEX IF EXISTS "documents_owner_user_id_content_hash_key";
+
+-- Deduplicate: keep the most recent document per content_hash, delete the rest.
+-- Cascade delete removes associated chunks automatically.
+DELETE FROM "documents"
+WHERE id IN (
+  SELECT id FROM (
+    SELECT id,
+           ROW_NUMBER() OVER (PARTITION BY content_hash ORDER BY created_at DESC) AS rn
+    FROM "documents"
+  ) t
+  WHERE rn > 1
+);
+
+-- Now safe to create global unique index.
 CREATE UNIQUE INDEX "documents_content_hash_key" ON "documents"("content_hash");
 
 -- Drop owner/visibility indexes.
