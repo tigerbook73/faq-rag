@@ -1,15 +1,10 @@
 import {
-  ADMIN_ACCESS_DENIED_PATH,
-  ADMIN_HOME_PATH,
   SIGN_IN_PATH,
   USER_HOME_PATH,
   buildCurrentPath,
   canBypassAuthProxy,
   findRoutePolicy,
   getRouteAccess,
-  isAdminApiRoute,
-  isAdminPrivateRoute,
-  isAdminRoute,
   isUserApiRoute,
   isUserPrivateRoute,
   resolvePostLoginRedirect,
@@ -44,8 +39,6 @@ describe("route-policy", () => {
       expect(getRouteAccess("/chat/last")).toBe("user-private");
       expect(getRouteAccess("/knowledge")).toBe("user-private");
       expect(getRouteAccess("/knowledge/documents")).toBe("user-private");
-      expect(getRouteAccess("/admin")).toBe("admin-private");
-      expect(getRouteAccess("/admin/users")).toBe("admin-private");
     });
 
     it("classifies API routes", () => {
@@ -56,8 +49,6 @@ describe("route-policy", () => {
       expect(getRouteAccess("/api/chat")).toBe("user-api");
       expect(getRouteAccess("/api/documents/123")).toBe("user-api");
       expect(getRouteAccess("/api/sessions/123")).toBe("user-api");
-      expect(getRouteAccess("/api/public-documents/123")).toBe("user-api");
-      expect(getRouteAccess("/api/admin/users")).toBe("admin-api");
     });
   });
 
@@ -74,7 +65,6 @@ describe("route-policy", () => {
 
       expect(canBypassAuthProxy("/chat")).toBe(false);
       expect(canBypassAuthProxy("/knowledge")).toBe(false);
-      expect(canBypassAuthProxy("/admin")).toBe(false);
       expect(canBypassAuthProxy("/about/team")).toBe(false);
       expect(canBypassAuthProxy("/auth/signout")).toBe(false);
       expect(canBypassAuthProxy("/api/ingest-hook-anything")).toBe(false);
@@ -96,22 +86,11 @@ describe("route-policy", () => {
     });
   });
 
-  describe("admin route detection", () => {
-    it("matches admin route boundaries", () => {
-      expect(isAdminRoute("/admin")).toBe(true);
-      expect(isAdminRoute("/admin/users")).toBe(true);
-      expect(isAdminRoute("/administrator")).toBe(false);
-    });
-
+  describe("route type detection", () => {
     it("detects private page and API route classes", () => {
       expect(isUserPrivateRoute("/chat/last")).toBe(true);
       expect(isUserPrivateRoute("/about")).toBe(false);
-      expect(isAdminPrivateRoute("/admin/documents")).toBe(true);
-      expect(isAdminPrivateRoute("/api/admin/documents")).toBe(false);
       expect(isUserApiRoute("/api/documents/123")).toBe(true);
-      expect(isUserApiRoute("/api/admin/users")).toBe(false);
-      expect(isAdminApiRoute("/api/admin/users")).toBe(true);
-      expect(isAdminApiRoute("/admin/users")).toBe(false);
     });
   });
 
@@ -119,7 +98,6 @@ describe("route-policy", () => {
     it("preserves safe app paths", () => {
       expect(sanitizeRedirectPath("/chat/last")).toBe("/chat/last");
       expect(sanitizeRedirectPath("/knowledge?tab=public#top")).toBe("/knowledge?tab=public#top");
-      expect(sanitizeRedirectPath("/admin/users?tab=active")).toBe("/admin/users?tab=active");
     });
 
     it("falls back for unsafe or looping targets", () => {
@@ -138,24 +116,14 @@ describe("route-policy", () => {
       expect(sanitizeRedirectPath("/unknown")).toBe(USER_HOME_PATH);
     });
 
-    it("allows caller supplied fallback", () => {
-      expect(sanitizeRedirectPath("/auth/signin", ADMIN_ACCESS_DENIED_PATH)).toBe(ADMIN_ACCESS_DENIED_PATH);
-    });
-
-    it("resolves post-login redirects by role", () => {
-      expect(resolvePostLoginRedirect("user", null)).toBe(USER_HOME_PATH);
-      expect(resolvePostLoginRedirect("admin", null)).toBe(ADMIN_HOME_PATH);
-      expect(resolvePostLoginRedirect("user", "/chat/last")).toBe("/chat/last");
-      expect(resolvePostLoginRedirect("admin", "/chat/last")).toBe("/chat/last");
-      expect(resolvePostLoginRedirect("admin", "/admin/users")).toBe("/admin/users");
-      expect(resolvePostLoginRedirect("user", "/admin/users")).toBe(USER_HOME_PATH);
-      expect(resolvePostLoginRedirect("admin", "/api/admin/users")).toBe(ADMIN_HOME_PATH);
-      expect(resolvePostLoginRedirect("user", "https://example.com/admin")).toBe(USER_HOME_PATH);
+    it("resolves post-login redirects", () => {
+      expect(resolvePostLoginRedirect(null)).toBe(USER_HOME_PATH);
+      expect(resolvePostLoginRedirect("/chat/last")).toBe("/chat/last");
+      expect(resolvePostLoginRedirect("https://example.com/chat")).toBe(USER_HOME_PATH);
     });
 
     it("builds current path with search params", () => {
       expect(buildCurrentPath("/knowledge", "?tab=public")).toBe("/knowledge?tab=public");
-      expect(buildCurrentPath("/admin")).toBe("/admin");
     });
   });
 });

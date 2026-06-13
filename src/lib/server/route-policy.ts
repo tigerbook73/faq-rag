@@ -1,18 +1,9 @@
 export const SIGN_IN_PATH = "/auth/signin";
 export const USER_HOME_PATH = "/chat/last";
-export const ADMIN_HOME_PATH = "/admin";
 export const SIGNED_IN_HOME_PATH = USER_HOME_PATH;
-export const ADMIN_ACCESS_DENIED_PATH = USER_HOME_PATH;
 
 export type UserRole = "user" | "admin";
-export type RouteAccess =
-  | "public"
-  | "sign-in"
-  | "user-private"
-  | "admin-private"
-  | "public-api"
-  | "user-api"
-  | "admin-api";
+export type RouteAccess = "public" | "sign-in" | "user-private" | "public-api" | "user-api";
 type RouteMatch = "exact" | "prefix";
 type SidebarPolicy = "always-hide" | "anonymous-hide" | "authenticated-allowed";
 
@@ -69,20 +60,6 @@ const ROUTE_POLICIES: readonly RoutePolicy[] = [
     sidebar: "authenticated-allowed",
   },
   {
-    path: "/admin",
-    match: "prefix",
-    access: "admin-private",
-    authProxyBypass: false,
-    sidebar: "authenticated-allowed",
-  },
-  {
-    path: "/api/admin",
-    match: "prefix",
-    access: "admin-api",
-    authProxyBypass: false,
-    sidebar: "always-hide",
-  },
-  {
     path: "/api/chat",
     match: "exact",
     access: "user-api",
@@ -98,13 +75,6 @@ const ROUTE_POLICIES: readonly RoutePolicy[] = [
   },
   {
     path: "/api/sessions",
-    match: "prefix",
-    access: "user-api",
-    authProxyBypass: false,
-    sidebar: "always-hide",
-  },
-  {
-    path: "/api/public-documents",
     match: "prefix",
     access: "user-api",
     authProxyBypass: false,
@@ -173,24 +143,12 @@ export function isSignInRoute(pathname: string) {
   return findRoutePolicy(pathname).access === "sign-in" && matchesPathPrefix(pathname, SIGN_IN_PATH);
 }
 
-export function isAdminRoute(pathname: string) {
-  return findRoutePolicy(pathname).access === "admin-private";
-}
-
 export function isUserPrivateRoute(pathname: string) {
   return findRoutePolicy(pathname).access === "user-private";
 }
 
-export function isAdminPrivateRoute(pathname: string) {
-  return findRoutePolicy(pathname).access === "admin-private";
-}
-
 export function isUserApiRoute(pathname: string) {
   return findRoutePolicy(pathname).access === "user-api";
-}
-
-export function isAdminApiRoute(pathname: string) {
-  return findRoutePolicy(pathname).access === "admin-api";
 }
 
 export function shouldHideUserShell(pathname: string, isAuthenticated: boolean) {
@@ -226,14 +184,6 @@ export function sanitizeRedirectPath(from: string | null | undefined, fallback =
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
-export function resolvePostLoginRedirect(role: UserRole, from: string | null | undefined) {
-  const homePath = role === "admin" ? ADMIN_HOME_PATH : USER_HOME_PATH;
-  const redirectPath = sanitizeRedirectPath(from, homePath);
-  const redirectUrl = new URL(redirectPath, URL_PARSE_ORIGIN);
-
-  if (role !== "admin" && isAdminPrivateRoute(redirectUrl.pathname)) {
-    return homePath;
-  }
-
-  return redirectPath;
+export function resolvePostLoginRedirect(from: string | null | undefined) {
+  return sanitizeRedirectPath(from, USER_HOME_PATH);
 }

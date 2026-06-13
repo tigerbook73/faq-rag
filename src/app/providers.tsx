@@ -12,22 +12,12 @@ import { ProviderContextProvider } from "@/context/provider-context";
 import { AuthContextProvider } from "@/context/auth-context";
 import type { InitialAuthState } from "@/context/auth-context";
 import { useAuth } from "@/context/auth-context";
-import { isAdminRoute, shouldHideSidebar } from "@/lib/server/route-policy";
+import { shouldHideSidebar } from "@/lib/server/route-policy";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const pathname = usePathname();
-  const isAdmin = isAdminRoute(pathname);
   const hideSidebar = shouldHideSidebar(pathname, isAuthenticated);
-
-  if (isAdmin) {
-    return (
-      <>
-        {children}
-        <Toaster />
-      </>
-    );
-  }
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
