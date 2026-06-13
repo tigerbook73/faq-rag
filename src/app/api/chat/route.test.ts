@@ -1,10 +1,5 @@
-const mockRequireUser = jest.fn();
 const mockRetrieve = jest.fn();
 const mockChat = jest.fn();
-
-jest.mock("@/lib/server/auth/require-user", () => ({
-  requireUser: () => mockRequireUser(),
-}));
 
 jest.mock("@/lib/server/retrieval/query", () => ({
   retrieve: (...args: unknown[]) => mockRetrieve(...args),
@@ -33,12 +28,11 @@ async function* emptyChatStream() {
 describe("/api/chat", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRequireUser.mockResolvedValue({ id: "user-2", role: "user" });
     mockRetrieve.mockResolvedValue([]);
     mockChat.mockReturnValue(emptyChatStream());
   });
 
-  it("passes the current user into retrieval", async () => {
+  it("calls retrieve with the question and returns SSE stream", async () => {
     const res = await POST(
       jsonRequest({
         question: "What can I access?",
@@ -48,13 +42,17 @@ describe("/api/chat", () => {
     );
 
     expect(res.status).toBe(200);
-    expect(mockRequireUser).toHaveBeenCalledTimes(1);
+    expect(res.headers.get("Content-Type")).toBe("text/event-stream");
     expect(mockRetrieve).toHaveBeenCalledTimes(1);
     expect(mockRetrieve.mock.calls[0][0]).toBe("What can I access?");
     expect(mockRetrieve.mock.calls[0][1]).toEqual({
-      userId: "user-2",
       traceId: expect.any(String),
       provider: "openai",
     });
+  });
+
+  it("returns 400 for invalid request body", async () => {
+    const res = await POST(jsonRequest({}) as never);
+    expect(res.status).toBe(400);
   });
 });

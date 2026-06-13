@@ -38,7 +38,6 @@ model Chunk {
   document   Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
-  // HNSW index on embedding applied via raw migration (pgvector, m=16, ef_construction=64)
   @@map("chunks")
 }
 

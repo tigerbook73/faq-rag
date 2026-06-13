@@ -1,17 +1,12 @@
-const mockRequireUser = jest.fn();
-const mockFindDuplicateDocumentForOwner = jest.fn();
-const mockCreatePendingDocumentForOwner = jest.fn();
+const mockFindDuplicateDocument = jest.fn();
+const mockCreatePendingDocument = jest.fn();
 const mockSetDocumentFileRef = jest.fn();
 const mockDeleteDocumentById = jest.fn();
 const mockCreateSignedUploadUrl = jest.fn();
 
-jest.mock("@/lib/server/auth/require-user", () => ({
-  requireUser: () => mockRequireUser(),
-}));
-
 jest.mock("@/lib/server/data/documents", () => ({
-  findDuplicateDocumentForOwner: (...args: unknown[]) => mockFindDuplicateDocumentForOwner(...args),
-  createPendingDocumentForOwner: (...args: unknown[]) => mockCreatePendingDocumentForOwner(...args),
+  findDuplicateDocument: (...args: unknown[]) => mockFindDuplicateDocument(...args),
+  createPendingDocument: (...args: unknown[]) => mockCreatePendingDocument(...args),
   setDocumentFileRef: (...args: unknown[]) => mockSetDocumentFileRef(...args),
   deleteDocumentById: (...args: unknown[]) => mockDeleteDocumentById(...args),
 }));
@@ -41,13 +36,11 @@ function jsonRequest(body: unknown) {
 describe("/api/documents/prepare", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRequireUser.mockResolvedValue({ id: "user-1", role: "user" });
-    mockFindDuplicateDocumentForOwner.mockResolvedValue(null);
-    mockCreatePendingDocumentForOwner.mockResolvedValue({
+    mockFindDuplicateDocument.mockResolvedValue(null);
+    mockCreatePendingDocument.mockResolvedValue({
       id: "doc-1",
       name: "FAQ Doc.md",
       status: "pending",
-      visibility: "private",
       _count: { chunks: 0 },
     });
     mockSetDocumentFileRef.mockResolvedValue({});
@@ -57,15 +50,14 @@ describe("/api/documents/prepare", () => {
     });
   });
 
-  it("creates pending uploads owned by the current user", async () => {
+  it("creates a pending document and returns a signed upload URL", async () => {
     const res = await POST(
       jsonRequest({ name: "FAQ Doc.md", size: 100, mime: "text/markdown", hash: validHash }) as never,
     );
 
     expect(res.status).toBe(201);
-    expect(mockFindDuplicateDocumentForOwner).toHaveBeenCalledWith("user-1", validHash);
-    expect(mockCreatePendingDocumentForOwner).toHaveBeenCalledWith({
-      ownerUserId: "user-1",
+    expect(mockFindDuplicateDocument).toHaveBeenCalledWith(validHash);
+    expect(mockCreatePendingDocument).toHaveBeenCalledWith({
       name: "FAQ Doc.md",
       mime: "text/markdown",
       contentHash: validHash,
@@ -81,20 +73,19 @@ describe("/api/documents/prepare", () => {
         id: "doc-1",
         name: "FAQ Doc.md",
         status: "pending",
-        visibility: "private",
         _count: { chunks: 0 },
       },
     });
   });
 
-  it("checks duplicate content only within the current owner", async () => {
-    mockFindDuplicateDocumentForOwner.mockResolvedValue({ id: "existing-doc", ownerUserId: "user-1" });
+  it("returns 409 when the content hash already exists", async () => {
+    mockFindDuplicateDocument.mockResolvedValue({ id: "existing-doc" });
 
     const res = await POST(jsonRequest({ name: "faq.md", size: 100, mime: "text/markdown", hash: validHash }) as never);
 
     expect(res.status).toBe(409);
-    expect(mockFindDuplicateDocumentForOwner).toHaveBeenCalledWith("user-1", validHash);
-    expect(mockCreatePendingDocumentForOwner).not.toHaveBeenCalled();
+    expect(mockFindDuplicateDocument).toHaveBeenCalledWith(validHash);
+    expect(mockCreatePendingDocument).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ error: "Duplicate file — already indexed" });
   });
 

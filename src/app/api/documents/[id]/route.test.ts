@@ -1,10 +1,5 @@
-const mockRequireUser = jest.fn();
 const mockGetDocumentForWrite = jest.fn();
 const mockDeleteDocument = jest.fn();
-
-jest.mock("@/lib/server/auth/require-user", () => ({
-  requireUser: () => mockRequireUser(),
-}));
 
 jest.mock("@/lib/server/data/documents", () => ({
   getDocumentForWrite: (...args: unknown[]) => mockGetDocumentForWrite(...args),
@@ -21,21 +16,20 @@ const params = { params: Promise.resolve({ id: "doc-1" }) };
 describe("/api/documents/[id]", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRequireUser.mockResolvedValue({ id: "user-1", role: "user" });
     mockDeleteDocument.mockResolvedValue({});
   });
 
-  it("deletes documents writable by the current actor", async () => {
-    mockGetDocumentForWrite.mockResolvedValue({ id: "doc-1", ownerUserId: "user-1", fileRef: "embed/doc-1/faq.md" });
+  it("deletes an existing document", async () => {
+    mockGetDocumentForWrite.mockResolvedValue({ id: "doc-1", fileRef: "embed/doc-1/faq.md" });
 
     const res = await DELETE(new Request("http://localhost/api/documents/doc-1") as never, params);
 
     expect(res.status).toBe(204);
-    expect(mockGetDocumentForWrite).toHaveBeenCalledWith({ id: "user-1", role: "user" }, "doc-1");
+    expect(mockGetDocumentForWrite).toHaveBeenCalledWith("doc-1");
     expect(mockDeleteDocument).toHaveBeenCalledWith("doc-1");
   });
 
-  it("returns 404 when the actor cannot write the document", async () => {
+  it("returns 404 when the document does not exist", async () => {
     mockGetDocumentForWrite.mockResolvedValue(null);
 
     const res = await DELETE(new Request("http://localhost/api/documents/doc-1") as never, params);

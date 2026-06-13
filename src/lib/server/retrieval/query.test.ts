@@ -61,7 +61,7 @@ function mockLLMResponse(text: string) {
 
 // ── tests ──────────────────────────────────────────────────────────────────
 describe("retrieve()", () => {
-  const options = { userId: "user-1", traceId: "trace-1", provider: "openai" };
+  const options = { traceId: "trace-1", provider: "openai" };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -82,15 +82,6 @@ describe("retrieve()", () => {
   it("calls getEmbedding 3 times (original + translation + HyDE)", async () => {
     await retrieve("What is RAG?", options);
     expect(mockGetEmbedding).toHaveBeenCalledTimes(3);
-  });
-
-  it("passes the current user to all vector searches", async () => {
-    await retrieve("What is RAG?", options);
-
-    expect(mockVectorSearch).toHaveBeenCalledTimes(3);
-    for (const call of mockVectorSearch.mock.calls) {
-      expect(call[2]).toBe("user-1");
-    }
   });
 
   it("falls back to original query when translation fails", async () => {
