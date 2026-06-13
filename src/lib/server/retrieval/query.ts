@@ -38,19 +38,17 @@ async function generateHypotheticalAnswer(query: string, client: OpenAI, model: 
 }
 
 type RetrieveOptions = {
-  userId: string;
   traceId?: string;
   provider?: string;
 };
 
-export async function retrieve(userQuery: string, options: RetrieveOptions): Promise<ChunkRow[]> {
-  const { userId, traceId, provider } = options;
+export async function retrieve(userQuery: string, options: RetrieveOptions = {}): Promise<ChunkRow[]> {
+  const { traceId, provider } = options;
   const { client, model } = resolveQueryClient(provider);
   const t0 = Date.now();
   const srcLang = detectLang(userQuery);
   const targetLang = srcLang === "en" ? "zh" : "en";
 
-  // translation and HyDE generation run in parallel
   const [translatedQuery, hydeAnswer] = await Promise.all([
     translateQuery(userQuery, targetLang, client, model).catch(() => userQuery),
     generateHypotheticalAnswer(userQuery, client, model).catch(() => null),
@@ -59,7 +57,6 @@ export async function retrieve(userQuery: string, options: RetrieveOptions): Pro
   const queryZh = srcLang === "zh" ? userQuery : translatedQuery;
   const queryEn = srcLang === "en" ? userQuery : translatedQuery;
 
-  // embed all queries in parallel
   const embedResults = await Promise.all([
     getEmbedding(queryZh),
     getEmbedding(queryEn),
@@ -67,11 +64,10 @@ export async function retrieve(userQuery: string, options: RetrieveOptions): Pro
   ]);
   const [embZh, embEn, embHyde] = embedResults;
 
-  // vector search in parallel across all query vectors
   const searchResults = await Promise.all([
-    vectorSearch(embZh, config.retrieval.topK, userId),
-    vectorSearch(embEn, config.retrieval.topK, userId),
-    embHyde ? vectorSearch(embHyde, config.retrieval.topK, userId) : Promise.resolve([]),
+    vectorSearch(embZh, config.retrieval.topK),
+    vectorSearch(embEn, config.retrieval.topK),
+    embHyde ? vectorSearch(embHyde, config.retrieval.topK) : Promise.resolve([]),
   ]);
 
   const candidates = deduplicateAndSort(searchResults.flat());

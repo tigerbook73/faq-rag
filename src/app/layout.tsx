@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
-import type { InitialAuthState } from "@/context/auth-context";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -27,25 +25,11 @@ export const viewport = {
   interactiveWidget: "resizes-content",
 };
 
-async function getInitialAuthState(): Promise<InitialAuthState> {
-  const headersList = await headers();
-  const userId = headersList.get("x-auth-id");
-  const email = headersList.get("x-auth-email");
-
-  if (!userId) {
-    return { isAuthenticated: false, role: null, email: null, id: null };
-  }
-
-  return { isAuthenticated: true, role: "user", email, id: userId };
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const initialAuthState = await getInitialAuthState();
-
   return (
     <html
       lang="en"
@@ -53,7 +37,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex h-full flex-col overflow-hidden">
-        <Providers initialAuthState={initialAuthState}>
+        <Providers>
           <Suspense>{children}</Suspense>
         </Providers>
       </body>

@@ -9,19 +9,15 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { PageTitleProvider } from "@/context/page-title-context";
 import { ProviderContextProvider } from "@/context/provider-context";
-import { AuthContextProvider } from "@/context/auth-context";
-import type { InitialAuthState } from "@/context/auth-context";
-import { useAuth } from "@/context/auth-context";
-import { shouldHideSidebar } from "@/lib/server/route-policy";
+import { isSidebarlessRoute } from "@/lib/server/route-policy";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isAuthLoading } = useAuth();
   const pathname = usePathname();
-  const hideSidebar = shouldHideSidebar(pathname, isAuthenticated);
+  const hideSidebar = isSidebarlessRoute(pathname);
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full overflow-hidden">
-      {!hideSidebar && (isAuthenticated || isAuthLoading) && <AppSidebar />}
+      {!hideSidebar && <AppSidebar />}
       <SidebarInset className="flex flex-col overflow-hidden">
         <TopBar />
         {children}
@@ -31,24 +27,16 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Providers({
-  children,
-  initialAuthState,
-}: {
-  children: React.ReactNode;
-  initialAuthState: InitialAuthState;
-}) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <AuthContextProvider initialAuthState={initialAuthState}>
-        <PageTitleProvider>
-          <ProviderContextProvider>
-            <TooltipProvider>
-              <AppLayout>{children}</AppLayout>
-            </TooltipProvider>
-          </ProviderContextProvider>
-        </PageTitleProvider>
-      </AuthContextProvider>
+      <PageTitleProvider>
+        <ProviderContextProvider>
+          <TooltipProvider>
+            <AppLayout>{children}</AppLayout>
+          </TooltipProvider>
+        </ProviderContextProvider>
+      </PageTitleProvider>
     </ThemeProvider>
   );
 }

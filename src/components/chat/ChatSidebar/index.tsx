@@ -18,11 +18,7 @@ import { Button } from "@/components/ui/button";
 import { SquarePen, Info, BookOpen, MessageSquare, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { type ChatSession } from "@/lib/client/session-api";
-import { useAuth } from "@/context/auth-context";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
 export function ChatSidebarContent() {
-  const { email } = useAuth();
   const {
     sessions,
     isLoadingSessions,
@@ -52,17 +48,7 @@ export function ChatSidebarContent() {
   return (
     <>
       <SidebarHeader className="pr-12 md:pr-2">
-        <div className="flex items-center justify-between">
-          <SidebarTrigger />
-          {email && (
-            <div className="flex min-w-0 items-center gap-2 overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:hidden">
-              <Avatar className="size-6 shrink-0">
-                <AvatarFallback className="text-xs">{email.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <span className="text-muted-foreground truncate text-xs">{email}</span>
-            </div>
-          )}
-        </div>
+        <SidebarTrigger />
       </SidebarHeader>
 
       <SidebarContent>

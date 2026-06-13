@@ -8,25 +8,22 @@ jest.mock("@/lib/server/db/client", () => ({
 
 import { vectorSearch } from "@/lib/server/retrieval/vector-search";
 
-describe("vectorSearch permissions", () => {
+describe("vectorSearch", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockQueryRaw.mockResolvedValue([]);
   });
 
-  it("filters retrieval to owned indexed documents and selected public documents", async () => {
-    await vectorSearch([0.1, 0.2], 5, "user-2");
+  it("queries all indexed documents without ownership filter", async () => {
+    await vectorSearch([0.1, 0.2], 5);
 
     expect(mockQueryRaw).toHaveBeenCalledTimes(1);
-    const [strings, ...values] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    const [strings] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
     const sql = strings.join("?");
 
     expect(sql).toContain("d.status = 'indexed'");
-    expect(sql).toContain("d.owner_user_id = ?");
-    expect(sql).toContain("d.visibility = 'public'");
-    expect(sql).toContain("FROM public_document_selections s");
-    expect(sql).toContain("s.document_id = d.id");
-    expect(sql).toContain("s.user_id = ?");
-    expect(values).toContain("user-2");
+    expect(sql).not.toContain("owner_user_id");
+    expect(sql).not.toContain("visibility");
+    expect(sql).not.toContain("public_document_selections");
   });
 });

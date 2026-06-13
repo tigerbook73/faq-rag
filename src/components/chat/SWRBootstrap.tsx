@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 import { SWRConfig } from "swr";
-import type { listSessionsForUser } from "@/lib/server/data/sessions";
+import type { listSessions } from "@/lib/server/data/sessions";
 
-type SessionSummary = Awaited<ReturnType<typeof listSessionsForUser>>[number];
+type SessionSummary = Awaited<ReturnType<typeof listSessions>>[number];
 
 const SESSIONS_KEY = "/api/sessions";
 
