@@ -1,8 +1,8 @@
--- Enable required PostgreSQL extensions
+-- Extensions
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
--- CreateTable
+-- CreateTable: documents
 CREATE TABLE "documents" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -12,12 +12,17 @@ CREATE TABLE "documents" (
     "size_bytes" INTEGER NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "error_msg" TEXT,
+    "total_chunks" INTEGER,
+    "file_path" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "documents_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE UNIQUE INDEX "documents_content_hash_key" ON "documents"("content_hash");
+CREATE INDEX "documents_status_idx" ON "documents"("status");
+
+-- CreateTable: chunks
 CREATE TABLE "chunks" (
     "id" TEXT NOT NULL,
     "document_id" TEXT NOT NULL,
@@ -30,18 +35,36 @@ CREATE TABLE "chunks" (
     CONSTRAINT "chunks_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "documents_content_hash_key" ON "documents"("content_hash");
+CREATE INDEX "chunks_document_id_idx" ON "chunks"("document_id");
 
--- AddForeignKey
 ALTER TABLE "chunks" ADD CONSTRAINT "chunks_document_id_fkey"
     FOREIGN KEY ("document_id") REFERENCES "documents"("id")
     ON DELETE CASCADE ON UPDATE CASCADE;
 
--- HNSW vector index (cosine distance)
-CREATE INDEX chunks_embedding_idx ON chunks
-    USING hnsw (embedding vector_cosine_ops);
+-- CreateTable: sessions
+CREATE TABLE "sessions" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL DEFAULT 'New Chat',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
--- Full-text trigram index (optional, for hybrid retrieval)
-CREATE INDEX chunks_content_trgm_idx ON chunks
-    USING gin (content gin_trgm_ops);
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "sessions_updated_at_idx" ON "sessions"("updated_at");
+
+-- CreateTable: session_messages
+CREATE TABLE "session_messages" (
+    "id" TEXT NOT NULL,
+    "session_id" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "citations" JSONB,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "session_messages_pkey" PRIMARY KEY ("id")
+);
+
+ALTER TABLE "session_messages" ADD CONSTRAINT "session_messages_session_id_fkey"
+    FOREIGN KEY ("session_id") REFERENCES "sessions"("id")
+    ON DELETE CASCADE ON UPDATE CASCADE;

@@ -6,11 +6,6 @@ export const DocumentListQuerySchema = z.object({
 });
 export type DocumentListQuery = z.infer<typeof DocumentListQuerySchema>;
 
-export const UpdateDocumentInputSchema = z.object({
-  visibility: z.enum(["private", "public"]),
-});
-export type UpdateDocumentInput = z.infer<typeof UpdateDocumentInputSchema>;
-
 export const PrepareUploadInputSchema = z.object({
   name: z.string().min(1),
   size: z.number().int().positive(),
@@ -27,7 +22,6 @@ export const DocumentItemSchema = z.object({
   name: z.string(),
   lang: z.string().nullable(),
   status: z.enum(["pending", "uploaded", "indexing", "indexed", "failed"]),
-  visibility: z.enum(["private", "public"]),
   sizeBytes: z.number(),
   errorMsg: z.string().nullable(),
   totalChunks: z.number().nullable(),
@@ -44,29 +38,3 @@ export const PrepareUploadOutputSchema = z.object({
   document: DocumentItemSchema,
 });
 export type PrepareUploadOutput = z.infer<typeof PrepareUploadOutputSchema>;
-
-// GET /api/admin/documents
-export const AdminDocumentItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  ownerUserId: z.string(),
-  status: z.string(),
-  visibility: z.enum(["private", "public"]),
-  owner: z.object({ email: z.string() }),
-  _count: z.object({ chunks: z.number(), selections: z.number() }),
-  createdAt: z.union([z.string(), z.date()]),
-});
-export type AdminDocumentItem = z.infer<typeof AdminDocumentItemSchema>;
-
-// GET /api/public-documents
-export const PublicDocumentItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  lang: z.string().nullable(),
-  status: z.string(),
-  selected: z.boolean(),
-  createdAt: z.union([z.string(), z.date()]),
-  owner: z.object({ email: z.string() }),
-  _count: z.object({ chunks: z.number() }),
-});
-export type PublicDocumentItem = z.infer<typeof PublicDocumentItemSchema>;

@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/shared/config";
 import { type DocumentItem as Document } from "@/lib/shared/schemas/document";
-import { deleteDocument, reindexDocument, updateDocumentVisibility } from "@/lib/client/documents-api";
+import { deleteDocument, reindexDocument } from "@/lib/client/documents-api";
 import { fetcher } from "@/lib/client/swr";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
@@ -18,7 +18,6 @@ export function useDocumentManagement() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
-  const [visibilityUpdatingId, setVisibilityUpdatingId] = useState<string | null>(null);
   const [rebuilding, setRebuilding] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [rebuildProgress, setRebuildProgress] = useState<{
@@ -50,7 +49,6 @@ export function useDocumentManagement() {
 
   const hasActiveDocs = baseDocuments.some((d) => ACTIVE_STATUSES.has(d.status));
 
-  // Use SWR's built-in refreshInterval for polling when there are active docs
   useSWR<{ items: Document[] }>(hasActiveDocs ? "/api/documents" : null, fetcher, {
     refreshInterval: config.ui.pollIntervalMs,
   });
@@ -89,27 +87,6 @@ export function useDocumentManagement() {
     }
   }
 
-  async function handleVisibilityChange(id: string, visibility: "private" | "public") {
-    const target = baseDocuments.find((d) => d.id === id);
-    if (!target || target.visibility === visibility) return;
-
-    mutateDocuments(
-      (current) => (current ? { items: current.items.map((d) => (d.id === id ? { ...d, visibility } : d)) } : current),
-      false,
-    );
-    setVisibilityUpdatingId(id);
-    try {
-      await updateDocumentVisibility(id, visibility);
-      await mutateDocuments();
-      toast.success(`Document is now ${visibility}`);
-    } catch (err) {
-      await mutateDocuments();
-      toast.error(err instanceof Error ? err.message : "Visibility update failed");
-    } finally {
-      setVisibilityUpdatingId(null);
-    }
-  }
-
   async function handleRebuildAll() {
     setRebuilding(true);
     setRebuildProgress({ done: 0, total: documents.length });
@@ -143,7 +120,6 @@ export function useDocumentManagement() {
     deleteTarget,
     setDeleteTarget,
     reindexingId,
-    visibilityUpdatingId,
     rebuilding,
     rebuildProgress,
     rebuildDialogOpen,
@@ -151,7 +127,6 @@ export function useDocumentManagement() {
     isManualRefreshing,
     handleDelete,
     handleReindex,
-    handleVisibilityChange,
     handleRebuildAll,
     handleManualRefresh,
     fetchDocuments,

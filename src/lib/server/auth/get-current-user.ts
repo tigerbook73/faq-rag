@@ -1,1 +1,0 @@
-export { getCurrentUser } from "./helpers";

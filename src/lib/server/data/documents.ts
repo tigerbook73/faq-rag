@@ -1,46 +1,19 @@
 import { prisma } from "@/lib/server/db/client";
 
-type DocumentActor = {
-  id: string;
-  role: "user" | "admin";
-};
-
-type DocumentVisibility = "private" | "public";
-
-export async function listDocumentsForOwner(ownerUserId: string) {
+export async function listDocuments() {
   return prisma.document.findMany({
-    where: { ownerUserId },
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { chunks: true } } },
   });
 }
 
-export async function listDocumentsPageForOwner(ownerUserId: string, input: { skip: number; take: number }) {
-  const where = { ownerUserId };
+export async function listDocumentsPage(input: { skip: number; take: number }) {
   const [items, total] = await Promise.all([
     prisma.document.findMany({
-      where,
       skip: input.skip,
       take: input.take,
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { chunks: true } } },
-    }),
-    prisma.document.count({ where }),
-  ]);
-
-  return { items, total };
-}
-
-export async function listAdminDocuments(opts?: { skip?: number; take?: number }) {
-  const [items, total] = await Promise.all([
-    prisma.document.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        owner: { select: { email: true } },
-        _count: { select: { chunks: true, selections: true } },
-      },
-      skip: opts?.skip,
-      take: opts?.take,
     }),
     prisma.document.count(),
   ]);
@@ -48,14 +21,13 @@ export async function listAdminDocuments(opts?: { skip?: number; take?: number }
   return { items, total };
 }
 
-export async function findDuplicateDocumentForOwner(ownerUserId: string, contentHash: string) {
+export async function findDuplicateDocument(contentHash: string) {
   return prisma.document.findUnique({
-    where: { ownerUserId_contentHash: { ownerUserId, contentHash } },
+    where: { contentHash },
   });
 }
 
-export async function createPendingDocumentForOwner(input: {
-  ownerUserId: string;
+export async function createPendingDocument(input: {
   name: string;
   mime: string;
   contentHash: string;
@@ -66,10 +38,8 @@ export async function createPendingDocumentForOwner(input: {
       name: input.name,
       mime: input.mime,
       contentHash: input.contentHash,
-      ownerUserId: input.ownerUserId,
       sizeBytes: input.sizeBytes,
       status: "pending",
-      visibility: "private",
     },
     include: { _count: { select: { chunks: true } } },
   });
@@ -86,11 +56,8 @@ export async function deleteDocumentById(documentId: string) {
   return prisma.document.delete({ where: { id: documentId } });
 }
 
-export async function getDocumentForWrite(actor: DocumentActor, documentId: string) {
-  const doc = await prisma.document.findUnique({ where: { id: documentId } });
-  if (!doc) return null;
-  if (actor.role !== "admin" && doc.ownerUserId !== actor.id) return null;
-  return doc;
+export async function getDocumentForWrite(documentId: string) {
+  return prisma.document.findUnique({ where: { id: documentId } });
 }
 
 export async function resetDocumentForReindex(documentId: string) {
@@ -104,31 +71,5 @@ export async function setDocumentUploaded(documentId: string) {
   return prisma.document.updateMany({
     where: { id: documentId, status: "pending" },
     data: { status: "uploaded" },
-  });
-}
-
-export async function updateDocumentVisibilityForOwner(
-  ownerUserId: string,
-  documentId: string,
-  visibility: DocumentVisibility,
-) {
-  const doc = await prisma.document.findUnique({
-    where: { id: documentId },
-    select: { ownerUserId: true },
-  });
-  if (!doc || doc.ownerUserId !== ownerUserId) return null;
-
-  return prisma.$transaction(async (tx) => {
-    const updated = await tx.document.update({
-      where: { id: documentId },
-      data: { visibility },
-      include: { _count: { select: { chunks: true } } },
-    });
-
-    if (visibility === "private") {
-      await tx.publicDocumentSelection.deleteMany({ where: { documentId } });
-    }
-
-    return updated;
   });
 }

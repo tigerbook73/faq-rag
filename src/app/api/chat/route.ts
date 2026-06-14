@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
-import { authErrorResponse, validationErrorResponse } from "@/lib/server/auth/api";
-import { requireUser } from "@/lib/server/auth/require-user";
+import { validationErrorResponse } from "@/lib/server/api";
 import { retrieve } from "@/lib/server/retrieval/query";
 import { sanitizeChunkContent } from "@/lib/server/retrieval/utils";
 import { getProvider } from "@/lib/server/llm/router";
@@ -11,13 +10,6 @@ import { logger } from "@/lib/server/logger";
 import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/shared/schemas/chat";
 
 export async function POST(req: NextRequest) {
-  let actor: Awaited<ReturnType<typeof requireUser>>;
-  try {
-    actor = await requireUser();
-  } catch (error) {
-    return authErrorResponse(error);
-  }
-
   const parsed = ChatRequestInputSchema.safeParse(await req.json());
   if (!parsed.success) return validationErrorResponse(parsed.error);
   const body: ChatRequestInput = parsed.data;
@@ -29,7 +21,7 @@ export async function POST(req: NextRequest) {
   log.info({ question: question.slice(0, 100) }, "chat request");
 
   const t0 = Date.now();
-  const chunks = await retrieve(question, { userId: actor.id, traceId, provider: providerName });
+  const chunks = await retrieve(question, { traceId, provider: providerName });
   log.info({ retrieval_total_ms: Date.now() - t0, chunks: chunks.length }, "retrieval complete");
 
   const citations = chunks.map((c, i) => ({
@@ -56,7 +48,6 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       let answer = "";
 
-      // send citations first as a JSON event
       const citationsPayload = `data: ${JSON.stringify({ type: "citations", citations, provider: providerName })}\n\n`;
       controller.enqueue(encoder.encode(citationsPayload));
 

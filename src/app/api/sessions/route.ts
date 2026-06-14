@@ -1,18 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { CreateSessionInputSchema } from "@/lib/shared/schemas/session";
-import { validationErrorResponse, withUser } from "@/lib/server/auth/api";
-import { createSessionForUser, listSessionsForUser } from "@/lib/server/data/sessions";
+import { validationErrorResponse } from "@/lib/server/api";
+import { createSession, listSessions } from "@/lib/server/data/sessions";
 
-export const GET = withUser(async (actor) => {
-  const sessions = await listSessionsForUser(actor.id);
+export async function GET() {
+  const sessions = await listSessions();
   return NextResponse.json(sessions);
-});
+}
 
-export const POST = withUser(async (actor, req) => {
+export async function POST(req: NextRequest) {
   const parsed = CreateSessionInputSchema.safeParse(await req.json());
   if (!parsed.success) {
     return validationErrorResponse(parsed.error);
   }
-  const session = await createSessionForUser(actor.id, parsed.data);
+  const session = await createSession(parsed.data);
   return NextResponse.json(session, { status: 201 });
-});
+}

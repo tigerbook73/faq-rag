@@ -16,12 +16,9 @@ import {
 } from "@/components/ui/sidebar";
 import { ChatSidebarContent } from "@/components/chat/ChatSidebar";
 import { Info, MessageSquare, BookOpen } from "lucide-react";
-import { useAuth } from "@/context/auth-context";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getLastChatHref } from "@/lib/client/last-chat";
 
 export function AppSidebar() {
-  const { isAuthenticated, email } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const isChat = pathname.startsWith("/chat");
@@ -43,53 +40,39 @@ export function AppSidebar() {
       ) : (
         <>
           <SidebarHeader className="pr-12 md:pr-2">
-            <div className="flex items-center justify-between">
-              <SidebarTrigger />
-              {email && (
-                <div className="flex min-w-0 items-center gap-2 overflow-hidden group-data-[state=collapsed]/sidebar-wrapper:hidden">
-                  <Avatar className="size-6 shrink-0">
-                    <AvatarFallback className="text-xs">{email.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-muted-foreground truncate text-xs">{email}</span>
-                </div>
-              )}
-            </div>
+            <SidebarTrigger />
           </SidebarHeader>
           <SidebarContent />
           <SidebarFooter>
             <SidebarMenu>
-              {isAuthenticated && (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={pathname.startsWith("/chat")}
-                      tooltip="Chat"
-                      render={
-                        <Link
-                          href="/chat/last"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            navigateToLastChat();
-                          }}
-                        />
-                      }
-                    >
-                      <MessageSquare />
-                      <span>Chat</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={pathname === "/knowledge"}
-                      tooltip="Knowledge"
-                      render={<Link href="/knowledge" onClick={closeOnMobile} />}
-                    >
-                      <BookOpen />
-                      <span>Knowledge</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
-              )}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/chat")}
+                  tooltip="Chat"
+                  render={
+                    <Link
+                      href="/chat/last"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigateToLastChat();
+                      }}
+                    />
+                  }
+                >
+                  <MessageSquare />
+                  <span>Chat</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === "/knowledge"}
+                  tooltip="Knowledge"
+                  render={<Link href="/knowledge" onClick={closeOnMobile} />}
+                >
+                  <BookOpen />
+                  <span>Knowledge</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/about"}

@@ -16,12 +16,9 @@ export default function AboutPage() {
       <div className="space-y-2">
         <h2 className="text-app-section font-semibold">Key Features</h2>
         <ul className="text-muted-foreground list-inside list-disc space-y-1 text-sm">
-          <li>Upload and manage private knowledge bases (PDF / DOCX / Markdown / TXT)</li>
+          <li>Upload and manage your knowledge base (PDF / DOCX / Markdown / TXT)</li>
           <li>Multilingual Q&amp;A (English / Chinese) with real-time streamed answers</li>
           <li>Retrieval with semantic chunking, vector search, and query expansion (HyDE)</li>
-          <li>Role-based access control (user / admin separation)</li>
-          <li>Document sharing with owner-scoped permissions</li>
-          <li>Admin dashboard for users, documents, and indexing operations</li>
         </ul>
       </div>
 

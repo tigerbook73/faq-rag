@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { validationErrorResponse, withUser } from "@/lib/server/auth/api";
+import { validationErrorResponse } from "@/lib/server/api";
 import { createSupabaseServiceClient } from "@/lib/server/supabase/server";
 import { sanitizeFilename } from "@/lib/server/storage";
 import { mimeFromExt } from "@/lib/server/ingest/parse";
 import { config } from "@/lib/shared/config";
 import {
-  createPendingDocumentForOwner,
+  createPendingDocument,
   deleteDocumentById,
-  findDuplicateDocumentForOwner,
+  findDuplicateDocument,
   setDocumentFileRef,
 } from "@/lib/server/data/documents";
 import { PrepareUploadInputSchema } from "@/lib/shared/schemas/document";
@@ -21,7 +21,7 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
-export const POST = withUser(async (actor, req) => {
+export async function POST(req: NextRequest) {
   const parsed = PrepareUploadInputSchema.safeParse(await req.json());
   if (!parsed.success) {
     return validationErrorResponse(parsed.error);
@@ -42,20 +42,18 @@ export const POST = withUser(async (actor, req) => {
     return NextResponse.json({ error: "File exceeds 50 KB limit" }, { status: 413 });
   }
 
-  const existing = await findDuplicateDocumentForOwner(actor.id, hash);
+  const existing = await findDuplicateDocument(hash);
   if (existing) {
     return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
   }
 
-  const doc = await createPendingDocumentForOwner({
-    ownerUserId: actor.id,
+  const doc = await createPendingDocument({
     name,
     mime: mimeFromExt(ext),
     contentHash: hash,
     sizeBytes: size,
   });
 
-  // Path format: "embed/{docId}/{sanitizedFilename}" — see src/lib/storage/index.ts → saveUploadedFile
   const storagePath = `embed/${doc.id}/${sanitizeFilename(name)}`;
 
   const supabase = createSupabaseServiceClient();
@@ -74,4 +72,4 @@ export const POST = withUser(async (actor, req) => {
     { docId: doc.id, signedUrl: urlData.signedUrl, token: urlData.token, document: doc },
     { status: 201 },
   );
-});
+}

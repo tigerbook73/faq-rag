@@ -7,7 +7,6 @@
  */
 
 import { retrieve } from "../src/lib/server/retrieval/query";
-import { DEFAULT_ADMIN_USER_ID } from "../src/lib/server/default-users";
 
 interface GoldenEntry {
   question: string;
@@ -26,7 +25,6 @@ const GOLDEN: GoldenEntry[] = [
 
 // ── Evaluation ─────────────────────────────────────────────────────────────
 async function evaluate() {
-  const userId = process.env.EVAL_USER_ID ?? DEFAULT_ADMIN_USER_ID;
   const ks = [1, 3, 5];
   const hits: Record<number, number> = { 1: 0, 3: 0, 5: 0 };
 
@@ -37,7 +35,7 @@ async function evaluate() {
   for (const entry of GOLDEN) {
     let chunks;
     try {
-      chunks = await retrieve(entry.question, { userId });
+      chunks = await retrieve(entry.question);
     } catch (err) {
       console.error(`  ERROR retrieving "${entry.question}":`, err);
       continue;

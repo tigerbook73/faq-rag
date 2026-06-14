@@ -1,29 +1,27 @@
 import { prisma } from "@/lib/server/db/client";
 import { Prisma } from "@/generated/prisma";
 
-export async function getSessionForUser(userId: string, sessionId: string) {
+export async function getSession(sessionId: string) {
   return prisma.session.findFirst({
-    where: { id: sessionId, userId },
+    where: { id: sessionId },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
 }
 
-export async function createSessionForUser(userId: string, input: { id: string; title?: string }) {
+export async function createSession(input: { id: string; title?: string }) {
   return prisma.session.create({
-    data: { id: input.id, userId, title: input.title ?? "New Chat" },
+    data: { id: input.id, title: input.title ?? "New Chat" },
   });
 }
 
-export async function listSessionsForUser(userId: string) {
+export async function listSessions() {
   return prisma.session.findMany({
-    where: { userId },
     orderBy: { updatedAt: "desc" },
     select: { id: true, title: true, updatedAt: true, createdAt: true },
   });
 }
 
-export async function upsertSessionForUser(
-  userId: string,
+export async function upsertSession(
   sessionId: string,
   input: {
     title?: string;
@@ -34,17 +32,10 @@ export async function upsertSessionForUser(
     }>;
   },
 ) {
-  const existing = await prisma.session.findUnique({
-    where: { id: sessionId },
-    select: { userId: true },
-  });
-
-  if (existing && existing.userId !== userId) return null;
-
   return prisma.$transaction(async (tx) => {
     await tx.session.upsert({
       where: { id: sessionId },
-      create: { id: sessionId, userId, title: input.title ?? "New Chat" },
+      create: { id: sessionId, title: input.title ?? "New Chat" },
       update: { ...(input.title !== undefined && { title: input.title }) },
     });
 
@@ -69,8 +60,8 @@ export async function upsertSessionForUser(
   });
 }
 
-export async function deleteSessionForUser(userId: string, sessionId: string) {
+export async function deleteSession(sessionId: string) {
   return prisma.session.deleteMany({
-    where: { id: sessionId, userId },
+    where: { id: sessionId },
   });
 }
