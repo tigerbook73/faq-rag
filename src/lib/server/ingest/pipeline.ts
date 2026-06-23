@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs/promises";
 import { prisma } from "../db/client";
 import { parseFile, parseBuffer, mimeFromExt } from "./parse";
-import { splitText } from "./split";
+import { splitText, splitTextMarkdown } from "./split";
 import { embedBatchForIndexing } from "../embeddings/router";
 import { detectLang } from "../lang/detect";
 import { saveUploadedFile, readUploadedFile } from "../storage";
@@ -52,7 +52,7 @@ export async function ingestFile(filePath: string): Promise<string> {
   try {
     const text = await parseFile(filePath);
     const lang = detectLang(text);
-    const chunks = await splitText(text);
+    const chunks = await (ext === ".md" ? splitTextMarkdown(text) : splitText(text));
 
     await prisma.document.update({
       where: { id: doc.id },
@@ -111,7 +111,8 @@ export async function processDocument(docId: string, filePath: string): Promise<
     const text = await parseBuffer(buffer, ext);
     const lang = detectLang(text);
 
-    const [chunks] = await Promise.all([splitText(text), prisma.chunk.deleteMany({ where: { documentId: docId } })]);
+    const splitter = ext === ".md" ? splitTextMarkdown : splitText;
+    const [chunks] = await Promise.all([splitter(text), prisma.chunk.deleteMany({ where: { documentId: docId } })]);
 
     await Promise.all([
       prisma.document.update({ where: { id: docId }, data: { totalChunks: chunks.length } }),

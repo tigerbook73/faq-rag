@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
-import { config } from "@/lib/shared/config";
 import { type DocumentItem } from "@/lib/shared/schemas/document";
 import { prepareUpload, confirmIndex } from "@/lib/client/documents-api";
+
+function formatBytes(bytes: number): string {
+  return bytes >= 1024 * 1024 ? `${bytes / (1024 * 1024)} MB` : `${bytes / 1024} KB`;
+}
 
 async function computeSHA256(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -17,7 +20,7 @@ async function computeSHA256(file: File): Promise<string> {
     .join("");
 }
 
-export function UploadZone() {
+export function UploadZone({ maxBytes }: { maxBytes: number }) {
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
   const { mutate } = useSWRConfig();
@@ -88,15 +91,18 @@ export function UploadZone() {
     [mutate, router],
   );
 
-  const onDropRejected = useCallback((rejections: FileRejection[]) => {
-    for (const { file, errors } of rejections) {
-      if (errors.some((e) => e.code === "file-too-large")) {
-        toast.error(`${file.name}: exceeds 50 KB limit`);
-      } else {
-        toast.error(`Unsupported file type: ${file.name}. Supported: .md .txt .pdf .docx`);
+  const onDropRejected = useCallback(
+    (rejections: FileRejection[]) => {
+      for (const { file, errors } of rejections) {
+        if (errors.some((e) => e.code === "file-too-large")) {
+          toast.error(`${file.name}: exceeds ${formatBytes(maxBytes)} limit`);
+        } else {
+          toast.error(`Unsupported file type: ${file.name}. Supported: .md .txt .pdf .docx`);
+        }
       }
-    }
-  }, []);
+    },
+    [maxBytes],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -107,7 +113,7 @@ export function UploadZone() {
       "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
-    maxSize: config.embedding.maxBytesCloud,
+    maxSize: maxBytes,
     disabled: isUploading,
   });
 
