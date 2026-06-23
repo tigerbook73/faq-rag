@@ -59,7 +59,7 @@ schema_paths = []
 
 [db.seed]
 # If enabled, seeds the database after migrations during a db reset.
-enabled = true
+enabled = false
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
 sql_paths = ["./seed.sql"]
@@ -86,7 +86,7 @@ enabled = false
 # max_header_length = 4096
 
 [studio]
-enabled = true
+enabled = false
 # Port to use for Supabase Studio.
 port = 54323
 # External URL of the API server that frontend connects to.
@@ -117,7 +117,7 @@ file_size_limit = "50MiB"
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
-enabled = true
+enabled = false
 
 # Image transformation API is available to Supabase Pro plan.
 # [storage.image_transformation]
@@ -145,7 +145,7 @@ max_indexes = 5
 # [storage.vector.buckets.documents-openai]
 
 [auth]
-enabled = true
+enabled = false
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://127.0.0.1:3000"
