@@ -38,8 +38,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Unsupported MIME type: ${mime}` }, { status: 400 });
   }
 
-  if (size > config.embedding.maxBytesCloud) {
-    return NextResponse.json({ error: "File exceeds 50 KB limit" }, { status: 413 });
+  const maxBytes = config.embedding.useOpenAI ? config.embedding.maxBytesCloud : config.embedding.maxBytesLocal;
+  if (size > maxBytes) {
+    const label = maxBytes >= 1024 * 1024 ? `${maxBytes / (1024 * 1024)} MB` : `${maxBytes / 1024} KB`;
+    return NextResponse.json({ error: `File exceeds ${label} limit` }, { status: 413 });
   }
 
   const existing = await findDuplicateDocument(hash);
