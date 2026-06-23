@@ -2,7 +2,7 @@
 
 A RAG-based FAQ system. Upload documents in Chinese or English, ask questions in either language, and receive streamed answers with cited sources.
 
-> Next.js 16 · Supabase (Auth + Storage + PostgreSQL/pgvector) · Claude / DeepSeek / OpenAI · bge-m3 embeddings
+> Next.js 16 · Supabase (Storage + PostgreSQL/pgvector) · Claude / DeepSeek / OpenAI · bge-m3 embeddings
 
 ## Features
 
@@ -11,14 +11,13 @@ A RAG-based FAQ system. Upload documents in Chinese or English, ask questions in
 - Semantic chunking with cosine-boundary detection
 - Knowledge base management — upload, delete, reindex
 - Multi-provider LLM switching (Claude, DeepSeek, OpenAI)
-- Supabase email/password auth
 
 ## Local Setup
 
 ### Prerequisites
 
 - Node.js ≥ 20 LTS + pnpm
-- [Supabase CLI](https://supabase.com/docs/guides/cli) — spins up a local Supabase stack (PostgreSQL + Auth) via Docker
+- [Supabase CLI](https://supabase.com/docs/guides/cli) — spins up a local Supabase stack (PostgreSQL + Storage) via Docker
 - Docker
 
 ### 1. Install dependencies
@@ -49,7 +48,7 @@ Resets the local database, applies all migrations, and writes the ingest webhook
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Sign in with the default local account: `admin@test.com` / `admin@123`.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Remote Deployment
 
@@ -58,7 +57,7 @@ Open [http://localhost:3000](http://localhost:3000). Sign in with the default lo
 | Requirement                     | Notes                                                              |
 | ------------------------------- | ------------------------------------------------------------------ |
 | Vercel account + project linked | `vercel link` once in the project root                             |
-| Supabase Cloud project          | Provides Auth, Storage, and PostgreSQL with pgvector               |
+| Supabase Cloud project          | Provides Storage and PostgreSQL with pgvector                      |
 | Supabase CLI linked locally     | `supabase link --project-ref <ref>` once                           |
 | `.env.cloud` configured         | `NEXT_PUBLIC_APP_URL`, `INGEST_HOOK_SECRET`, DB connection strings |
 
