@@ -4,6 +4,7 @@ out
 build
 coverage
 src/generated
+.aisk
 
 # Package-manager generated lockfiles
 pnpm-lock.yaml

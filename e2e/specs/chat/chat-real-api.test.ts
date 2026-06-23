@@ -1,9 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { signIn } from "../../helpers";
 
 test.describe("Chat flow @real-api @slow", () => {
   test("sends a message and receives a streamed response with citation", async ({ page }) => {
-    await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();
@@ -24,7 +22,6 @@ test.describe("Chat flow @real-api @slow", () => {
   });
 
   test("citation superscript is rendered and opens CitationDrawer on click", async ({ page }) => {
-    await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();

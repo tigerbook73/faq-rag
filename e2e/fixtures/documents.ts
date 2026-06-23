@@ -55,16 +55,6 @@ export async function uploadAndIndexTextDocument(page: Page, input: { name: stri
   return data.document;
 }
 
-export async function setDocumentVisibility(page: Page, documentId: string, visibility: "private" | "public") {
-  const res = await page.request.patch(`/api/documents/${documentId}`, {
-    data: { visibility },
-  });
-
-  if (!res.ok()) {
-    throw new Error(`Failed to set document visibility: ${res.status()} ${await res.text()}`);
-  }
-}
-
 export async function waitForDocumentStatus(page: Page, documentId: string, status: string, timeoutMs = 60_000) {
   const startedAt = Date.now();
 

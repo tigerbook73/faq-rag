@@ -1,10 +1,8 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
-import { signIn } from "../../helpers";
 
 test.describe("Knowledge base @embed @slow", () => {
   test("upload a document and show it in the document table", async ({ page }) => {
-    await signIn(page, "user1", "/chat/last");
     await page.goto("/knowledge");
 
     // Upload the fixture file

@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { signIn } from "../../helpers";
 import { mockChatRoute } from "../../mocks/chat";
 
 test.describe("Chat UI (mocked API)", () => {
@@ -8,7 +7,6 @@ test.describe("Chat UI (mocked API)", () => {
   });
 
   test("sends a message and receives a mocked streamed response @smoke", async ({ page }) => {
-    await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();
@@ -22,7 +20,6 @@ test.describe("Chat UI (mocked API)", () => {
   });
 
   test("citation superscript is rendered and opens CitationDrawer on click", async ({ page }) => {
-    await signIn(page, "user1", "/chat/last");
     await page.goto("/chat/new");
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();
