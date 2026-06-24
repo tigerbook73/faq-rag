@@ -7,6 +7,7 @@ import { useSWRConfig } from "swr";
 import { toast } from "sonner";
 import { type DocumentItem } from "@/lib/shared/schemas/document";
 import { prepareUpload, confirmIndex } from "@/lib/client/documents-api";
+import { useEmbedService } from "@/context/embed-service-context";
 
 function formatBytes(bytes: number): string {
   return bytes >= 1024 * 1024 ? `${bytes / (1024 * 1024)} MB` : `${bytes / 1024} KB`;
@@ -24,6 +25,7 @@ export function UploadZone({ maxBytes }: { maxBytes: number }) {
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
   const { mutate } = useSWRConfig();
+  const { triggerEmbed } = useEmbedService();
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -70,6 +72,7 @@ export function UploadZone({ maxBytes }: { maxBytes: number }) {
           );
 
           await confirmIndex(docId).catch(() => {});
+          triggerEmbed(docId);
 
           success++;
         } catch (err) {
@@ -88,7 +91,7 @@ export function UploadZone({ maxBytes }: { maxBytes: number }) {
       await mutate("/api/documents");
       router.refresh();
     },
-    [mutate, router],
+    [mutate, router, triggerEmbed],
   );
 
   const onDropRejected = useCallback(

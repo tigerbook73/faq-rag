@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { PageTitleProvider } from "@/context/page-title-context";
 import { ProviderContextProvider } from "@/context/provider-context";
+import { EmbedServiceProvider } from "@/context/embed-service-context";
 import { isSidebarlessRoute } from "@/lib/server/route-policy";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -32,9 +33,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <PageTitleProvider>
         <ProviderContextProvider>
-          <TooltipProvider>
-            <AppLayout>{children}</AppLayout>
-          </TooltipProvider>
+          <EmbedServiceProvider>
+            <TooltipProvider>
+              <AppLayout>{children}</AppLayout>
+            </TooltipProvider>
+          </EmbedServiceProvider>
         </ProviderContextProvider>
       </PageTitleProvider>
     </ThemeProvider>

@@ -7,11 +7,13 @@ import { config } from "@/lib/shared/config";
 import { type DocumentItem as Document } from "@/lib/shared/schemas/document";
 import { deleteDocument, reindexDocument } from "@/lib/client/documents-api";
 import { fetcher } from "@/lib/client/swr";
+import { useEmbedService } from "@/context/embed-service-context";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 
 export function useDocumentManagement() {
   const { data, isLoading, mutate: mutateDocuments } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
+  const { triggerEmbed } = useEmbedService();
   const baseDocuments = useMemo(() => data?.items ?? [], [data]);
 
   const [search, setSearch] = useState("");
@@ -78,6 +80,7 @@ export function useDocumentManagement() {
     setReindexingId(id);
     try {
       await reindexDocument(id);
+      triggerEmbed(id);
       await mutateDocuments();
     } catch (err) {
       await mutateDocuments();
@@ -95,6 +98,7 @@ export function useDocumentManagement() {
       for (let i = 0; i < documents.length; i++) {
         try {
           await reindexDocument(documents[i].id);
+          triggerEmbed(documents[i].id);
         } catch {
           failed++;
         }
