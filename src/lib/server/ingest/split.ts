@@ -1,6 +1,5 @@
 import { RecursiveCharacterTextSplitter, MarkdownTextSplitter } from "@langchain/textsplitters";
 import { config } from "@/lib/shared/config";
-import { splitTextSemantic } from "./semantic-splitter";
 
 const fixedSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: config.chunking.size,
@@ -17,9 +16,8 @@ export async function splitTextFixed(text: string): Promise<string[]> {
   return fixedSplitter.splitText(text);
 }
 
-// Default: semantic chunking with fixed-size fallback for short texts / large chunks
 export async function splitText(text: string): Promise<string[]> {
-  return splitTextSemantic(text);
+  return splitTextFixed(text);
 }
 
 // Strips NestJS doc system annotations before chunking

@@ -75,3 +75,51 @@ export async function setDocumentUploaded(documentId: string) {
     data: { status: "uploaded" },
   });
 }
+
+export async function setDocumentIndexed(documentId: string) {
+  return prisma.document.update({
+    where: { id: documentId },
+    data: { status: "indexed", errorMsg: null },
+  });
+}
+
+export async function setDocumentFailed(documentId: string, errorMsg: string) {
+  return prisma.document
+    .update({
+      where: { id: documentId },
+      data: { status: "failed", errorMsg },
+    })
+    .catch(() => {});
+}
+
+export async function findUnembeddedChunks(
+  docId: string,
+  limit: number,
+): Promise<Array<{ id: string; content: string }>> {
+  return prisma.$queryRaw<Array<{ id: string; content: string }>>`
+    SELECT id::text, content FROM chunks
+    WHERE document_id = ${docId}::uuid AND embedding IS NULL
+    ORDER BY ord
+    LIMIT ${limit}
+  `;
+}
+
+export async function countUnembeddedChunks(docId: string): Promise<number> {
+  const result = await prisma.$queryRaw<[{ count: bigint }]>`
+    SELECT COUNT(*)::bigint as count FROM chunks
+    WHERE document_id = ${docId}::uuid AND embedding IS NULL
+  `;
+  return Number(result[0].count);
+}
+
+export async function updateChunkEmbeddings(chunks: Array<{ id: string; embedding: number[] }>): Promise<void> {
+  await prisma.$transaction(
+    chunks.map(
+      ({ id, embedding }) =>
+        prisma.$executeRaw`
+        UPDATE chunks SET embedding = ${`[${embedding.join(",")}]`}::vector
+        WHERE id = ${id}::uuid
+      `,
+    ),
+  );
+}

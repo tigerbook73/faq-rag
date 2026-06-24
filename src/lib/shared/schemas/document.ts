@@ -32,6 +32,14 @@ export const DocumentItemSchema = z.object({
 });
 export type DocumentItem = z.infer<typeof DocumentItemSchema>;
 
+// POST /api/documents/{id}/embed
+export const EmbedBatchResultSchema = z.object({
+  embedded: z.number(),
+  remaining: z.number(),
+  status: z.string(),
+});
+export type EmbedBatchResult = z.infer<typeof EmbedBatchResultSchema>;
+
 // POST /api/documents/prepare
 export const PrepareUploadOutputSchema = z.object({
   docId: z.string(),

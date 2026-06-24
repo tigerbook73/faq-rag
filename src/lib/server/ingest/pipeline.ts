@@ -2,7 +2,7 @@ import crypto from "crypto";
 import path from "path";
 import fs from "fs/promises";
 import { prisma } from "../db/client";
-import { findDuplicateDocument } from "../data/documents";
+import { findDuplicateDocument, setDocumentFailed } from "../data/documents";
 import { parseFile, parseBuffer, mimeFromExt } from "./parse";
 import { splitText, splitTextMarkdown } from "./split";
 import { embedBatchForIndexing, getEmbeddingModelId } from "../embeddings/router";
@@ -102,6 +102,49 @@ export async function ingestBuffer(
   });
 
   return { docId: doc.id, filePath: storagePath };
+}
+
+async function storeChunksWithoutEmbeddings(docId: string, chunks: string[]): Promise<void> {
+  await prisma.$transaction(
+    chunks.map(
+      (text, i) =>
+        prisma.$executeRaw`
+        INSERT INTO chunks (id, document_id, ord, content, lang, created_at)
+        VALUES (
+          ${crypto.randomUUID()}::uuid,
+          ${docId}::uuid,
+          ${i},
+          ${text},
+          ${detectLang(text)},
+          NOW()
+        )
+      `,
+    ),
+  );
+}
+
+/** Parse + split file into chunks stored without embeddings; sets status=indexing. */
+export async function parseAndSplitDocument(docId: string, filePath: string): Promise<void> {
+  await prisma.document.update({ where: { id: docId }, data: { status: "indexing", errorMsg: null } });
+  try {
+    const buffer = await readUploadedFile(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const text = await parseBuffer(buffer, ext);
+    const lang = detectLang(text);
+
+    const splitter = ext === ".md" ? splitTextMarkdown : splitText;
+    const [chunks] = await Promise.all([splitter(text), prisma.chunk.deleteMany({ where: { documentId: docId } })]);
+
+    await storeChunksWithoutEmbeddings(docId, chunks);
+    await prisma.document.update({
+      where: { id: docId },
+      data: { totalChunks: chunks.length, lang },
+    });
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    await setDocumentFailed(docId, errorMsg);
+    throw err;
+  }
 }
 
 // Indexing — called by worker (local) or inline (cloud)

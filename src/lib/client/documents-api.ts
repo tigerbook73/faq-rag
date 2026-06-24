@@ -1,7 +1,9 @@
 import {
   PrepareUploadOutputSchema,
+  EmbedBatchResultSchema,
   type PrepareUploadInput,
   type PrepareUploadOutput,
+  type EmbedBatchResult,
 } from "../shared/schemas/document";
 
 export async function prepareUpload(input: PrepareUploadInput): Promise<PrepareUploadOutput> {
@@ -31,4 +33,17 @@ export async function reindexDocument(id: string): Promise<void> {
     const data = await res.json().catch(() => ({}));
     throw new Error((data as { error?: string }).error ?? `Reindex failed (${res.status})`);
   }
+}
+
+export async function embedBatch(docId: string, batchSize = 20): Promise<EmbedBatchResult> {
+  const res = await fetch(`/api/documents/${docId}/embed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ batchSize }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? `Embed failed (${res.status})`);
+  }
+  return EmbedBatchResultSchema.parse(await res.json());
 }
