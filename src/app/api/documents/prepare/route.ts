@@ -5,6 +5,7 @@ import { createSupabaseServiceClient } from "@/lib/server/supabase/server";
 import { sanitizeFilename } from "@/lib/server/storage";
 import { mimeFromExt } from "@/lib/server/ingest/parse";
 import { config } from "@/lib/shared/config";
+import { getEmbeddingModelId } from "@/lib/server/embeddings/router";
 import {
   createPendingDocument,
   deleteDocumentById,
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `File exceeds ${label} limit` }, { status: 413 });
   }
 
-  const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
+  const embeddingModel = getEmbeddingModelId();
   const existing = await findDuplicateDocument(hash, embeddingModel);
   if (existing) {
     return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });

@@ -14,9 +14,7 @@ export async function vectorSearch(embedding: number[], topK: number, embeddingM
   const vec = `[${embedding.join(",")}]`;
   // For bge-m3 (local), also match NULL rows (legacy docs indexed before this field was added)
   const modelFilter =
-    embeddingModel === "openai"
-      ? `d.embedding_model = 'openai'`
-      : `(d.embedding_model = 'bge-m3' OR d.embedding_model IS NULL)`;
+    embeddingModel === "bge-m3" ? `(d.embedding_model = $3 OR d.embedding_model IS NULL)` : `d.embedding_model = $3`;
 
   return prisma.$queryRawUnsafe<ChunkRow[]>(
     `SELECT
@@ -35,5 +33,6 @@ export async function vectorSearch(embedding: number[], topK: number, embeddingM
     LIMIT $2`,
     vec,
     topK,
+    embeddingModel,
   );
 }

@@ -56,12 +56,13 @@ describe("/api/documents/prepare", () => {
     );
 
     expect(res.status).toBe(201);
-    expect(mockFindDuplicateDocument).toHaveBeenCalledWith(validHash);
+    expect(mockFindDuplicateDocument).toHaveBeenCalledWith(validHash, "bge-m3");
     expect(mockCreatePendingDocument).toHaveBeenCalledWith({
       name: "FAQ Doc.md",
       mime: "text/markdown",
       contentHash: validHash,
       sizeBytes: 100,
+      embeddingModel: "bge-m3",
     });
     expect(mockCreateSignedUploadUrl).toHaveBeenCalledWith("embed/doc-1/FAQ_Doc.md");
     expect(mockSetDocumentFileRef).toHaveBeenCalledWith("doc-1", "embed/doc-1/FAQ_Doc.md");
@@ -84,7 +85,7 @@ describe("/api/documents/prepare", () => {
     const res = await POST(jsonRequest({ name: "faq.md", size: 100, mime: "text/markdown", hash: validHash }) as never);
 
     expect(res.status).toBe(409);
-    expect(mockFindDuplicateDocument).toHaveBeenCalledWith(validHash);
+    expect(mockFindDuplicateDocument).toHaveBeenCalledWith(validHash, "bge-m3");
     expect(mockCreatePendingDocument).not.toHaveBeenCalled();
     expect(await res.json()).toEqual({ error: "Duplicate file — already indexed" });
   });

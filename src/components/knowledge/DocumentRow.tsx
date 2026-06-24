@@ -25,9 +25,7 @@ export function statusVariant(status: string): "default" | "secondary" | "destru
 }
 
 function modelLabel(embeddingModel: string | null | undefined) {
-  if (embeddingModel === "openai") return "OpenAI";
-  if (embeddingModel === "bge-m3") return "Local";
-  return "—";
+  return embeddingModel ?? "—";
 }
 
 function chunkLabel(doc: Document) {
