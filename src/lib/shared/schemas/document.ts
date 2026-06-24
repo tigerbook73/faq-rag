@@ -25,7 +25,9 @@ export const DocumentItemSchema = z.object({
   sizeBytes: z.number(),
   errorMsg: z.string().nullable(),
   totalChunks: z.number().nullable(),
+  embeddingModel: z.string().nullable(),
   createdAt: z.union([z.string(), z.date()]),
+  isBuiltIn: z.boolean(),
   _count: z.object({ chunks: z.number() }),
 });
 export type DocumentItem = z.infer<typeof DocumentItemSchema>;

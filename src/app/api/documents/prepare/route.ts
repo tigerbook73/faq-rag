@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `File exceeds ${label} limit` }, { status: 413 });
   }
 
-  const existing = await findDuplicateDocument(hash);
+  const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
+  const existing = await findDuplicateDocument(hash, embeddingModel);
   if (existing) {
     return NextResponse.json({ error: "Duplicate file — already indexed" }, { status: 409 });
   }
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
     mime: mimeFromExt(ext),
     contentHash: hash,
     sizeBytes: size,
+    embeddingModel,
   });
 
   const storagePath = `embed/${doc.id}/${sanitizeFilename(name)}`;

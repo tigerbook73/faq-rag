@@ -1,0 +1,2 @@
+ALTER TABLE documents ADD COLUMN embedding_model TEXT;
+ALTER TABLE documents ADD COLUMN is_built_in BOOLEAN NOT NULL DEFAULT FALSE;

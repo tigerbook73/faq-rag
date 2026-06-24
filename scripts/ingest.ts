@@ -1,6 +1,6 @@
 import path from "path";
-import fs from "fs/promises";
 import { ingestFile } from "../src/lib/server/ingest/pipeline";
+import { collectFiles } from "./libs/utils";
 
 async function main() {
   const target = process.argv[2];
@@ -9,22 +9,7 @@ async function main() {
     process.exit(1);
   }
 
-  const resolved = path.resolve(target);
-  const stat = await fs.stat(resolved);
-
-  const files: string[] = [];
-
-  if (stat.isDirectory()) {
-    const entries = await fs.readdir(resolved);
-    for (const entry of entries) {
-      const ext = path.extname(entry).toLowerCase();
-      if ([".md", ".txt", ".pdf", ".docx"].includes(ext)) {
-        files.push(path.join(resolved, entry));
-      }
-    }
-  } else {
-    files.push(resolved);
-  }
+  const files = await collectFiles(target);
 
   if (files.length === 0) {
     console.log("No supported files found.");

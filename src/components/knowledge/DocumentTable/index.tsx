@@ -93,6 +93,7 @@ export function DocumentTable() {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Lang</TableHead>
+            <TableHead>Model</TableHead>
             <TableHead>Chunks</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
@@ -102,7 +103,7 @@ export function DocumentTable() {
         <TableBody>
           {documents.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-muted-foreground py-8 text-center text-sm">
+              <TableCell colSpan={7} className="text-muted-foreground py-8 text-center text-sm">
                 No documents match &ldquo;{search}&rdquo;
               </TableCell>
             </TableRow>
