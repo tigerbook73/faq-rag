@@ -1,6 +1,7 @@
 import { getOpenaiClient } from "../llm/clients";
 
-const MODEL = "text-embedding-3-small";
+export const OPENAI_EMBEDDING_MODEL = "text-embedding-3-small";
+const MODEL = OPENAI_EMBEDDING_MODEL;
 const DIMENSIONS = 1024;
 
 export async function getEmbeddingOpenAI(text: string): Promise<number[]> {

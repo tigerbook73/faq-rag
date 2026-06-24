@@ -1,4 +1,12 @@
 import { config } from "@/lib/shared/config";
+import { OPENAI_EMBEDDING_MODEL } from "./openai-embed";
+
+export const BGE_EMBEDDING_MODEL = "bge-m3";
+
+/** Returns the identifier stored in the DB for the currently active embedding model. */
+export function getEmbeddingModelId(): string {
+  return config.embedding.useOpenAI ? OPENAI_EMBEDDING_MODEL : BGE_EMBEDDING_MODEL;
+}
 
 const INDEXING_BATCH_SIZE = 8;
 

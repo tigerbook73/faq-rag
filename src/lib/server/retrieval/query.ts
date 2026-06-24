@@ -1,4 +1,4 @@
-import { getEmbedding } from "../embeddings/router";
+import { getEmbedding, getEmbeddingModelId } from "../embeddings/router";
 import { vectorSearch, type ChunkRow } from "./vector-search";
 import { deduplicateAndSort } from "./rerank";
 import { detectLang } from "../lang/detect";
@@ -64,7 +64,7 @@ export async function retrieve(userQuery: string, options: RetrieveOptions = {})
   ]);
   const [embZh, embEn, embHyde] = embedResults;
 
-  const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
+  const embeddingModel = getEmbeddingModelId();
   const searchResults = await Promise.all([
     vectorSearch(embZh, config.retrieval.topK, embeddingModel),
     vectorSearch(embEn, config.retrieval.topK, embeddingModel),

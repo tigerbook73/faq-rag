@@ -5,11 +5,10 @@ import { prisma } from "../db/client";
 import { findDuplicateDocument } from "../data/documents";
 import { parseFile, parseBuffer, mimeFromExt } from "./parse";
 import { splitText, splitTextMarkdown } from "./split";
-import { embedBatchForIndexing } from "../embeddings/router";
+import { embedBatchForIndexing, getEmbeddingModelId } from "../embeddings/router";
 import { detectLang } from "../lang/detect";
 import { saveUploadedFile, readUploadedFile } from "../storage";
 import { logger } from "../logger";
-import { config } from "@/lib/shared/config";
 
 async function embedAndStoreChunks(docId: string, chunks: string[]): Promise<void> {
   const embeddings = await embedBatchForIndexing(chunks);
@@ -41,7 +40,7 @@ export async function ingestFile(filePath: string): Promise<string> {
   const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
-  const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
+  const embeddingModel = getEmbeddingModelId();
   const existing = await findDuplicateDocument(contentHash, embeddingModel);
   if (existing) {
     logger.info({ fileName, hash: contentHash.slice(0, 8) }, "ingest: skipping duplicate");
@@ -88,7 +87,7 @@ export async function ingestBuffer(
   const contentHash = crypto.createHash("sha256").update(buffer).digest("hex");
   const sizeBytes = buffer.length;
 
-  const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
+  const embeddingModel = getEmbeddingModelId();
   const existing = await findDuplicateDocument(contentHash, embeddingModel);
   if (existing) return { docId: existing.id, filePath: null };
 
@@ -122,7 +121,7 @@ export async function processDocument(docId: string, filePath: string): Promise<
       embedAndStoreChunks(docId, chunks),
     ]);
 
-    const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
+    const embeddingModel = getEmbeddingModelId();
     await prisma.document.update({
       where: { id: docId },
       data: { status: "indexed", lang, errorMsg: null, embeddingModel },

@@ -9,6 +9,7 @@ const mockCreate = jest.fn();
 
 jest.mock("@/lib/server/embeddings/router", () => ({
   getEmbedding: (...args: unknown[]) => mockGetEmbedding(...args),
+  getEmbeddingModelId: () => "bge-m3",
 }));
 jest.mock("@/lib/server/retrieval/vector-search", () => ({
   vectorSearch: (...args: unknown[]) => mockVectorSearch(...args),
