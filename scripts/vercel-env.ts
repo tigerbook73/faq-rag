@@ -2,7 +2,7 @@
  * Manage Vercel production environment variables.
  *
  * Usage:
- *   pnpm vercel:env:pull    Pull Vercel production vars → .env.vercel, diff with .env+.env.cloud
+ *   pnpm vercel:env:pull    Pull Vercel production vars → .env.vercel, diff with .env+.env.production
  *   pnpm vercel:env:push    Diff then push only changed vars to Vercel production
  *   pnpm vercel:env:delete  Interactively delete a Vercel production env var
  */
@@ -94,18 +94,18 @@ class VercelEnvManager {
     console.log("Pulling production env vars from Vercel...\n");
     this.pullVercel();
 
-    const rows = this.computeDiff(this.parseEnvFile(".env.vercel"), this.parseEnvFiles(".env", ".env.cloud"));
+    const rows = this.computeDiff(this.parseEnvFile(".env.vercel"), this.parseEnvFiles(".env", ".env.production"));
     if (rows.length === 0) {
-      console.log("\n✓ .env + .env.cloud and Vercel production are in sync.");
+      console.log("\n✓ .env + .env.production and Vercel production are in sync.");
     } else {
       this.printTable(rows);
     }
   }
 
   push(): void {
-    const cloud = this.parseEnvFiles(".env", ".env.cloud");
+    const cloud = this.parseEnvFiles(".env", ".env.production");
     if (cloud.size === 0) {
-      console.error("ERROR: .env and .env.cloud are both empty or not found");
+      console.error("ERROR: .env and .env.production are both empty or not found");
       process.exit(1);
     }
 
@@ -179,7 +179,7 @@ class VercelEnvManager {
 }
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
-const cli = cac("npx tsx ./scripts/vercel-env");
+const cli = cac("bun scripts/vercel-env");
 
 cli.usage("pull | push | delete");
 
@@ -188,7 +188,7 @@ cli.command("").action(() => {
 });
 
 cli
-  .command("pull", "Pull Vercel production vars → .env.vercel, then diff with .env + .env.cloud")
+  .command("pull", "Pull Vercel production vars → .env.vercel, then diff with .env + .env.production")
   .action(() => new VercelEnvManager().pull());
 
 cli

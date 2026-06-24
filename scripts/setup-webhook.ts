@@ -4,33 +4,28 @@
  * Usage:
  *   pnpm hook:set          Apply hook settings to local DB
  *   pnpm hook:query        Show current hook settings in local DB
- *   pnpm hook:prod:set     Apply hook settings to remote DB
- *   pnpm hook:prod:query   Query hook settings from remote DB
+ *   pnpm hook:set:prod     Apply hook settings to remote DB  (NODE_ENV=production)
+ *   pnpm hook:query:prod   Query hook settings from remote DB (NODE_ENV=production)
  *
- * Env files:
+ * Env files (loaded automatically by bun):
  *   Local : .env + .env.development.local  (INGEST_HOOK_SECRET)
- *   Prod  : .env + .env.cloud             (INGEST_HOOK_SECRET, NEXT_PUBLIC_APP_URL)
+ *   Prod  : .env + .env.production         (INGEST_HOOK_SECRET, NEXT_PUBLIC_APP_URL)
  */
 
 import { execSync } from "child_process";
 import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { config } from "dotenv";
 import { cac } from "cac";
 
 class WebhookConfig {
   private readonly target: "--local" | "--linked";
-  private readonly envFile: string;
   private readonly hookUrl: string;
   private readonly hookSecret: string;
 
-  constructor(private readonly isProd: boolean) {
+  constructor() {
+    const isProd = process.env.NODE_ENV === "production";
     this.target = isProd ? "--linked" : "--local";
-    this.envFile = isProd ? ".env.cloud" : ".env.development.local";
-
-    config({ path: ".env", override: false });
-    config({ path: this.envFile, override: true });
 
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
     this.hookUrl = isProd ? `${appUrl}/api/ingest-hook` : "http://host.docker.internal:3000/api/ingest-hook";
@@ -50,13 +45,16 @@ class WebhookConfig {
 
   query(): void {
     const sql = "SELECT key, value FROM app.ingest_config ORDER BY key;";
-    console.log(this.isProd ? "Querying remote database...\n" : "Current webhook settings in local database:\n");
+    console.log(
+      this.target === "--linked" ? "Querying remote database...\n" : "Current webhook settings in local database:\n",
+    );
     this.execQuery(sql);
   }
 
   set(): void {
     if (!this.hookSecret) {
-      console.error(`ERROR: INGEST_HOOK_SECRET is not set in ${this.envFile}`);
+      const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development.local";
+      console.error(`ERROR: INGEST_HOOK_SECRET is not set in ${envFile}`);
       process.exit(1);
     }
 
@@ -67,7 +65,7 @@ class WebhookConfig {
     `.trim();
     const querySql = "SELECT key, value FROM app.ingest_config ORDER BY key;";
 
-    console.log(this.isProd ? "Applying to remote database...\n" : "Applying to local database...");
+    console.log(this.target === "--linked" ? "Applying to remote database...\n" : "Applying to local database...");
     this.execQuery(updateSql);
     console.log("\nVerifying...");
     this.execQuery(querySql);
@@ -75,7 +73,7 @@ class WebhookConfig {
 }
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
-const cli = cac("npx tsx ./scripts/setup-webhook");
+const cli = cac("bun scripts/setup-webhook");
 
 cli.usage("<command> [options]");
 
@@ -83,15 +81,9 @@ cli.command("").action(() => {
   cli.outputHelp();
 });
 
-cli
-  .command("query", "Show current hook settings in the database")
-  .option("--prod", "Target the remote (linked) Supabase project")
-  .action((options: { prod?: boolean }) => new WebhookConfig(options.prod ?? false).query());
+cli.command("query", "Show current hook settings in the database").action(() => new WebhookConfig().query());
 
-cli
-  .command("set", "Apply hook_url and hook_secret to the database")
-  .option("--prod", "Target the remote (linked) Supabase project")
-  .action((options: { prod?: boolean }) => new WebhookConfig(options.prod ?? false).set());
+cli.command("set", "Apply hook_url and hook_secret to the database").action(() => new WebhookConfig().set());
 
 cli.help();
 cli.parse();

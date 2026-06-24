@@ -13,9 +13,9 @@
  *             "dimensions":1024, "generatedAt":"<ISO>"}
  *   Line N: {"type":"chunk", "ord":N, "content":"...", "lang":"...", "embedding":"<base64>"}
  *
- * Env loading order (later files override earlier):
+ * Env loading order (later files override earlier, handled automatically by bun):
  *   development (default): .env → .env.development.local
- *   production (NODE_ENV=production): .env → .env.cloud
+ *   production (NODE_ENV=production): .env → .env.production
  */
 
 import path from "path";
@@ -23,17 +23,6 @@ import fs from "fs/promises";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import crypto from "crypto";
-import dotenv from "dotenv";
-
-// ── Env loading (must run before any config/prisma imports) ───────────────────
-
-function loadEnv(): void {
-  const isProd = process.env.NODE_ENV === "production";
-  dotenv.config({ path: ".env" });
-  dotenv.config({ path: isProd ? ".env.cloud" : ".env.development.local", override: true });
-}
-
-loadEnv();
 
 // ── CLI argument parsing ──────────────────────────────────────────────────────
 
@@ -48,16 +37,9 @@ const getFlag = (name: string) => {
 if (mode !== "export" && mode !== "import" && mode !== "clear") {
   console.error("Usage:");
   console.error("  pnpm seed:export <input-file> [--model <openai|local>] [--out-dir <dir>]");
-  console.error("  pnpm seed:import <seed-file>  [--db-url <url>]");
-  console.error("  pnpm seed:clear [source-name]  [--db-url <url>]  # omit name to clear all built-in");
+  console.error("  pnpm seed:import <seed-file>");
+  console.error("  pnpm seed:clear [source-name]  # omit name to clear all built-in");
   process.exit(1);
-}
-
-// Set DATABASE_URL override BEFORE any Prisma import
-const dbUrl = getFlag("db-url");
-if (dbUrl) {
-  process.env.DATABASE_URL = dbUrl;
-  process.env.DIRECT_URL = dbUrl;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
