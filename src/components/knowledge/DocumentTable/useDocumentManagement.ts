@@ -11,7 +11,7 @@ import { fetcher } from "@/lib/client/swr";
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 
 export function useDocumentManagement() {
-  const { data, mutate: mutateDocuments } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
+  const { data, isLoading, mutate: mutateDocuments } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
   const baseDocuments = useMemo(() => data?.items ?? [], [data]);
 
   const [search, setSearch] = useState("");
@@ -114,6 +114,7 @@ export function useDocumentManagement() {
   return {
     documents,
     allDocuments: baseDocuments,
+    isLoading,
     search,
     setSearch,
     deletingId,
