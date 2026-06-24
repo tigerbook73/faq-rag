@@ -59,7 +59,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | Vercel account + project linked | `vercel link` once in the project root                             |
 | Supabase Cloud project          | Provides Storage and PostgreSQL with pgvector                      |
 | Supabase CLI linked locally     | `supabase link --project-ref <ref>` once                           |
-| `.env.cloud` configured         | `NEXT_PUBLIC_APP_URL`, `INGEST_HOOK_SECRET`, DB connection strings |
+| `.env.production` configured    | `NEXT_PUBLIC_APP_URL`, `INGEST_HOOK_SECRET`, DB connection strings |
 
 > **Without Supabase Cloud**: the Storage webhook (`/api/ingest-hook`) will not fire — files uploaded via the UI won't be indexed automatically. Manual reindex from the UI remains available.
 >
@@ -98,11 +98,11 @@ pnpm sb:start / sb:stop / sb:restart / sb:status
 # Webhook config
 pnpm hook:set            # Write hook config to local DB
 pnpm hook:query          # Read hook config from local DB
-pnpm hook:prod:set       # Write hook config to remote DB
-pnpm hook:prod:query     # Read hook config from remote DB
+pnpm hook:set:prod       # Write hook config to remote DB
+pnpm hook:query:prod     # Read hook config from remote DB
 
 # Remote deployment
-pnpm deploy:remote       # supabase db push + prisma migrate deploy + hook:prod:set
+pnpm deploy:remote       # supabase db push + prisma migrate deploy + hook:set:prod
 ```
 
 ---
