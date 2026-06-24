@@ -15,5 +15,11 @@ export function SWRBootstrap({
   fallbackSessions: SessionSummary[];
   children: ReactNode;
 }) {
-  return <SWRConfig value={{ fallback: { [SESSIONS_KEY]: fallbackSessions } }}>{children}</SWRConfig>;
+  const sessions = fallbackSessions.map((s) => ({
+    ...s,
+    messages: [],
+    createdAt: new Date(s.createdAt as unknown as string).getTime(),
+    updatedAt: new Date(s.updatedAt as unknown as string).getTime(),
+  }));
+  return <SWRConfig value={{ fallback: { [SESSIONS_KEY]: sessions } }}>{children}</SWRConfig>;
 }

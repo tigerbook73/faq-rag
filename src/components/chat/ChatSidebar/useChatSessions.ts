@@ -3,10 +3,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import useSWR from "swr";
-import { apiDeleteSession, updateSessionTitle, fetchSession, type ChatSession } from "@/lib/client/session-api";
+import {
+  apiDeleteSession,
+  updateSessionTitle,
+  fetchSession,
+  fetchSessions,
+  type ChatSession,
+} from "@/lib/client/session-api";
 import { getLastChatHref } from "@/lib/client/last-chat";
 import { useSidebar } from "@/components/ui/sidebar";
-import { fetcher } from "@/lib/client/swr";
 
 const SWR_KEY = "/api/sessions";
 
@@ -14,7 +19,7 @@ export function useChatSessions() {
   const router = useRouter();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const { data: sessions = [], isLoading: isLoadingSessions, mutate } = useSWR<ChatSession[]>(SWR_KEY, fetcher);
+  const { data: sessions = [], isLoading: isLoadingSessions, mutate } = useSWR<ChatSession[]>(SWR_KEY, fetchSessions);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
