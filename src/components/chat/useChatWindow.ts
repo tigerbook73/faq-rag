@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type Dispatch, type SetStateAction } from "react";
+import { useRouter } from "next/navigation";
 import { upsertSession, type Message, type ChatSession } from "@/lib/client/session-api";
 import { lastChat } from "@/lib/client/last-chat";
 import { mutate as swrMutate } from "swr";
@@ -105,6 +106,7 @@ export function useStreamingChat({
   setInput,
   draftKey,
 }: UseStreamingChatParams) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -134,116 +136,119 @@ export function useStreamingChat({
     [setSession],
   );
 
-  const send = useCallback(async () => {
-    textareaRef.current?.focus();
+  const send = useCallback(
+    async (overrideText?: string) => {
+      textareaRef.current?.focus();
 
-    const question = input.trim();
-    if (!question || loading) return;
+      const question = (overrideText ?? input).trim();
+      if (!question || loading) return;
 
-    setInput("");
-    localStorage.removeItem(draftKey);
-    setLoading(true);
+      setInput("");
+      localStorage.removeItem(draftKey);
+      setLoading(true);
 
-    const resolvedId = chatId ?? crypto.randomUUID();
-    const history = messages.map((m) => ({ role: m.role, content: m.content }));
-    const withUser: Message[] = [...messages, { role: "user", content: question }];
-    setMessages(withUser);
+      const resolvedId = chatId ?? crypto.randomUUID();
+      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const withUser: Message[] = [...messages, { role: "user", content: question }];
+      setMessages(withUser);
 
-    let assistantContent = "";
-    let citations: Citation[] = [];
-    const assistantIndex = withUser.length;
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      let assistantContent = "";
+      let citations: Citation[] = [];
+      const assistantIndex = withUser.length;
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-    const sessionAtSend = session;
-
-    try {
-      const res = await startChatStream({ question, provider, history });
-
-      if (!res.ok) {
-        const errorBody = await res.json().catch(() => ({}));
-        throw new Error((errorBody as { error?: string }).error ?? `Chat failed (${res.status})`);
-      }
-      if (!res.body) throw new Error("No response body");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let streamDone = false;
-      let doneMessages: Message[] | null = null;
-
-      const parser = createParser({
-        onEvent: (event) => {
-          const raw = event.data;
-          let payload: { type: string; citations?: Citation[]; token?: string; answer?: string };
-          try {
-            payload = JSON.parse(raw);
-          } catch {
-            return;
-          }
-
-          if (payload.type === "citations") {
-            citations = payload.citations ?? [];
-          } else if (payload.type === "token") {
-            assistantContent += payload.token ?? "";
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
-              return updated;
-            });
-          } else if (payload.type === "done") {
-            streamDone = true;
-            const finalContent = payload.answer ?? assistantContent;
-            const usedNums = new Set([
-              ...[...finalContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
-              ...[...finalContent.matchAll(/\(\^(\d+)\)/g)].map((m) => parseInt(m[1], 10)),
-              ...[...finalContent.matchAll(/\[(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
-            ]);
-            doneMessages = [
-              ...withUser,
-              { role: "assistant", content: finalContent, citations: citations.filter((c) => usedNums.has(c.id)) },
-            ];
-            setMessages(doneMessages);
-          }
-        },
-      });
+      const sessionAtSend = session;
 
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          parser.feed(decoder.decode(value, { stream: true }));
+        const res = await startChatStream({ question, provider, history });
+
+        if (!res.ok) {
+          const errorBody = await res.json().catch(() => ({}));
+          throw new Error((errorBody as { error?: string }).error ?? `Chat failed (${res.status})`);
         }
-      } catch {
-        // stream interrupted mid-response — save whatever was generated
-        if (assistantContent && !doneMessages) {
-          const interrupted = assistantContent + "\n\n⚠️ _回答被中断_";
-          const finalMessages: Message[] = [...withUser, { role: "assistant", content: interrupted, citations: [] }];
+        if (!res.body) throw new Error("No response body");
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let streamDone = false;
+        let doneMessages: Message[] | null = null;
+
+        const parser = createParser({
+          onEvent: (event) => {
+            const raw = event.data;
+            let payload: { type: string; citations?: Citation[]; token?: string; answer?: string };
+            try {
+              payload = JSON.parse(raw);
+            } catch {
+              return;
+            }
+
+            if (payload.type === "citations") {
+              citations = payload.citations ?? [];
+            } else if (payload.type === "token") {
+              assistantContent += payload.token ?? "";
+              setMessages((prev) => {
+                const updated = [...prev];
+                updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
+                return updated;
+              });
+            } else if (payload.type === "done") {
+              streamDone = true;
+              const finalContent = payload.answer ?? assistantContent;
+              const usedNums = new Set([
+                ...[...finalContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
+                ...[...finalContent.matchAll(/\(\^(\d+)\)/g)].map((m) => parseInt(m[1], 10)),
+                ...[...finalContent.matchAll(/\[(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
+              ]);
+              doneMessages = [
+                ...withUser,
+                { role: "assistant", content: finalContent, citations: citations.filter((c) => usedNums.has(c.id)) },
+              ];
+              setMessages(doneMessages);
+            }
+          },
+        });
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            parser.feed(decoder.decode(value, { stream: true }));
+          }
+        } catch {
+          // stream interrupted mid-response — save whatever was generated
+          if (assistantContent && !doneMessages) {
+            const interrupted = assistantContent + "\n\n⚠️ _回答被中断_";
+            const finalMessages: Message[] = [...withUser, { role: "assistant", content: interrupted, citations: [] }];
+            setMessages(finalMessages);
+            await persistMessages(finalMessages, sessionAtSend, resolvedId);
+            if (!chatId) router.replace(`/chat/${resolvedId}`);
+            streamDone = true;
+          }
+        }
+
+        if (doneMessages) {
+          await persistMessages(doneMessages, sessionAtSend, resolvedId);
+          if (!chatId) router.replace(`/chat/${resolvedId}`);
+        } else if (!streamDone && assistantContent) {
+          // stream ended without "done" event (e.g. server crash) — save partial content
+          const partial = assistantContent + "\n\n⚠️ _回答被中断_";
+          const finalMessages: Message[] = [...withUser, { role: "assistant", content: partial, citations: [] }];
           setMessages(finalMessages);
           await persistMessages(finalMessages, sessionAtSend, resolvedId);
-          if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
-          streamDone = true;
+          if (!chatId) router.replace(`/chat/${resolvedId}`);
         }
+      } catch (err) {
+        toast.error(String(err));
+        setMessages(withUser);
+        await persistMessages(withUser, sessionAtSend, resolvedId);
+        if (!chatId) router.replace(`/chat/${resolvedId}`);
+      } finally {
+        setLoading(false);
       }
-
-      if (doneMessages) {
-        await persistMessages(doneMessages, sessionAtSend, resolvedId);
-        if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
-      } else if (!streamDone && assistantContent) {
-        // stream ended without "done" event (e.g. server crash) — save partial content
-        const partial = assistantContent + "\n\n⚠️ _回答被中断_";
-        const finalMessages: Message[] = [...withUser, { role: "assistant", content: partial, citations: [] }];
-        setMessages(finalMessages);
-        await persistMessages(finalMessages, sessionAtSend, resolvedId);
-        if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
-      }
-    } catch (err) {
-      toast.error(String(err));
-      setMessages(withUser);
-      await persistMessages(withUser, sessionAtSend, resolvedId);
-      if (!chatId) window.history.replaceState(null, "", `/chat/${resolvedId}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [input, loading, messages, provider, session, chatId, persistMessages, draftKey, setInput, setMessages]);
+    },
+    [input, loading, messages, provider, session, chatId, persistMessages, draftKey, setInput, setMessages, router],
+  );
 
   return { loading, send, textareaRef };
 }

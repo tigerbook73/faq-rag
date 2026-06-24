@@ -42,9 +42,10 @@ interface DocumentRowProps {
 
 export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete }: DocumentRowProps) {
   const canReindex = !doc.isBuiltIn && (doc.status === "indexed" || doc.status === "failed");
+  const hasActions = !doc.isBuiltIn;
   const actionsMenu = (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" disabled={!hasActions} />}>
         <MoreHorizontal />
         <span className="sr-only">Open actions for {doc.name}</span>
       </DropdownMenuTrigger>
@@ -69,7 +70,10 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
         <TableCell colSpan={7} className="whitespace-normal">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-2">
-              <p className="truncate font-medium">{doc.name}</p>
+              <p className="truncate font-medium">
+                {doc.name}
+                {doc.isBuiltIn && <span className="text-muted-foreground ml-1 font-normal">(built-in)</span>}
+              </p>
               <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                 <span>{doc.lang}</span>
                 <span>{chunkLabel(doc)} chunks</span>
@@ -79,7 +83,7 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
                 <span className="text-muted-foreground text-xs">{new Date(doc.createdAt).toLocaleDateString()}</span>
               </div>
               {doc.status === "failed" && doc.errorMsg && (
-                <p className="text-destructive text-xs break-words">{doc.errorMsg}</p>
+                <p className="text-destructive text-xs wrap-break-word">{doc.errorMsg}</p>
               )}
             </div>
             <div className="shrink-0">{actionsMenu}</div>
@@ -87,14 +91,17 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
         </TableCell>
       </TableRow>
       <TableRow className="hidden md:table-row">
-        <TableCell className="max-w-50 truncate font-medium">{doc.name}</TableCell>
+        <TableCell className="max-w-50 truncate font-medium">
+          {doc.name}
+          {doc.isBuiltIn && <span className="text-muted-foreground ml-1 font-normal">(built-in)</span>}
+        </TableCell>
         <TableCell>{doc.lang}</TableCell>
         <TableCell>{modelLabel(doc.embeddingModel)}</TableCell>
         <TableCell>{chunkLabel(doc)}</TableCell>
         <TableCell>
           <Badge variant={statusVariant(doc.status)}>{doc.status}</Badge>
           {doc.status === "failed" && doc.errorMsg && (
-            <p className="text-destructive mt-1 max-w-48 text-xs break-words">{doc.errorMsg}</p>
+            <p className="text-destructive mt-1 max-w-48 text-xs wrap-break-word">{doc.errorMsg}</p>
           )}
         </TableCell>
         <TableCell className="text-muted-foreground hidden text-xs lg:table-cell">
