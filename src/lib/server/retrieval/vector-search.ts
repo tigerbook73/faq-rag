@@ -10,21 +10,30 @@ export interface ChunkRow {
   document_name: string;
 }
 
-export async function vectorSearch(embedding: number[], topK: number): Promise<ChunkRow[]> {
+export async function vectorSearch(embedding: number[], topK: number, embeddingModel: string): Promise<ChunkRow[]> {
   const vec = `[${embedding.join(",")}]`;
-  return prisma.$queryRaw<ChunkRow[]>`
-    SELECT
+  // For bge-m3 (local), also match NULL rows (legacy docs indexed before this field was added)
+  const modelFilter =
+    embeddingModel === "openai"
+      ? `d.embedding_model = 'openai'`
+      : `(d.embedding_model = 'bge-m3' OR d.embedding_model IS NULL)`;
+
+  return prisma.$queryRawUnsafe<ChunkRow[]>(
+    `SELECT
       c.id,
       c.document_id,
       c.ord,
       c.content,
       c.lang,
-      1 - (c.embedding <=> ${vec}::vector) AS score,
+      1 - (c.embedding <=> $1::vector) AS score,
       d.name AS document_name
     FROM chunks c
     JOIN documents d ON d.id = c.document_id
     WHERE d.status = 'indexed'
-    ORDER BY c.embedding <=> ${vec}::vector
-    LIMIT ${topK}
-  `;
+      AND ${modelFilter}
+    ORDER BY c.embedding <=> $1::vector
+    LIMIT $2`,
+    vec,
+    topK,
+  );
 }

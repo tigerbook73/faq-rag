@@ -24,6 +24,12 @@ export function statusVariant(status: string): "default" | "secondary" | "destru
   return "outline";
 }
 
+function modelLabel(embeddingModel: string | null | undefined) {
+  if (embeddingModel === "openai") return "OpenAI";
+  if (embeddingModel === "bge-m3") return "Local";
+  return "—";
+}
+
 function chunkLabel(doc: Document) {
   return doc.status === "indexing" && doc.totalChunks ? `${doc._count.chunks} / ${doc.totalChunks}` : doc._count.chunks;
 }
@@ -50,9 +56,11 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
             {isReindexing ? "Reindexing..." : "Reindex"}
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem variant="destructive" disabled={isDeleting} onClick={() => onDelete(doc.id)}>
-          Delete
-        </DropdownMenuItem>
+        {!doc.isBuiltIn && (
+          <DropdownMenuItem variant="destructive" disabled={isDeleting} onClick={() => onDelete(doc.id)}>
+            Delete
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -60,7 +68,7 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
   return (
     <Fragment>
       <TableRow className="md:hidden">
-        <TableCell colSpan={6} className="whitespace-normal">
+        <TableCell colSpan={7} className="whitespace-normal">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-2">
               <p className="truncate font-medium">{doc.name}</p>
@@ -83,6 +91,7 @@ export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete
       <TableRow className="hidden md:table-row">
         <TableCell className="max-w-50 truncate font-medium">{doc.name}</TableCell>
         <TableCell>{doc.lang}</TableCell>
+        <TableCell>{modelLabel(doc.embeddingModel)}</TableCell>
         <TableCell>{chunkLabel(doc)}</TableCell>
         <TableCell>
           <Badge variant={statusVariant(doc.status)}>{doc.status}</Badge>

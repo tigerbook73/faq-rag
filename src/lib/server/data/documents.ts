@@ -21,9 +21,9 @@ export async function listDocumentsPage(input: { skip: number; take: number }) {
   return { items, total };
 }
 
-export async function findDuplicateDocument(contentHash: string) {
+export async function findDuplicateDocument(contentHash: string, embeddingModel: string) {
   return prisma.document.findUnique({
-    where: { contentHash },
+    where: { contentHash_embeddingModel: { contentHash, embeddingModel } },
   });
 }
 
@@ -32,6 +32,7 @@ export async function createPendingDocument(input: {
   mime: string;
   contentHash: string;
   sizeBytes: number;
+  embeddingModel?: string;
 }) {
   return prisma.document.create({
     data: {
@@ -40,6 +41,7 @@ export async function createPendingDocument(input: {
       contentHash: input.contentHash,
       sizeBytes: input.sizeBytes,
       status: "pending",
+      ...(input.embeddingModel ? { embeddingModel: input.embeddingModel } : {}),
     },
     include: { _count: { select: { chunks: true } } },
   });

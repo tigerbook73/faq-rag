@@ -64,10 +64,11 @@ export async function retrieve(userQuery: string, options: RetrieveOptions = {})
   ]);
   const [embZh, embEn, embHyde] = embedResults;
 
+  const embeddingModel = config.embedding.useOpenAI ? "openai" : "bge-m3";
   const searchResults = await Promise.all([
-    vectorSearch(embZh, config.retrieval.topK),
-    vectorSearch(embEn, config.retrieval.topK),
-    embHyde ? vectorSearch(embHyde, config.retrieval.topK) : Promise.resolve([]),
+    vectorSearch(embZh, config.retrieval.topK, embeddingModel),
+    vectorSearch(embEn, config.retrieval.topK, embeddingModel),
+    embHyde ? vectorSearch(embHyde, config.retrieval.topK, embeddingModel) : Promise.resolve([]),
   ]);
 
   const candidates = deduplicateAndSort(searchResults.flat());
