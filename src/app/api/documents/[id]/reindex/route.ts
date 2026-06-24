@@ -9,6 +9,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const doc = await getDocumentForWrite(id);
   if (!doc) return notFoundResponse();
 
+  if (doc.isBuiltIn) {
+    return NextResponse.json({ error: "Built-in documents cannot be reindexed" }, { status: 403 });
+  }
+
   if (!doc.fileRef) {
     return NextResponse.json({ error: "File not available for reindexing" }, { status: 422 });
   }

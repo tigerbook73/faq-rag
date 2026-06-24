@@ -41,7 +41,7 @@ interface DocumentRowProps {
 }
 
 export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete }: DocumentRowProps) {
-  const canReindex = doc.status === "indexed" || doc.status === "failed";
+  const canReindex = !doc.isBuiltIn && (doc.status === "indexed" || doc.status === "failed");
   const actionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
