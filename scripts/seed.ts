@@ -227,6 +227,7 @@ async function runImport() {
     .digest("hex");
 
   console.log(`Importing: ${meta.source} (model: ${meta.modelName})`);
+  const dbUrl = process.env.DATABASE_URL;
   if (dbUrl) console.log(`  DB: ${dbUrl.replace(/:[^:@]+@/, ":***@")}`);
 
   // Dynamic import AFTER env override

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/server/db/client";
-import { config } from "@/lib/shared/config";
-import { enqueueIndexing } from "@/lib/server/ingest/indexing-queue";
-import { processDocument } from "@/lib/server/ingest/pipeline";
+import { parseAndSplitDocument } from "@/lib/server/ingest/pipeline";
 import { logger } from "@/lib/server/logger";
 
 // Payload sent by the storage_notify_indexing trigger
@@ -36,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Document not found or missing fileRef" }, { status: 404 });
   }
 
-  // Idempotent: only one of A-path or B-path wins this update
+  // Idempotent: only one of webhook-path or client-path wins this update
   const result = await prisma.document.updateMany({
     where: { id: docId, status: "pending" },
     data: { status: "uploaded" },
@@ -47,17 +45,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "already_processing" });
   }
 
-  if (config.embedding.useOpenAI) {
-    // Fire and forget — pg_net does not need to wait for indexing to complete
-    processDocument(docId, doc.fileRef).catch(async (err) => {
-      logger.error({ docId, err }, "[ingest-hook] processDocument failed");
-      await prisma.document
-        .update({ where: { id: docId }, data: { status: "failed", errorMsg: String(err) } })
-        .catch(() => {});
-    });
-  } else {
-    enqueueIndexing(docId, doc.fileRef);
-  }
+  // Fire and forget — parse+split sets status=indexing; client drives embedding via /embed
+  parseAndSplitDocument(docId, doc.fileRef).catch((err) => {
+    logger.error({ docId, err }, "[ingest-hook] parseAndSplitDocument failed");
+  });
 
   logger.info({ docId }, "[ingest-hook] queued for indexing");
   return NextResponse.json({ status: "queued" });
