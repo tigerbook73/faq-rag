@@ -14,6 +14,7 @@ import { usePageTitle } from "@/context/page-title-context";
 import { useProvider } from "@/context/provider-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDraftPersistence, useChatScroll, useStreamingChat } from "./useChatWindow";
+import { ChatEmptyState } from "./ChatEmptyState";
 
 export function ChatWindow({ chatId }: { chatId: string | null }) {
   const router = useRouter();
@@ -110,8 +111,8 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-(--container-app-chat) px-4 py-4">
           {messages.length === 0 && (
-            <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-              Ask a question about your knowledge base
+            <div className="flex h-full items-center justify-center py-12">
+              <ChatEmptyState onSend={(q) => void send(q)} />
             </div>
           )}
           {messages.map((m, i) => (
@@ -140,7 +141,7 @@ export function ChatWindow({ chatId }: { chatId: string | null }) {
             rows={2}
             disabled={loading}
           />
-          <Button onClick={send} disabled={loading} className="h-app-composer px-6">
+          <Button onClick={() => void send()} disabled={loading} className="h-app-composer px-6">
             {loading ? "Thinking…" : "Send"}
           </Button>
         </div>
