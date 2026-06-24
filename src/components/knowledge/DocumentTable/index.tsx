@@ -19,6 +19,7 @@ export function DocumentTable() {
   const {
     documents,
     allDocuments,
+    isLoading,
     search,
     setSearch,
     deletingId,
@@ -35,6 +36,23 @@ export function DocumentTable() {
     handleRebuildAll,
     handleManualRefresh,
   } = useDocumentManagement();
+
+  if (isLoading) {
+    return (
+      <section className="space-y-4">
+        <KnowledgeSectionTitle title="My documents" />
+        <div className="divide-y">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 py-3">
+              <div className="bg-muted h-4 w-48 animate-pulse rounded" />
+              <div className="bg-muted h-4 w-12 animate-pulse rounded" />
+              <div className="bg-muted ml-auto h-4 w-16 animate-pulse rounded" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   if (allDocuments.length === 0) {
     return (
