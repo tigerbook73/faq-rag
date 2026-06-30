@@ -219,7 +219,7 @@ async function runImport() {
   }
   meta = firstObj as unknown as SeedMeta;
 
-  const embeddingModel = meta.model === "openai" ? "openai" : "bge-m3";
+  const embeddingModel = meta.model === "openai" ? "text-embedding-3-small" : "bge-m3";
   // contentHash is deterministic by source + modelName (excludes generatedAt so re-exports are idempotent)
   const contentHash = crypto
     .createHash("sha256")
