@@ -1,7 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# Dependencies
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,45 +8,48 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
-/test-results
-/e2e/.auth
+apps/web/coverage/
+apps/web/test-results/
+apps/web/e2e/.auth
 
-# next.js
-/.next/
-/out/
+# Next.js
+.next/
+apps/web/.next/
+apps/web/out/
 
-# production
+# Production
 /build
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — .env (safe defaults) and .env.example are tracked
-.env*
-!.env
-!.env.example
+# Env files — each app manages its own; safe defaults and templates are tracked
+**/.env*
+!apps/**/.env
+!apps/**/.env.example
 
-# runtime data (docker volume remnant + user uploads)
-/data/*
+# Runtime data (docker volume + user uploads)
+apps/web/data/
 
-# typescript
+# TypeScript
 *.tsbuildinfo
-next-env.d.ts
+packages/shared/dist/
+apps/web/next-env.d.ts
 
 # AI planning
 /PLAN*.md
 
 # Prisma generated client
-/src/generated/
+apps/web/src/generated/
 
-.env*.local
+# Vercel
 .vercel

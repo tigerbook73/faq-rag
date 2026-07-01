@@ -13,7 +13,7 @@ pre-commit:
       stage_fixed: true
     lint:
       glob: "*.{ts,tsx}"
-      run: pnpm exec eslint --fix {staged_files}
+      run: pnpm exec eslint --config apps/web/eslint.config.mjs --fix {staged_files}
       stage_fixed: true
     # aisk-test-review-gate-check-reviewed-by-commit-marker:
     #   run: node .aisk/test-review-gate/scripts/check-reviewed-by-commit-marker.cjs {staged_files}

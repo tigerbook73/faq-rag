@@ -1,3 +1,19 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
 ignoredBuiltDependencies:
   - sharp
+  - supabase
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - esbuild
+  - lefthook
+  - msw
+  - onnxruntime-node
+  - prisma
+  - protobufjs
+  - supabase
