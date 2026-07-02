@@ -111,7 +111,7 @@ updated: 2026-07-02
 - 首次发送自动设 title（前 30 字），写入 LAST_CHAT_KEY
 - 中断/异常：append "⚠️ 回答被中断"
 - 引用标记：`[^n]`/`[n]`/`(^n)` → `@@n@@` → 自定义渲染为可点击上标
-- CitationSheet 组件（Gluestack BottomSheet / ActionSheet）：文档名 + score badge + preview
+- CitationSheet 组件（`@gorhom/bottom-sheet`，Step 1 确认 Gluestack v2 无此组件）：文档名 + score badge + preview
 - 消息底部引用列表
 - ProviderContext + Header 右侧 provider 切换（ActionSheet）+ AsyncStorage 持久化
 

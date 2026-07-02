@@ -6,9 +6,9 @@
 
 **所处阶段**：逐步实现
 
-**当前停在**：规划完成，等待开始 Step 1
+**当前停在**：Step 1 完成，等待开始 Step 2
 
-**建议下一步**：开始 Step 1 — 环境初始化。先读 `00-brief.md` + `DECISIONS.md` + `step-map.md`，再查阅 Gluestack UI v2 安装文档。
+**建议下一步**：开始 Step 2 — API 客户端层（session.ts / chat.ts / document.ts / storage.ts + Jest 单元测试）。
 
 ---
 
@@ -24,7 +24,7 @@
 
 | 步骤   | 名称               | 状态   | 备注 |
 | ------ | ------------------ | ------ | ---- |
-| Step 1 | 环境初始化         | 待开始 |      |
+| Step 1 | 环境初始化         | 完成   |      |
 | Step 2 | API 客户端层       | 待开始 |      |
 | Step 3 | 会话列表屏幕       | 待开始 |      |
 | Step 4 | 聊天屏幕           | 待开始 |      |
@@ -35,14 +35,14 @@
 
 ## 第三层：实现
 
-| 步骤   | 验证状态  | 前瞻性检查 | 备注 |
-| ------ | --------- | ---------- | ---- |
-| Step 1 | ⏳ 待开始 | —          |      |
-| Step 2 | ⏳ 待开始 | —          |      |
-| Step 3 | ⏳ 待开始 | —          |      |
-| Step 4 | ⏳ 待开始 | —          |      |
-| Step 5 | ⏳ 待开始 | —          |      |
-| Step 6 | ⏳ 待开始 | —          |      |
+| 步骤   | 验证状态  | 前瞻性检查 | 备注                                                                   |
+| ------ | --------- | ---------- | ---------------------------------------------------------------------- |
+| Step 1 | ✅ 通过   | ✅ 通过    | Gluestack 无 BottomSheet，改用 @gorhom/bottom-sheet（见 DECISIONS.md） |
+| Step 2 | ⏳ 待开始 | —          |                                                                        |
+| Step 3 | ⏳ 待开始 | —          |                                                                        |
+| Step 4 | ⏳ 待开始 | —          |                                                                        |
+| Step 5 | ⏳ 待开始 | —          |                                                                        |
+| Step 6 | ⏳ 待开始 | —          |                                                                        |
 
 ---
 
@@ -64,3 +64,4 @@
 ## 最近更新
 
 2026-07-02 规划完成，6 步路径确认，技术选型已与用户全部确认。
+2026-07-02 Step 1 完成：packages/shared Zod schemas、expo-router 导航、NativeWind + Gluestack Button、Jest 配置。发现 Gluestack v2 无 BottomSheet npm 包，改用 @gorhom/bottom-sheet（见 DECISIONS.md Amendment）。

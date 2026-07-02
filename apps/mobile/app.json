@@ -3,6 +3,8 @@
     "name": "FAQ RAG Mobile",
     "slug": "faq-rag-mobile",
     "version": "1.0.0",
-    "platforms": ["ios", "android", "web"]
+    "scheme": "faqrag",
+    "platforms": ["ios", "android", "web"],
+    "plugins": ["expo-router"]
   }
 }

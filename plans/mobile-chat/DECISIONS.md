@@ -10,7 +10,7 @@
 
 - [arch] UI 组件库：Gluestack UI v2（基于 NativeWind v4），是 shadcn/ui 在 RN 端的等价物。（来源：架构阶段）
 
-- 引用详情弹窗：优先用 Gluestack BottomSheet，若 v2 不提供则用 Gluestack ActionSheet。Step 1 安装后确认并在此更新。（来源：架构阶段）
+- 引用详情弹窗：**使用 `@gorhom/bottom-sheet`**。Step 1 确认 Gluestack v2 不以 npm 包形式提供 BottomSheet（需要 CLI 复制组件文件，TTY 限制无法使用），`@gluestack-ui/nativewind-utils` 也不含此组件。改用 `@gorhom/bottom-sheet`（需 `react-native-reanimated` + `react-native-gesture-handler`，已安装）。（来源：Step 1 实装确认）
 
 - SSE 流式：fetch + eventsource-parser，与 web 端完全一致。（来源：架构阶段）
 
