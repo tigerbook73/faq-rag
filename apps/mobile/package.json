@@ -4,14 +4,25 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "start": "echo 'Mobile app not yet implemented. Install expo and configure this script.'",
-    "android": "echo 'Mobile app not yet implemented.'",
-    "ios": "echo 'Mobile app not yet implemented.'"
+    "start": "expo start --web",
+    "start:lan": "expo start --lan",
+    "start:localhost": "expo start --localhost",
+    "start:tunnel": "expo start --tunnel",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
-    "@faq-rag/shared": "workspace:*"
+    "@faq-rag/shared": "workspace:*",
+    "expo": "^57.0.1",
+    "expo-status-bar": "^57.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-native": "^0.86.0",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@types/react": "^19.2.14",
     "typescript": "^5"
   }
 }
