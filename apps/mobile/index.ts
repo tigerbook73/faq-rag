@@ -1,2 +1,4 @@
-// Mobile app entry point — not yet implemented
-export {};
+import { registerRootComponent } from "expo";
+import App from "./App";
+
+registerRootComponent(App);
