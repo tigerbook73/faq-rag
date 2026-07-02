@@ -1,7 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# Dependencies
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,45 +8,30 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-/test-results
-/e2e/.auth
-
-# next.js
-/.next/
-/out/
-
-# production
+# Build artifacts
 /build
 
-# misc
+# Runtime data
+/data
+
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — .env (safe defaults) and .env.example are tracked
-.env*
-!.env
-!.env.example
+# Env files — each package tracks its own safe defaults via its .gitignore
+**/.env*
 
-# runtime data (docker volume remnant + user uploads)
-/data/*
-
-# typescript
+# TypeScript incremental build info
 *.tsbuildinfo
-next-env.d.ts
 
 # AI planning
 /PLAN*.md
 
-# Prisma generated client
-/src/generated/
-
-.env*.local
+# Vercel
 .vercel

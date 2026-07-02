@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "FAQ RAG Mobile",
+    "slug": "faq-rag-mobile",
+    "version": "1.0.0",
+    "platforms": ["ios", "android"]
+  }
+}

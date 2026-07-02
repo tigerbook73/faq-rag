@@ -3,7 +3,7 @@ node_modules
 out
 build
 coverage
-src/generated
+apps/web/src/generated
 .aisk
 
 # Package-manager generated lockfiles

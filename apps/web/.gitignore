@@ -1,0 +1,21 @@
+# Env — safe defaults and templates are tracked
+!.env
+!.env.example
+
+# Next.js
+.next/
+out/
+
+# Testing
+coverage/
+test-results/
+e2e/.auth
+
+# Runtime data (uploads)
+data/
+
+# TypeScript
+next-env.d.ts
+
+# Prisma generated client
+src/generated/

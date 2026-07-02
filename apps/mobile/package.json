@@ -1,0 +1,17 @@
+{
+  "name": "@faq-rag/mobile",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "echo 'Mobile app not yet implemented. Install expo and configure this script.'",
+    "android": "echo 'Mobile app not yet implemented.'",
+    "ios": "echo 'Mobile app not yet implemented.'"
+  },
+  "dependencies": {
+    "@faq-rag/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
