@@ -2,17 +2,18 @@
   "name": "faq-rag",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @faq-rag/web dev",
-    "build": "pnpm --filter @faq-rag/web build",
-    "start": "pnpm --filter @faq-rag/web start",
-    "test": "pnpm --filter @faq-rag/web test",
-    "lint": "pnpm --filter @faq-rag/web lint",
-    "format": "pnpm --filter @faq-rag/web format",
-    "e2e": "pnpm --filter @faq-rag/web e2e",
+    "dev:web": "pnpm --filter @faq-rag/web dev",
+    "build": "pnpm -r build",
+    "start:web": "pnpm --filter @faq-rag/web start",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format",
+    "e2e": "pnpm -r e2e",
     "sb:start": "pnpm --filter @faq-rag/web sb:start",
     "sb:stop": "pnpm --filter @faq-rag/web sb:stop",
     "sb:restart": "pnpm --filter @faq-rag/web sb:restart",
-    "sb:status": "pnpm --filter @faq-rag/web sb:status"
+    "sb:status": "pnpm --filter @faq-rag/web sb:status",
+    "verify": "pnpm -r verify"
   },
   "devDependencies": {
     "eslint": "^9",
