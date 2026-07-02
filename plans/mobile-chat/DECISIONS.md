@@ -12,6 +12,8 @@
 
 - 引用详情弹窗：**使用 `@gorhom/bottom-sheet`**。Step 1 确认 Gluestack v2 不以 npm 包形式提供 BottomSheet（需要 CLI 复制组件文件，TTY 限制无法使用），`@gluestack-ui/nativewind-utils` 也不含此组件。改用 `@gorhom/bottom-sheet`（需 `react-native-reanimated` + `react-native-gesture-handler`，已安装）。（来源：Step 1 实装确认）
 
+- `tailwind.config.js` 必须显式声明 `darkMode: "class"`。Tailwind 默认的 `"media"` 策略会让 NativeWind（`react-native-css-interop`）在 Web 端初始化时崩溃（`Cannot manually set color scheme, as dark mode is type 'media'`），任何涉及主题/深色模式的实现（如 Step 4 的 provider 切换 UI）都不能依赖系统级 `prefers-color-scheme` 自动切换，需走 class 策略手动控制。（来源：Step 1 环境补丁，commit 0e9253d）
+
 - SSE 流式：fetch + eventsource-parser，与 web 端完全一致。（来源：架构阶段）
 
 - 数据获取：SWR，与 web 端一致。（来源：架构阶段）

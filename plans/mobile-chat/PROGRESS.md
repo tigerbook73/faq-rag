@@ -65,3 +65,4 @@
 
 2026-07-02 规划完成，6 步路径确认，技术选型已与用户全部确认。
 2026-07-02 Step 1 完成：packages/shared Zod schemas、expo-router 导航、NativeWind + Gluestack Button、Jest 配置。发现 Gluestack v2 无 BottomSheet npm 包，改用 @gorhom/bottom-sheet（见 DECISIONS.md Amendment）。
+2026-07-02 Step 1 环境补丁：`expo-doctor` 发现依赖不满足 SDK 57——补齐 `react-native-worklets` peer dependency、`tailwindcss` 从误装的 v4 改回 NativeWind 要求的 `^3.4.0`（commit 834a3dc）；Web 端运行时报 `Cannot manually set color scheme, as dark mode is type 'media'`，`tailwind.config.js` 补 `darkMode: "class"` 修复（commit 0e9253d，见 DECISIONS.md）。
