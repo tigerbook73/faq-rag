@@ -4,6 +4,7 @@
     "slug": "faq-rag-mobile",
     "version": "1.0.0",
     "scheme": "faqrag",
+    "userInterfaceStyle": "automatic",
     "platforms": ["ios", "android", "web"],
     "plugins": ["expo-router"]
   }
