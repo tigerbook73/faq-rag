@@ -2,24 +2,28 @@
   "name": "faq-rag",
   "private": true,
   "scripts": {
-    "dev:web": "pnpm --filter @faq-rag/web dev",
-    "build": "pnpm -r build",
-    "start:web": "pnpm --filter @faq-rag/web start",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
-    "format": "pnpm -r format",
-    "e2e": "pnpm -r e2e",
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@faq-rag/web",
+    "dev:mobile": "turbo run start --filter=@faq-rag/mobile",
+    "build": "turbo run build",
+    "start:web": "turbo run start --filter=@faq-rag/web",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "typecheck": "turbo run typecheck",
+    "e2e": "turbo run e2e",
     "sb:start": "pnpm --filter @faq-rag/web sb:start",
     "sb:stop": "pnpm --filter @faq-rag/web sb:stop",
     "sb:restart": "pnpm --filter @faq-rag/web sb:restart",
     "sb:status": "pnpm --filter @faq-rag/web sb:status",
-    "verify": "pnpm -r verify"
+    "verify": "turbo run verify"
   },
   "devDependencies": {
-    "eslint": "^9",
+    "eslint": "^9.39.4",
     "lefthook": "^2.1.9",
     "prettier": "^3.8.3",
-    "prettier-plugin-tailwindcss": "^0.8.0"
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "turbo": "^2.10.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

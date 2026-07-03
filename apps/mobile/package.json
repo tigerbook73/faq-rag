@@ -4,14 +4,14 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "dev": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "test": "jest --watchAll=false",
     "lint": "expo lint --fix",
     "format": "prettier --write . | rg -v -F '(unchanged)' || true",
     "typecheck": "tsc --noEmit",
-    "verify": "pnpm lint && pnpm typecheck && pnpm format"
+    "verify": "pnpm lint && pnpm typecheck && pnpm format && pnpm test"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.2",
