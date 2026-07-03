@@ -3,6 +3,24 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_MODEL",
+        "DATABASE_URL",
+        "DEEPSEEK_API_KEY",
+        "DEEPSEEK_MODEL",
+        "DIRECT_URL",
+        "EMBEDDING_DIM",
+        "EMBEDDING_MODEL",
+        "EMBEDDING_PROVIDER",
+        "INGEST_HOOK_SECRET",
+        "LLM_PROVIDER",
+        "OPENAI_API_KEY",
+        "OPENAI_MODEL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"]
     },
     "dev": {
