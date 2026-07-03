@@ -18,6 +18,8 @@
 
 - 数据获取：SWR，与 web 端一致。（来源：架构阶段）
 
+- [arch] Lint：`eslint-config-expo`（Expo 官方 flat config，随 `npx expo install` 装的是与 SDK 版本对齐的 `^57.0.0`），配置文件 `apps/mobile/eslint.config.js` 直接 `require("eslint-config-expo/flat")` 组装，不复用 web 端的 `eslint-config-next`。根目录 `eslint.config.mjs` 只是给未配置 ESLint 的包占位（`export default [{}]`，对 `.ts`/`.tsx` 没有任何匹配规则），mobile 之前用它会导致 `expo lint` 报 "all files are ignored"——任何包只要放自己的 `eslint.config.js`/`.mjs`，就会完全覆盖（不是合并）根目录占位配置。`package.json` 脚本：`lint` = `expo lint --fix`、`format` = 与 web 端一致的 `prettier --write . | rg -v -F '(unchanged)' || true`、`typecheck` = `tsc --noEmit`（三者分开，不像 web 端把 typecheck 塞进 lint 里）。（来源：Step 2 收尾）
+
 ## 数据层
 
 - 共享类型：Zod schema 从 `apps/web/src/lib/shared/schemas/` 搬运到 `packages/shared/src/schemas/`，mobile 从 `@faq-rag/shared` import。Web 端继续使用自己的文件，不修改。（来源：架构阶段，理由：防止 mobile/web 类型漂移）
