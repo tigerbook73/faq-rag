@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "jsx": "react-native",
+    "types": ["nativewind/types", "jest"],
     "paths": {
       "@faq-rag/shared": ["../../packages/shared/src/index.ts"]
     }
