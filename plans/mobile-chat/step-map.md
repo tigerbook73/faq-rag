@@ -11,7 +11,7 @@ updated: 2026-07-02
 | 步骤   | 名称               | 依赖   | 状态   |
 | ------ | ------------------ | ------ | ------ |
 | Step 1 | 环境初始化         | —      | 完成   |
-| Step 2 | API 客户端层       | Step 1 | 待开始 |
+| Step 2 | API 客户端层       | Step 1 | 完成   |
 | Step 3 | 会话列表屏幕       | Step 2 | 待开始 |
 | Step 4 | 聊天屏幕           | Step 3 | 待开始 |
 | Step 5 | Knowledge 列表屏幕 | Step 2 | 待开始 |
@@ -66,7 +66,13 @@ updated: 2026-07-02
 
 依赖：Step 1
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：`document.ts` 的上传进度用 `expo-file-system.uploadAsync`。
+修正为：实际安装的 `expo-file-system@57.0.0` 已重写为 `File`/`Directory`/`UploadTask` 面向对象 API，改用 `new File(fileUri).upload(url, options)`。
+原因：SDK 57 的 expo-file-system 是全新 API，无顶层 `uploadAsync` 导出（Step 2 实装时读包内 `.d.ts` 才发现）。
+影响范围：仅本步骤的 `uploadToSupabase` 实现方式变化，不影响其他步骤；详见 DECISIONS.md。
 
 ---
 
