@@ -6,9 +6,9 @@
 
 **所处阶段**：逐步实现
 
-**当前停在**：Step 3（会话列表屏幕）已完成并提交（commit 66b4c5e + c26a445，分支 `feat/mobile-chat-step3-session-list`），另追加了 `apps/web` 的 dev-only CORS 修复（待提交），均尚未合并进 main
+**当前停在**：Step 3（会话列表屏幕）+ `apps/web` dev-only CORS 修复已全部完成并提交（commit 66b4c5e、c26a445、864fc40，分支 `feat/mobile-chat-step3-session-list`），尚未合并进 main
 
-**建议下一步**：提交 CORS 修复改动，走 PR 流程合并 Step 3（同前两步），然后开始 Step 4 — 聊天屏幕（`app/chat/[id].tsx` + `src/context/provider-context.tsx`）。
+**建议下一步**：走 PR 流程合并 Step 3（同前两步），然后开始 Step 4 — 聊天屏幕（`app/chat/[id].tsx` + `src/context/provider-context.tsx`）。
 
 ---
 
