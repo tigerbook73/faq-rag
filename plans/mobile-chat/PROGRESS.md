@@ -6,9 +6,9 @@
 
 **所处阶段**：逐步实现
 
-**当前停在**：Step 3（会话列表屏幕）实现完成并通过验证，在分支 `feat/mobile-chat-step3-session-list` 上，尚未提交/合并
+**当前停在**：Step 3（会话列表屏幕）已完成并提交（commit 66b4c5e，分支 `feat/mobile-chat-step3-session-list`），尚未合并进 main
 
-**建议下一步**：提交 Step 3 改动（建议走 PR 流程，同前两步），然后开始 Step 4 — 聊天屏幕（`app/chat/[id].tsx` + `src/context/provider-context.tsx`）。
+**建议下一步**：走 PR 流程合并 Step 3（同前两步），然后开始 Step 4 — 聊天屏幕（`app/chat/[id].tsx` + `src/context/provider-context.tsx`）。
 
 ---
 
@@ -26,7 +26,7 @@
 | ------ | ------------------ | ------ | ---- |
 | Step 1 | 环境初始化         | 完成   |      |
 | Step 2 | API 客户端层       | 完成   |      |
-| Step 3 | 会话列表屏幕       | 待开始 |      |
+| Step 3 | 会话列表屏幕       | 完成   |      |
 | Step 4 | 聊天屏幕           | 待开始 |      |
 | Step 5 | Knowledge 列表屏幕 | 待开始 |      |
 | Step 6 | 文档上传           | 待开始 |      |
