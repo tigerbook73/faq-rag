@@ -14,7 +14,7 @@ updated: 2026-07-02
 | Step 2 | API 客户端层       | Step 1 | 完成   |
 | Step 3 | 会话列表屏幕       | Step 2 | 完成   |
 | Step 4 | 聊天屏幕           | Step 3 | 完成   |
-| Step 5 | Knowledge 列表屏幕 | Step 2 | 待开始 |
+| Step 5 | Knowledge 列表屏幕 | Step 2 | 完成   |
 | Step 6 | 文档上传           | Step 5 | 待开始 |
 
 ---
@@ -175,7 +175,14 @@ updated: 2026-07-02
 
 依赖：Step 2
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：长按 ActionSheet 用 Gluestack ActionSheet；Delete 走系统确认框。
+修正为：① Gluestack v2 的 ActionSheet 同 BottomSheet 一样无 npm 包形式（Step 1 已确认该限制），沿用 Step 4 ProviderSheet 的 RN `Modal` 手写 action sheet 模式；② `Alert.alert` 在 react-native-web 上是 no-op，删除确认框在 web 运行环境完全静默，且长按 → 点 Delete 已是两步明确操作，故去掉二次确认直接删除（失败经 SWR revalidate 回滚）。
+另发现并修复了 web 端阻塞性 bug：`apps/web/src/lib/server/data/documents.ts` 的 `findUnembeddedChunks`/`countUnembeddedChunks`/`updateChunkEmbeddings` 把参数 cast 成 `::uuid`，而 `chunks.id`/`chunks.document_id` 是 text 列（Prisma String id），`text = uuid` 无操作符导致 `/api/documents/[id]/embed` 必 500——reindex 和上传的 embed 循环完全走不通。去掉错误 cast 修复（追加型变更，同 Step 3 CORS 先例）。
+原因：功能验证阶段真实调用 embed 端点时发现。
+影响范围：web 数据层三个查询的 cast 移除，不改变语义；mobile 侧仅实现方式变化。
 
 ---
 
