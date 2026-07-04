@@ -12,7 +12,7 @@ updated: 2026-07-02
 | ------ | ------------------ | ------ | ------ |
 | Step 1 | 环境初始化         | —      | 完成   |
 | Step 2 | API 客户端层       | Step 1 | 完成   |
-| Step 3 | 会话列表屏幕       | Step 2 | 待开始 |
+| Step 3 | 会话列表屏幕       | Step 2 | 完成   |
 | Step 4 | 聊天屏幕           | Step 3 | 待开始 |
 | Step 5 | Knowledge 列表屏幕 | Step 2 | 待开始 |
 | Step 6 | 文档上传           | Step 5 | 待开始 |
@@ -99,7 +99,13 @@ updated: 2026-07-02
 
 依赖：Step 2
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：左滑删除用 `ReanimatedSwipeable`；冷启动自动跳转逻辑放在 `chats.tsx` mount 时机。
+修正为：① `react-native-gesture-handler@2.32` 未在公共 API 导出 `ReanimatedSwipeable`（只在内部子路径 `components/ReanimatedSwipeable/`），改用同库正式导出的 `Swipeable`（基于 Animated，非 Reanimated），效果等价；② 自动跳转逻辑放进 `app/(tabs)/index.tsx`（root "/" 的重定向入口，读 AsyncStorage 后决定跳 `/chat/{id}` 还是 `/chats`），而不是 `chats.tsx` mount 时——否则每次切回 Chats tab 都会被强制跳走，不止冷启动一次。
+原因：Step 3 实装时读包内 `.d.ts`/源码确认 API 实际形态；跳转时机问题在功能验证阶段发现。
+影响范围：仅本步骤实现方式变化，不影响其他步骤。
 
 ---
 

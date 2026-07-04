@@ -38,6 +38,8 @@
 
 - Mobile 调用 web REST API，base URL 来自 `EXPO_PUBLIC_API_URL` 环境变量。
 
+- [arch] `apps/web/src/proxy.ts` 仅在 `NODE_ENV !== "production"` 时给 `/api/*` 路由加 `Access-Control-Allow-Origin: *`（含 OPTIONS 预检直接短路返回 204）。原因：mobile 端在浏览器里跑（`expo start --web`，本项目沙盒环境验证唯一可用手段；未来若真做成可通过浏览器访问的 web 客户端也会撞到同样限制）时，跨域调用 `apps/web` 的 API 会被浏览器 CORS 拦截（`Failed to fetch`），因为 `apps/web` 原本不发任何 CORS 头。真机（iOS/Android 原生 App）的 `fetch` 不受此限制，只有"浏览器里跑 mobile"这一种场景会触发。做成仅 dev 生效是保守选择——未对生产部署的安全姿态做任何改动；若后续需要生产环境也支持跨域访问（例如真的部署一个网页版 mobile 客户端），需要重新评估是否用通配符还是按 origin allowlist。（来源：Step 3 实装后用户报告 `createSession` 报 "Failed to fetch"，定位到 CORS 缺失）
+
 - Session 写入规范（对标 web 的 Key Conventions）：任何 session 写操作后，同时 `mutate('/api/sessions')`（列表）AND `mutate('/api/sessions/${id}', updated, { revalidate: false })`（单条缓存），防止导航回旧聊天时看到过期数据。
 
 - 上传进度：使用 `expo-file-system` 的 `File` 类（`new File(fileUri).upload(url, options)`，支持 `onProgress`），不用 fetch（fetch 不支持 upload progress 事件）。**更正**：00-brief.md/step-map.md 里写的 `expo-file-system.uploadAsync` 是旧版（legacy）API 名称，SDK 57 装的 `expo-file-system@57.0.0` 已完全重写为 `File`/`Directory`/`UploadTask` 的面向对象 API，没有顶层 `uploadAsync` 导出。（来源：Step 2 实装确认，读 `node_modules/expo-file-system/build/*.d.ts` 核实）
