@@ -6,9 +6,9 @@
 
 **所处阶段**：逐步实现
 
-**当前停在**：Step 3（会话列表屏幕）已完成并提交（commit 66b4c5e，分支 `feat/mobile-chat-step3-session-list`），尚未合并进 main
+**当前停在**：Step 3（会话列表屏幕）已完成并提交（commit 66b4c5e + c26a445，分支 `feat/mobile-chat-step3-session-list`），另追加了 `apps/web` 的 dev-only CORS 修复（待提交），均尚未合并进 main
 
-**建议下一步**：走 PR 流程合并 Step 3（同前两步），然后开始 Step 4 — 聊天屏幕（`app/chat/[id].tsx` + `src/context/provider-context.tsx`）。
+**建议下一步**：提交 CORS 修复改动，走 PR 流程合并 Step 3（同前两步），然后开始 Step 4 — 聊天屏幕（`app/chat/[id].tsx` + `src/context/provider-context.tsx`）。
 
 ---
 
@@ -54,6 +54,7 @@
 | 2026-07-03 | 修正 | Step 1     | `/code-review` high effort 发现 7 处问题，均判定为可隔离型修正（不影响 Step 1 已确认的架构决策），直接修复后继续，未触发 Amendment：详见"最近更新"                                                                                                                    |
 | 2026-07-03 | 修正 | Step 2     | 实装期间发现 `expo-file-system` 上传 API 与规划时假设的 `uploadAsync` 不符（SDK 57 已重写为 `File`/`Directory` 面向对象 API），可隔离型修正，已在 step-map.md Step 2 加 Amendment，直接按新 API 实现继续                                                              |
 | 2026-07-04 | 修正 | Step 3     | `react-native-gesture-handler@2.32` 未公开导出 `ReanimatedSwipeable`，改用同库正式导出的 `Swipeable`；冷启动自动跳转逻辑从 `chats.tsx` mount 移到 `app/(tabs)/index.tsx`（避免每次切回 Chats tab 被强制跳走）。均为可隔离型修正，已在 step-map.md Step 3 加 Amendment |
+| 2026-07-04 | 追加 | Step 3     | 用户实测遇到 `createSession` "Failed to fetch"，定位为 `apps/web` 未发 CORS 头导致浏览器里跑的 mobile 端跨域被拦截；给 `apps/web/src/proxy.ts` 加了仅 dev 生效的 `/api/*` CORS 放行（见 DECISIONS.md [arch]），不影响 Step 3 范围，追加型变更                         |
 
 ---
 
@@ -63,6 +64,7 @@
 - [ ] Gluestack UI v2 作为 RN 端 UI 组件库（来自 DECISIONS.md [arch]）
 - [ ] Expo SDK 57 类型缺口用根目录 `.d.ts` + `declare global` 打补丁的模式（来自 DECISIONS.md [arch]，Step 2 新增）
 - [ ] mobile 端 `eslint-config-expo` flat config 方案（来自 DECISIONS.md [arch]，Step 2 收尾新增）
+- [ ] `apps/web/src/proxy.ts` 开发环境放开 `/api/*` CORS 以支持浏览器里跑 mobile 端（来自 DECISIONS.md [arch]，Step 3 用户报错后新增）
 
 ---
 
@@ -76,3 +78,4 @@
 2026-07-03 Step 2 收尾：给 mobile 补齐 `lint`/`format`/`typecheck` 脚本。装 `eslint-config-expo@^57.0.0`（与 SDK 版本对齐）+ `apps/mobile/eslint.config.js`（`require("eslint-config-expo/flat")`）——之前 mobile 没有自己的 eslint 配置，`expo lint` 会摸到根目录 `eslint.config.mjs` 的占位配置（`export default [{}]`，对 `.ts`/`.tsx` 无匹配规则），报 "all files are ignored"；包级配置文件会完全覆盖（不是合并）根目录占位配置，装上 `eslint-config-expo` 后 `expo lint` 全绿。`pnpm -r lint`/`pnpm -r format` 现在覆盖 mobile + web（shared 仍无脚本，按预期跳过）。
 2026-07-04 确认 Step 2 分支 `feat/mobile-chat-step2-api-client` 已随 PR #25（标题为 "Add Turborepo workspace scripts"，实际打包了 Step 2 的两个 commit + turborepo 脚本改动）合并进 main（commit 858c6ad）。PROGRESS.md 之前记录的"尚未提交/合并"已过期，予以更正。
 2026-07-04 Step 3 完成（分支 `feat/mobile-chat-step3-session-list`）：新增依赖 `swr@^2.4.1`；`app/_layout.tsx` 包一层 `GestureHandlerRootView`（本步骤首次引入手势交互）；`app/(tabs)/index.tsx` 从静态 `Redirect` 改为读取 `AsyncStorage` 的 `LAST_CHAT` 后决定跳转目标；`app/chat/[id].tsx` 占位屏幕挂载时补 `setLastChat(id)`；新增 `src/hooks/useChatSessions.ts`（`useSWR('/api/sessions', listSessions)` + `handleNew`/`handleDelete` 乐观 mutate，镜像 web 端 `ChatSidebar/useChatSessions.ts`）、`src/lib/utils/relative-date.ts`（从 web `SessionItem.tsx` 移植）；重写 `app/(tabs)/chats.tsx`（FlatList + `Swipeable` 左滑删除 + "+" 新建 + 空状态）。实装期间发现两处可隔离型修正（均见 step-map.md Step 3 Amendment）：① `react-native-gesture-handler@2.32` 未公开导出 `ReanimatedSwipeable`，改用同库正式导出的 `Swipeable`；② 冷启动自动跳转逻辑从 `chats.tsx` mount 移到 `app/(tabs)/index.tsx`，避免每次切回 Chats tab 被强制跳走。功能验证：由于沙盒环境无原生模拟器/adb/xcrun，改用 `expo start --web`（react-native-web，Step 1 已装）+ Playwright 驱动验证；直接跨域调用本地 `apps/web` dev server（localhost:8090 → localhost:3000）遇到浏览器 CORS 阻塞（`apps/web` 未配置 `Access-Control-Allow-Origin`，原生 App 不受此限制，纯测试环境限制非产品缺陷），改用 Playwright `page.route` 拦截 mock `/api/sessions` 的 GET/POST/DELETE，验证列表渲染、相对时间、点击进入会话并写入 `LAST_CHAT`、"+"新建后乐观更新列表、冷启动读取 `LAST_CHAT` 后正确重定向到 `/chat/{id}`，均通过；左滑删除的手势本身在 headless 浏览器环境未做实际拖拽模拟（`Swipeable` 渲染的 `Delete` 按钮已确认挂载在 DOM 中），建议后续有真机/模拟器时补一次真实滑动验证。全部改动已通过 `pnpm verify`（lint + typecheck + format + test，18/18，与 Step 2 相同用例，未新增测试——本步骤 UI 交互无自动化测试，遵循 step-map 原计划）。
+2026-07-04 用户实测复现了验证阶段预见到的 CORS 问题：真实点击 "+ New Chat" 时 `createSession` 报 "Uncaught Error: Failed to fetch"（`apps/mobile/src/lib/api/session.ts:61`）。根因确认：`apps/web` 的 API 路由不发任何 CORS 头，浏览器里跑的 mobile 端（`expo start --web`）跨域调用被拦截；真机原生 App 不受此限制。修复：`apps/web/src/proxy.ts` 给 `/api/*` 加了仅 `NODE_ENV !== "production"` 生效的 `Access-Control-Allow-Origin: *`（含 OPTIONS 预检短路），生产部署不受影响（见 DECISIONS.md [arch]，已加入架构归并待办）。修复过程中安全策略拦截了最初的通配符方案（未限定 dev-only），已询问用户但超时未回复，按最保守选项（仅本地开发环境启用）实现。验证：用真实（非 mock）本地 `apps/web` dev server + Playwright 驱动 `expo start --web`，确认列表能加载已有真实会话、点击 "+ New Chat" 成功创建并跳转、`localStorage` 正确写入 `chat:last`，问题解决。
