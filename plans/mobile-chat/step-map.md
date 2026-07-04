@@ -13,7 +13,7 @@ updated: 2026-07-02
 | Step 1 | 环境初始化         | —      | 完成   |
 | Step 2 | API 客户端层       | Step 1 | 完成   |
 | Step 3 | 会话列表屏幕       | Step 2 | 完成   |
-| Step 4 | 聊天屏幕           | Step 3 | 待开始 |
+| Step 4 | 聊天屏幕           | Step 3 | 完成   |
 | Step 5 | Knowledge 列表屏幕 | Step 2 | 待开始 |
 | Step 6 | 文档上传           | Step 5 | 待开始 |
 
@@ -139,7 +139,13 @@ updated: 2026-07-02
 
 依赖：Step 3
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：中断/异常处理完全在聊天屏幕层实现。
+修正为：给 Step 2 的 `chat.ts` 追加了可选 `onClose` 回调（流正常关闭但未收到 `done` 事件时触发）——没有它，服务端中途崩溃断流会让 UI 的 loading 永久卡住（web 端 `useChatWindow` 有同样的兜底分支）。追加型变更，原有 18 个测试不受影响。
+原因：对照 web 端实现时发现 `streamChat` 的回调契约缺少"流结束但无 done"这一分支。
+影响范围：`chat.ts` 新增可选回调 + `useStreamingChat` 消费它，不影响其他步骤。
 
 ---
 

@@ -9,6 +9,8 @@ export interface StreamChatCallbacks {
   onToken?: (token: string) => void;
   onDone?: (answer: string) => void;
   onError?: (message: string) => void;
+  /** Fires when the stream closes cleanly, whether or not "done" was received. */
+  onClose?: () => void;
 }
 
 interface ChatEventPayload {
@@ -62,6 +64,7 @@ export function streamChat(params: ChatRequestInput, callbacks: StreamChatCallba
         if (done) break;
         parser.feed(decoder.decode(value, { stream: true }));
       }
+      callbacks.onClose?.();
     } catch (err) {
       if (controller.signal.aborted) return;
       callbacks.onError?.(err instanceof Error ? err.message : String(err));
