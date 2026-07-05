@@ -24,11 +24,12 @@ test.describe("Chat UI (mocked API)", () => {
 
     const input = page.getByPlaceholder(/ask/i).or(page.locator("textarea")).first();
     await input.fill("How many vacation days?");
-    await input.press("Control+Enter");
-
-    await page.waitForURL((url) => url.pathname.startsWith("/chat/") && url.pathname !== "/chat/new", {
-      timeout: 15_000,
-    });
+    await Promise.all([
+      page.waitForURL((url) => url.pathname.startsWith("/chat/") && url.pathname !== "/chat/new", {
+        timeout: 15_000,
+      }),
+      input.press("Control+Enter"),
+    ]);
 
     await expect(page.getByRole("button", { name: "Send" })).toBeEnabled({ timeout: 15_000 });
 

@@ -96,9 +96,11 @@ export async function findUnembeddedChunks(
   docId: string,
   limit: number,
 ): Promise<Array<{ id: string; content: string }>> {
+  // chunks.id / chunks.document_id are text columns (Prisma String ids); casting
+  // the parameter to uuid makes the comparison "text = uuid", which has no operator.
   return prisma.$queryRaw<Array<{ id: string; content: string }>>`
-    SELECT id::text, content FROM chunks
-    WHERE document_id = ${docId}::uuid AND embedding IS NULL
+    SELECT id, content FROM chunks
+    WHERE document_id = ${docId} AND embedding IS NULL
     ORDER BY ord
     LIMIT ${limit}
   `;
@@ -107,7 +109,7 @@ export async function findUnembeddedChunks(
 export async function countUnembeddedChunks(docId: string): Promise<number> {
   const result = await prisma.$queryRaw<[{ count: bigint }]>`
     SELECT COUNT(*)::bigint as count FROM chunks
-    WHERE document_id = ${docId}::uuid AND embedding IS NULL
+    WHERE document_id = ${docId} AND embedding IS NULL
   `;
   return Number(result[0].count);
 }
@@ -118,7 +120,7 @@ export async function updateChunkEmbeddings(chunks: Array<{ id: string; embeddin
       ({ id, embedding }) =>
         prisma.$executeRaw`
         UPDATE chunks SET embedding = ${`[${embedding.join(",")}]`}::vector
-        WHERE id = ${id}::uuid
+        WHERE id = ${id}
       `,
     ),
   );

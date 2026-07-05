@@ -34,22 +34,40 @@ export async function prepareUpload(input: PrepareUploadInput): Promise<PrepareU
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error ?? `Prepare failed (${res.status})`);
+    // status lets callers distinguish 409 (duplicate) from other failures.
+    const err = new Error((data as { error?: string }).error ?? `Prepare failed (${res.status})`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
   }
   return PrepareUploadOutputSchema.parse(await res.json());
 }
 
 /**
- * Uploads a local file to a Supabase Storage signed URL. Mirrors the web
+ * Uploads a picked file to a Supabase Storage signed URL. Mirrors the web
  * client's multipart shape (empty field name + cacheControl form param) — see
  * apps/web/src/components/knowledge/UploadZone.tsx.
+ *
+ * `source` is a local file URI on native (expo-file-system's File.upload,
+ * with progress events) or a DOM Blob/File on web, where expo-file-system is
+ * unavailable and the picker hands us the file object directly (no progress).
  */
 export async function uploadToSupabase(
-  fileUri: string,
+  source: string | Blob,
   signedUrl: string,
   onProgress?: (fraction: number) => void,
 ): Promise<void> {
-  const file = new File(fileUri);
+  if (typeof source !== "string") {
+    const form = new FormData();
+    form.append("cacheControl", "3600");
+    form.append("", source);
+    const res = await fetch(signedUrl, { method: "PUT", body: form });
+    if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+    onProgress?.(1);
+    return;
+  }
+  const file = new File(source);
   const result = await file.upload(signedUrl, {
     httpMethod: "PUT",
     uploadType: UploadType.MULTIPART,

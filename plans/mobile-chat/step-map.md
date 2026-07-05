@@ -8,14 +8,14 @@ updated: 2026-07-02
 
 ## 步骤总览
 
-| 步骤   | 名称               | 依赖   | 状态   |
-| ------ | ------------------ | ------ | ------ |
-| Step 1 | 环境初始化         | —      | 完成   |
-| Step 2 | API 客户端层       | Step 1 | 完成   |
-| Step 3 | 会话列表屏幕       | Step 2 | 完成   |
-| Step 4 | 聊天屏幕           | Step 3 | 待开始 |
-| Step 5 | Knowledge 列表屏幕 | Step 2 | 待开始 |
-| Step 6 | 文档上传           | Step 5 | 待开始 |
+| 步骤   | 名称               | 依赖   | 状态 |
+| ------ | ------------------ | ------ | ---- |
+| Step 1 | 环境初始化         | —      | 完成 |
+| Step 2 | API 客户端层       | Step 1 | 完成 |
+| Step 3 | 会话列表屏幕       | Step 2 | 完成 |
+| Step 4 | 聊天屏幕           | Step 3 | 完成 |
+| Step 5 | Knowledge 列表屏幕 | Step 2 | 完成 |
+| Step 6 | 文档上传           | Step 5 | 完成 |
 
 ---
 
@@ -139,7 +139,13 @@ updated: 2026-07-02
 
 依赖：Step 3
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：中断/异常处理完全在聊天屏幕层实现。
+修正为：给 Step 2 的 `chat.ts` 追加了可选 `onClose` 回调（流正常关闭但未收到 `done` 事件时触发）——没有它，服务端中途崩溃断流会让 UI 的 loading 永久卡住（web 端 `useChatWindow` 有同样的兜底分支）。追加型变更，原有 18 个测试不受影响。
+原因：对照 web 端实现时发现 `streamChat` 的回调契约缺少"流结束但无 done"这一分支。
+影响范围：`chat.ts` 新增可选回调 + `useStreamingChat` 消费它，不影响其他步骤。
 
 ---
 
@@ -169,7 +175,14 @@ updated: 2026-07-02
 
 依赖：Step 2
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：长按 ActionSheet 用 Gluestack ActionSheet；Delete 走系统确认框。
+修正为：① Gluestack v2 的 ActionSheet 同 BottomSheet 一样无 npm 包形式（Step 1 已确认该限制），沿用 Step 4 ProviderSheet 的 RN `Modal` 手写 action sheet 模式；② `Alert.alert` 在 react-native-web 上是 no-op，删除确认框在 web 运行环境完全静默，且长按 → 点 Delete 已是两步明确操作，故去掉二次确认直接删除（失败经 SWR revalidate 回滚）。
+另发现并修复了 web 端阻塞性 bug：`apps/web/src/lib/server/data/documents.ts` 的 `findUnembeddedChunks`/`countUnembeddedChunks`/`updateChunkEmbeddings` 把参数 cast 成 `::uuid`，而 `chunks.id`/`chunks.document_id` 是 text 列（Prisma String id），`text = uuid` 无操作符导致 `/api/documents/[id]/embed` 必 500——reindex 和上传的 embed 循环完全走不通。去掉错误 cast 修复（追加型变更，同 Step 3 CORS 先例）。
+原因：功能验证阶段真实调用 embed 端点时发现。
+影响范围：web 数据层三个查询的 cast 移除，不改变语义；mobile 侧仅实现方式变化。
 
 ---
 
@@ -200,4 +213,10 @@ updated: 2026-07-02
 
 依赖：Step 5
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：`uploadToSupabase` 统一处理上传进度。
+修正为：native 端继续用 `expo-file-system` 的 `File.upload()` 获取上传进度；web 端 `expo-document-picker` 返回 DOM `File`，改用 `FormData` 直接 `PUT` signed upload URL，multipart 字段形态与 web 端 `UploadZone`/e2e fixture 保持一致（`cacheControl` + 空字段文件）。web fetch 无可靠上传进度事件，因此只显示阶段进度并在完成后置 100%。
+原因：功能验证阶段对照 Supabase signed upload URL 的现有 web 实现发现 raw body PUT 与项目当前 multipart 上传形态不一致。
+影响范围：仅 Step 6 的 web fallback 上传方式；native 上传进度不受影响。

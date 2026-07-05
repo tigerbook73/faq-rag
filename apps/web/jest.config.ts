@@ -12,8 +12,10 @@ const config: Config = {
       "ts-jest",
       {
         tsconfig: {
+          rootDir: ".",
           module: "commonjs",
           moduleResolution: "node",
+          ignoreDeprecations: "6.0",
           types: ["jest", "node"],
         },
       },
