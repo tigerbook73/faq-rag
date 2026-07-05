@@ -42,6 +42,12 @@ declare global {
     constructor(message?: string, name?: string);
     readonly name: string;
   }
+
+  // React Native's Blob type (which DOM File extends on web, e.g. the
+  // expo-document-picker web asset.file) predates the Blob arrayBuffer() spec.
+  interface Blob {
+    arrayBuffer(): Promise<ArrayBuffer>;
+  }
 }
 
 export {};

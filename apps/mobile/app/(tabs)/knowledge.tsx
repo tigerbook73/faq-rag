@@ -2,6 +2,8 @@ import { useState, useCallback } from "react";
 import { View, Text, FlatList, Pressable, Modal, ActivityIndicator } from "react-native";
 import type { DocumentItem } from "@faq-rag/shared";
 import { useDocuments } from "../../src/hooks/useDocuments";
+import { useDocumentUpload } from "../../src/hooks/useDocumentUpload";
+import { UploadProgressModal } from "../../src/components/knowledge/UploadProgressModal";
 import { formatBytes } from "../../src/lib/utils/format";
 import { relativeDate } from "../../src/lib/utils/relative-date";
 
@@ -115,6 +117,7 @@ function DocumentActionSheet({
 
 export default function KnowledgeScreen() {
   const { documents, isLoading, handleDelete, handleReindex } = useDocuments();
+  const { state: uploadState, pickAndUpload, reset: resetUpload } = useDocumentUpload();
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -133,10 +136,14 @@ export default function KnowledgeScreen() {
     <View className="flex-1 bg-white">
       <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3">
         <Text className="text-lg font-semibold text-gray-800">Knowledge</Text>
-        {/* Upload flow lands in Step 6 */}
-        <View className="rounded-lg bg-gray-200 px-3 py-1.5">
-          <Text className="text-sm font-medium text-gray-400">Upload</Text>
-        </View>
+        <Pressable
+          onPress={() => void pickAndUpload()}
+          disabled={uploadState.phase !== "idle" && uploadState.phase !== "error"}
+          className="rounded-lg bg-blue-600 px-3 py-1.5 active:bg-blue-700"
+          testID="upload-button"
+        >
+          <Text className="text-sm font-medium text-white">Upload</Text>
+        </Pressable>
       </View>
 
       {isLoading ? (
@@ -170,6 +177,8 @@ export default function KnowledgeScreen() {
         onDelete={() => actionDoc && void handleDelete(actionDoc.id)}
         onClose={() => setActionDoc(null)}
       />
+
+      <UploadProgressModal state={uploadState} onDismiss={resetUpload} />
     </View>
   );
 }

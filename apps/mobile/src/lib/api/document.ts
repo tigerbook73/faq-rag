@@ -34,7 +34,12 @@ export async function prepareUpload(input: PrepareUploadInput): Promise<PrepareU
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error ?? `Prepare failed (${res.status})`);
+    // status lets callers distinguish 409 (duplicate) from other failures.
+    const err = new Error((data as { error?: string }).error ?? `Prepare failed (${res.status})`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
   }
   return PrepareUploadOutputSchema.parse(await res.json());
 }

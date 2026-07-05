@@ -8,14 +8,14 @@ updated: 2026-07-02
 
 ## 步骤总览
 
-| 步骤   | 名称               | 依赖   | 状态   |
-| ------ | ------------------ | ------ | ------ |
-| Step 1 | 环境初始化         | —      | 完成   |
-| Step 2 | API 客户端层       | Step 1 | 完成   |
-| Step 3 | 会话列表屏幕       | Step 2 | 完成   |
-| Step 4 | 聊天屏幕           | Step 3 | 完成   |
-| Step 5 | Knowledge 列表屏幕 | Step 2 | 完成   |
-| Step 6 | 文档上传           | Step 5 | 待开始 |
+| 步骤   | 名称               | 依赖   | 状态 |
+| ------ | ------------------ | ------ | ---- |
+| Step 1 | 环境初始化         | —      | 完成 |
+| Step 2 | API 客户端层       | Step 1 | 完成 |
+| Step 3 | 会话列表屏幕       | Step 2 | 完成 |
+| Step 4 | 聊天屏幕           | Step 3 | 完成 |
+| Step 5 | Knowledge 列表屏幕 | Step 2 | 完成 |
+| Step 6 | 文档上传           | Step 5 | 完成 |
 
 ---
 
@@ -213,4 +213,10 @@ updated: 2026-07-02
 
 依赖：Step 5
 
-状态：待开始
+状态：完成（见 Amendment）
+
+[Amendment - 实装期间发现的更正，均为可隔离型，未改变步骤范围]
+原决定：`uploadToSupabase` 统一处理上传进度。
+修正为：native 端继续用 `expo-file-system` 的 `File.upload()` 获取上传进度；web 端 `expo-document-picker` 返回 DOM `File`，改用 `FormData` 直接 `PUT` signed upload URL，multipart 字段形态与 web 端 `UploadZone`/e2e fixture 保持一致（`cacheControl` + 空字段文件）。web fetch 无可靠上传进度事件，因此只显示阶段进度并在完成后置 100%。
+原因：功能验证阶段对照 Supabase signed upload URL 的现有 web 实现发现 raw body PUT 与项目当前 multipart 上传形态不一致。
+影响范围：仅 Step 6 的 web fallback 上传方式；native 上传进度不受影响。
