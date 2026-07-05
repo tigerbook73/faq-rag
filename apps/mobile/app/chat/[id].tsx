@@ -70,17 +70,24 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
     void setLastChat(chatId);
   }, [chatId]);
 
-  // Restore / persist the input draft (debounced), keyed per chat.
+  // Restore / persist the input draft (debounced), keyed per chat. Persisting
+  // must wait for the restore to settle: the initial empty input would
+  // otherwise schedule a setDraft("") (a key delete) that races the async read
+  // and can wipe the stored draft.
+  const [draftRestored, setDraftRestored] = useState(false);
   useEffect(() => {
-    void getDraft(chatId).then((draft) => {
-      if (draft) setInput((current) => current || draft);
-    });
+    void getDraft(chatId)
+      .then((draft) => {
+        if (draft) setInput((current) => current || draft);
+      })
+      .finally(() => setDraftRestored(true));
   }, [chatId]);
 
   useEffect(() => {
+    if (!draftRestored) return;
     const timer = setTimeout(() => void setDraft(chatId, input), 300);
     return () => clearTimeout(timer);
-  }, [chatId, input]);
+  }, [chatId, input, draftRestored]);
 
   const handleSend = useCallback(() => {
     const question = input.trim();
@@ -96,7 +103,9 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
   }, []);
 
   const scrollToEnd = useCallback(() => {
-    listRef.current?.scrollToEnd({ animated: true });
+    // animated: false — this fires on every streamed content-size change, and
+    // overlapping animated scrolls thrash the animator and fight user scroll.
+    listRef.current?.scrollToEnd({ animated: false });
   }, []);
 
   return (

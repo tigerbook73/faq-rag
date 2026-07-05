@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Markdown, { type RenderRules } from "react-native-markdown-display";
 import type { Citation } from "@faq-rag/shared";
+import { CITATION_MARK_PATTERNS } from "../../lib/utils/citations";
 import { TypingDots } from "./TypingDots";
 
 interface Props {
@@ -16,10 +17,7 @@ interface Props {
 // citation variants ([^n], [n], (^n)) to @@n@@ before markdown parsing so
 // [^n] is not consumed as a footnote reference.
 function normalizeCitations(content: string): string {
-  return content
-    .replace(/\[\^(\d+)\]/g, (_, n) => `@@${parseInt(n, 10)}@@`)
-    .replace(/\[(\d+)\]/g, (_, n) => `@@${parseInt(n, 10)}@@`)
-    .replace(/\(\^(\d+)\)/g, (_, n) => `@@${parseInt(n, 10)}@@`);
+  return CITATION_MARK_PATTERNS.reduce((acc, re) => acc.replace(re, (_, n) => `@@${parseInt(n, 10)}@@`), content);
 }
 
 function makeRules(citations: Citation[] | undefined, onCitationClick?: (c: Citation) => void): RenderRules {
@@ -48,6 +46,10 @@ function makeRules(citations: Citation[] | undefined, onCitationClick?: (c: Cita
                   </Text>
                 );
               }
+              // No matching citation (model-invented number, or plain text
+              // like arr[0]) — restore the original form instead of leaking
+              // the @@n@@ sentinel.
+              return <Text key={i}>[{num}]</Text>;
             }
             return <Text key={i}>{part}</Text>;
           })}
@@ -77,6 +79,12 @@ export const MessageBubble = memo(function MessageBubble({
 }: Props) {
   const isUser = role === "user";
 
+  // Both are re-computed only when their inputs change; during streaming the
+  // bubble re-renders per flush, so skipping the regex passes and the rules
+  // object rebuild matters.
+  const normalized = useMemo(() => (isUser ? content : normalizeCitations(content)), [isUser, content]);
+  const rules = useMemo(() => makeRules(citations, onCitationClick), [citations, onCitationClick]);
+
   if (isUser) {
     return (
       <View className="mb-3 flex-row justify-end">
@@ -94,8 +102,8 @@ export const MessageBubble = memo(function MessageBubble({
           <TypingDots />
         ) : (
           <>
-            <Markdown style={markdownStyle} rules={makeRules(citations, onCitationClick)}>
-              {normalizeCitations(content)}
+            <Markdown style={markdownStyle} rules={rules}>
+              {normalized}
             </Markdown>
             {citations && citations.length > 0 && (
               <View className="mt-2 border-t border-gray-200 pt-2">

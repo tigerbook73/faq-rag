@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { ChatRequestInputSchema } from "@faq-rag/shared";
 import type { Provider } from "../lib/api/chat";
 import { getStoredProvider, setStoredProvider } from "../lib/api/storage";
 
-// Mirrors apps/web/src/lib/server/llm/providers.ts's PROVIDER_LABEL; keep in
-// sync manually (mobile cannot import from an app package).
-export const PROVIDERS: Provider[] = ["claude", "deepseek", "openai"];
+// Derived from the shared schema enum so the runtime list cannot drift from
+// the API contract. Labels stay local: the schema carries no display names
+// (they mirror apps/web/src/lib/server/llm/providers.ts's PROVIDER_LABEL).
+export const PROVIDERS: readonly Provider[] = ChatRequestInputSchema.shape.provider.unwrap().options;
 export const PROVIDER_LABEL: Record<Provider, string> = {
   claude: "Claude",
   deepseek: "DeepSeek",

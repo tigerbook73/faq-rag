@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { View, Text, FlatList, Pressable, Modal, ActivityIndicator } from "react-native";
 import type { DocumentItem } from "@faq-rag/shared";
 import { useDocuments } from "../../src/hooks/useDocuments";
@@ -29,7 +29,9 @@ function chunkLabel(doc: DocumentItem): string {
   return `${doc._count.chunks} chunks`;
 }
 
-function DocumentRow({
+// memo + doc-parameterized callbacks keep unchanged rows from re-rendering on
+// every 3s poll while a document is indexing.
+const DocumentRow = memo(function DocumentRow({
   doc,
   expanded,
   onPress,
@@ -37,13 +39,13 @@ function DocumentRow({
 }: {
   doc: DocumentItem;
   expanded: boolean;
-  onPress: () => void;
-  onLongPress: () => void;
+  onPress: (doc: DocumentItem) => void;
+  onLongPress: (doc: DocumentItem) => void;
 }) {
   return (
     <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={() => onPress(doc)}
+      onLongPress={() => onLongPress(doc)}
       delayLongPress={400}
       className="border-b border-gray-100 bg-white px-4 py-3 active:bg-gray-50"
       testID={`doc-row-${doc.id}`}
@@ -69,7 +71,7 @@ function DocumentRow({
       )}
     </Pressable>
   );
-}
+});
 
 function DocumentActionSheet({
   doc,
@@ -121,6 +123,14 @@ export default function KnowledgeScreen() {
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const toggleExpanded = useCallback((doc: DocumentItem) => {
+    setExpandedId((cur) => (cur === doc.id ? null : doc.id));
+  }, []);
+
+  const openActions = useCallback((doc: DocumentItem) => {
+    if (!doc.isBuiltIn) setActionDoc(doc);
+  }, []);
+
   const startReindex = useCallback(
     (doc: DocumentItem) => {
       // Failure rolls the optimistic status back via revalidation inside the
@@ -162,10 +172,8 @@ export default function KnowledgeScreen() {
             <DocumentRow
               doc={item}
               expanded={expandedId === item.id}
-              onPress={() => setExpandedId((cur) => (cur === item.id ? null : item.id))}
-              onLongPress={() => {
-                if (!item.isBuiltIn) setActionDoc(item);
-              }}
+              onPress={toggleExpanded}
+              onLongPress={openActions}
             />
           )}
         />

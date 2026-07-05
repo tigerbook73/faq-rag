@@ -4,6 +4,7 @@ import type { Message, Citation } from "@faq-rag/shared";
 import { streamChat, type Provider } from "../lib/api/chat";
 import { updateSession, type ChatSession } from "../lib/api/session";
 import { setLastChat } from "../lib/api/storage";
+import { CITATION_MARK_PATTERNS } from "../lib/utils/citations";
 
 const INTERRUPTED_MARK = "\n\n⚠️ _回答被中断_";
 
@@ -71,10 +72,26 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
       let assistantContent = "";
       let citations: Citation[] = [];
       let settled = false;
+      let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+      // Coalesces per-token updates: flushing at most every 50ms keeps the
+      // full-string markdown re-parse cost linear instead of quadratic.
+      const flushTokens = () => {
+        flushTimer = null;
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
+          return updated;
+        });
+      };
 
       const finish = (finalMessages: Message[]) => {
         if (settled) return;
         settled = true;
+        if (flushTimer) {
+          clearTimeout(flushTimer);
+          flushTimer = null;
+        }
         setMessages(finalMessages);
         setLoading(false);
         void persistMessages(finalMessages, sessionAtSend);
@@ -88,20 +105,12 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
           },
           onToken: (token) => {
             assistantContent += token;
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[assistantIndex] = { ...updated[assistantIndex], content: assistantContent };
-              return updated;
-            });
+            if (!flushTimer) flushTimer = setTimeout(flushTokens, 50);
           },
           onDone: (answer) => {
             const finalContent = answer || assistantContent;
             const usedNums = new Set(
-              [
-                ...finalContent.matchAll(/\[\^(\d+)\]/g),
-                ...finalContent.matchAll(/\(\^(\d+)\)/g),
-                ...finalContent.matchAll(/\[(\d+)\]/g),
-              ].map((m) => parseInt(m[1], 10)),
+              CITATION_MARK_PATTERNS.flatMap((re) => [...finalContent.matchAll(re)]).map((m) => parseInt(m[1], 10)),
             );
             finish([
               ...withUser,

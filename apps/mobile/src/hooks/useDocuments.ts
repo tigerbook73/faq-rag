@@ -28,13 +28,15 @@ export function useDocuments() {
     try {
       while (true) {
         const result = await embedBatch(docId);
-        void swrMutate(SWR_KEY);
         if (result.remaining === 0 || result.status !== "indexing") break;
       }
     } catch {
-      void swrMutate(SWR_KEY);
+      // The revalidate below surfaces the failed status; nothing else to do.
     } finally {
       embeddingRef.current.delete(docId);
+      // Single refresh when the loop exits; intermediate progress is already
+      // covered by the 3s poll while the document is "indexing".
+      void swrMutate(SWR_KEY);
     }
   }, []);
 

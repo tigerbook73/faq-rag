@@ -4,6 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { mutate as swrMutate } from "swr";
 import { prepareUpload, uploadToSupabase, confirmIndex, embedBatch } from "../lib/api/document";
 import { computeSHA256, computeFileSHA256 } from "../lib/api/utils/crypto";
+import { formatBytes } from "../lib/utils/format";
 
 // Matches apps/web config.embedding.maxBytesLocal / maxBytesCloud.
 const MAX_BYTES = process.env.EXPO_PUBLIC_IS_CLOUD === "true" ? 50 * 1024 : 1024 * 1024;
@@ -60,8 +61,12 @@ export function useDocumentUpload() {
 
     const size = asset.size ?? 0;
     if (size <= 0 || size > MAX_BYTES) {
-      const label = MAX_BYTES >= 1024 * 1024 ? `${MAX_BYTES / (1024 * 1024)} MB` : `${MAX_BYTES / 1024} KB`;
-      setState({ ...IDLE, phase: "error", fileName: asset.name, error: `File exceeds the ${label} limit` });
+      setState({
+        ...IDLE,
+        phase: "error",
+        fileName: asset.name,
+        error: `File exceeds the ${formatBytes(MAX_BYTES)} limit`,
+      });
       return;
     }
 
@@ -85,20 +90,9 @@ export function useDocumentUpload() {
       }
 
       setState((s) => ({ ...s, phase: "uploading", progress: 0 }));
-      if (webFile) {
-        const form = new FormData();
-        form.append("cacheControl", "3600");
-        form.append("", webFile);
-        const res = await fetch(prep.signedUrl, {
-          method: "PUT",
-          body: form,
-        });
-        if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-      } else {
-        await uploadToSupabase(asset.uri, prep.signedUrl, (fraction) =>
-          setState((s) => ({ ...s, progress: fraction })),
-        );
-      }
+      await uploadToSupabase(webFile ?? asset.uri, prep.signedUrl, (fraction) =>
+        setState((s) => ({ ...s, progress: fraction })),
+      );
       setState((s) => ({ ...s, progress: 1 }));
 
       setState((s) => ({ ...s, phase: "confirming" }));
@@ -110,8 +104,9 @@ export function useDocumentUpload() {
         const result = await embedBatch(prep.docId);
         embedded += result.embedded;
         const total = embedded + result.remaining;
+        // Progress is shown by the modal; the document list is refreshed once
+        // after the loop instead of per batch.
         setState((s) => ({ ...s, embedded, totalChunks: total }));
-        void swrMutate("/api/documents");
         if (result.remaining === 0 || result.status !== "indexing") break;
       }
 
