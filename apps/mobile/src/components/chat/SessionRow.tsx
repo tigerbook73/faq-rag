@@ -1,5 +1,5 @@
 import { Pressable, Text } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { relativeDate } from "../../lib/utils/relative-date";
 import type { ChatSession } from "../../lib/api/session";
 
