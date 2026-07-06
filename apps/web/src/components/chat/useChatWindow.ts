@@ -195,15 +195,7 @@ export function useStreamingChat({
             } else if (payload.type === "done") {
               streamDone = true;
               const finalContent = payload.answer ?? assistantContent;
-              const usedNums = new Set([
-                ...[...finalContent.matchAll(/\[\^(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
-                ...[...finalContent.matchAll(/\(\^(\d+)\)/g)].map((m) => parseInt(m[1], 10)),
-                ...[...finalContent.matchAll(/\[(\d+)\]/g)].map((m) => parseInt(m[1], 10)),
-              ]);
-              doneMessages = [
-                ...withUser,
-                { role: "assistant", content: finalContent, citations: citations.filter((c) => usedNums.has(c.id)) },
-              ];
+              doneMessages = [...withUser, { role: "assistant", content: finalContent, citations }];
               setMessages(doneMessages);
             }
           },

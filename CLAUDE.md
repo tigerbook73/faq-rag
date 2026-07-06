@@ -264,7 +264,7 @@ All three providers respect env var overrides: `ANTHROPIC_MODEL`, `DEEPSEEK_MODE
 | `src/components/chat/ChatWindow.tsx`             | Main chat UI — SSE streaming, session hydration, send logic                                            |
 | `src/components/chat/ChatSidebar.tsx`            | Session list — create/rename/delete/export/navigate                                                    |
 | `src/components/chat/CitationDrawer.tsx`         | Bottom drawer for citation detail view                                                                 |
-| `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, inline citation superscripts                                             |
+| `src/components/chat/MessageBubble.tsx`          | Message rendering — Markdown, collapsible citation source list                                         |
 | `src/components/chat/ProviderSelect.tsx`         | Provider dropdown (Claude / DeepSeek / OpenAI)                                                         |
 | `src/app/api/ingest-hook/route.ts`               | Supabase Storage webhook — validates secret, triggers indexing                                         |
 | `scripts/setup-webhook.ts`                       | CLI to read/write `app.ingest_config` (hook_url, hook_secret)                                          |
