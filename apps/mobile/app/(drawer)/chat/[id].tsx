@@ -9,23 +9,34 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
+import type { DrawerNavigationProp } from "expo-router/drawer";
 import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useSWR from "swr";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { Ionicons } from "@expo/vector-icons";
 import type { Citation, Message } from "@faq-rag/shared";
-import { getSession, type ChatSession } from "../../src/lib/api/session";
-import { setLastChat, getDraft, setDraft } from "../../src/lib/api/storage";
-import { MessageBubble } from "../../src/components/chat/MessageBubble";
-import { CitationSheet } from "../../src/components/chat/CitationSheet";
-import { ProviderSheet } from "../../src/components/chat/ProviderSheet";
-import { useProvider, PROVIDER_LABEL } from "../../src/context/provider-context";
-import { useStreamingChat } from "../../src/hooks/useStreamingChat";
+import { getSession, type ChatSession } from "../../../src/lib/api/session";
+import { setLastChat, getDraft, setDraft } from "../../../src/lib/api/storage";
+import { MessageBubble } from "../../../src/components/chat/MessageBubble";
+import { CitationSheet } from "../../../src/components/chat/CitationSheet";
+import { ProviderSheet } from "../../../src/components/chat/ProviderSheet";
+import { IconButton } from "../../../src/components/ui/icon-button";
+import { useProvider, PROVIDER_LABEL } from "../../../src/context/provider-context";
+import { useStreamingChat } from "../../../src/hooks/useStreamingChat";
+import { useChatSessions } from "../../../src/hooks/useChatSessions";
+
+// This screen is a direct child of the (drawer) group's Drawer navigator;
+// useNavigation()'s generic type doesn't know that, so this only narrows to
+// the drawer-specific method (openDrawer) that's actually available at runtime.
+type ChatDrawerNavigation = DrawerNavigationProp<Record<string, object | undefined>>;
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const navigation = useNavigation<ChatDrawerNavigation>();
+  const insets = useSafeAreaInsets();
 
   const { data: sessionData, isLoading: isSessionLoading } = useSWR<ChatSession | null>(
     id ? `/api/sessions/${id}` : null,
@@ -34,14 +45,22 @@ export default function ChatScreen() {
   );
 
   useEffect(() => {
-    // Session was deleted/pruned server-side; go back to the list.
-    if (!isSessionLoading && sessionData === null) router.replace("/chats");
+    // Session was deleted/pruned server-side; go back to "/" so it can
+    // validate chat:last and land on a usable session (there's no "/chats"
+    // list route to bounce to anymore).
+    if (!isSessionLoading && sessionData === null) router.replace("/");
   }, [isSessionLoading, sessionData, router]);
 
   if (isSessionLoading || !sessionData) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-gray-950">
-        <Stack.Screen options={{ headerShown: true, title: "Chat" }} />
+        <IconButton
+          icon="menu"
+          onPress={() => navigation.openDrawer()}
+          accessibilityLabel="Open menu"
+          className="absolute left-1"
+          style={{ top: insets.top }}
+        />
         <ActivityIndicator />
       </View>
     );
@@ -56,6 +75,8 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const { provider, setProvider } = useProvider();
+  const navigation = useNavigation<ChatDrawerNavigation>();
+  const { handleNew } = useChatSessions();
 
   const [session, setSession] = useState<ChatSession | null>(initialSession);
   const [messages, setMessages] = useState<Message[]>(initialSession.messages);
@@ -112,22 +133,26 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: session?.title ?? "Chat",
-          headerBackTitle: "Chats",
-          headerRight: () => (
-            <Pressable
-              onPress={() => setProviderSheetVisible(true)}
-              className="rounded-lg border border-gray-200 px-2.5 py-1 dark:border-gray-700"
-              testID="provider-button"
-            >
-              <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">{PROVIDER_LABEL[provider]}</Text>
-            </Pressable>
-          ),
-        }}
-      />
+      <View
+        className="flex-row items-center border-b border-gray-100 px-1 dark:border-gray-800"
+        style={{ paddingTop: insets.top }}
+      >
+        <IconButton icon="menu" onPress={() => navigation.openDrawer()} accessibilityLabel="Open menu" />
+        <Text
+          numberOfLines={1}
+          className="flex-1 px-1 text-center text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
+          {session?.title ?? "Chat"}
+        </Text>
+        <Pressable
+          onPress={() => setProviderSheetVisible(true)}
+          className="mr-1 rounded-lg border border-gray-200 px-2.5 py-1 dark:border-gray-700"
+          testID="provider-button"
+        >
+          <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">{PROVIDER_LABEL[provider]}</Text>
+        </Pressable>
+        <IconButton icon="create-outline" onPress={() => void handleNew()} accessibilityLabel="New chat" />
+      </View>
 
       <KeyboardAvoidingView
         className="flex-1"
@@ -136,6 +161,12 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
       >
         {messages.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
+            <Ionicons
+              name="chatbubbles-outline"
+              size={40}
+              color={colorScheme === "dark" ? "#4b5563" : "#9ca3af"}
+              style={{ marginBottom: 12 }}
+            />
             <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
               Ask a question about your documents
             </Text>
@@ -176,10 +207,16 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
           <Pressable
             onPress={handleSend}
             disabled={loading || !input.trim()}
-            className={`rounded-xl px-4 py-2.5 ${loading || !input.trim() ? "bg-gray-300 dark:bg-gray-700" : "bg-blue-600"}`}
+            className={`h-10 w-10 items-center justify-center rounded-full ${
+              loading || !input.trim() ? "bg-gray-300 dark:bg-gray-700" : "bg-blue-600"
+            }`}
             testID="chat-send"
           >
-            <Text className="text-sm font-medium text-white">{loading ? "…" : "Send"}</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="arrow-up" size={20} color="#fff" />
+            )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>

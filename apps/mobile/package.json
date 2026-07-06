@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.2",
+    "@expo/vector-icons": "^15.1.1",
     "@faq-rag/shared": "workspace:*",
     "@gluestack-ui/nativewind-utils": "^1.0.28",
     "@gorhom/bottom-sheet": "^5.2.14",

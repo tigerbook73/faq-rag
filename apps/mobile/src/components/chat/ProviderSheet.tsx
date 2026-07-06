@@ -1,4 +1,6 @@
 import { Modal, Text, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import type { Provider } from "../../lib/api/chat";
 import { PROVIDERS, PROVIDER_LABEL } from "../../context/provider-context";
 
@@ -11,6 +13,9 @@ interface Props {
 
 /** Bottom-anchored action sheet for switching the LLM provider. */
 export function ProviderSheet({ visible, current, onSelect, onClose }: Props) {
+  const { colorScheme } = useColorScheme();
+  const checkColor = colorScheme === "dark" ? "#60a5fa" : "#2563eb";
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
@@ -32,7 +37,7 @@ export function ProviderSheet({ visible, current, onSelect, onClose }: Props) {
               >
                 {PROVIDER_LABEL[p]}
               </Text>
-              {p === current && <Text className="text-blue-600 dark:text-blue-400">✓</Text>}
+              {p === current && <Ionicons name="checkmark" size={18} color={checkColor} />}
             </Pressable>
           ))}
         </Pressable>
