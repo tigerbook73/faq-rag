@@ -195,7 +195,10 @@ export function useStreamingChat({
             } else if (payload.type === "done") {
               streamDone = true;
               const finalContent = payload.answer ?? assistantContent;
-              doneMessages = [...withUser, { role: "assistant", content: finalContent, citations }];
+              // "done" carries citations filtered to the ones the answer
+              // actually cites; the initial event listed all retrieved chunks.
+              const finalCitations = payload.citations ?? citations;
+              doneMessages = [...withUser, { role: "assistant", content: finalContent, citations: finalCitations }];
               setMessages(doneMessages);
             }
           },

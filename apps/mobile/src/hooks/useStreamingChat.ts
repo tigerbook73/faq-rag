@@ -106,9 +106,11 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
             assistantContent += token;
             if (!flushTimer) flushTimer = setTimeout(flushTokens, 50);
           },
-          onDone: (answer) => {
+          onDone: (answer, doneCitations) => {
             const finalContent = answer || assistantContent;
-            finish([...withUser, { role: "assistant", content: finalContent, citations }]);
+            // Prefer the server-filtered list (only citations the answer uses);
+            // fall back to the full retrieved list from the initial event.
+            finish([...withUser, { role: "assistant", content: finalContent, citations: doneCitations ?? citations }]);
           },
           onError: (message) => {
             const content = assistantContent ? assistantContent + INTERRUPTED_MARK : `⚠️ ${message}`;

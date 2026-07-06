@@ -16,7 +16,7 @@ function Dot({ delay }: { delay: number }) {
     return () => loop.stop();
   }, [opacity, delay]);
 
-  return <Animated.View style={{ opacity }} className="h-2 w-2 rounded-full bg-gray-500" />;
+  return <Animated.View style={{ opacity }} className="h-2 w-2 rounded-full bg-gray-500 dark:bg-gray-400" />;
 }
 
 export function TypingDots() {

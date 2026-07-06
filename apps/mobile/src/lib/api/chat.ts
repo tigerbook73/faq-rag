@@ -5,9 +5,11 @@ import { getApiUrl } from "./config";
 export type Provider = ChatRequestInput["provider"];
 
 export interface StreamChatCallbacks {
+  /** All retrieved chunks, sent before the answer starts streaming. */
   onCitations?: (citations: Citation[]) => void;
   onToken?: (token: string) => void;
-  onDone?: (answer: string) => void;
+  /** Final answer plus the citations it actually references (undefined on older servers). */
+  onDone?: (answer: string, citations?: Citation[]) => void;
   onError?: (message: string) => void;
   /** Fires when the stream closes cleanly, whether or not "done" was received. */
   onClose?: () => void;
@@ -54,7 +56,7 @@ export function streamChat(params: ChatRequestInput, callbacks: StreamChatCallba
           }
           if (payload.type === "citations") callbacks.onCitations?.(payload.citations ?? []);
           else if (payload.type === "token") callbacks.onToken?.(payload.token ?? "");
-          else if (payload.type === "done") callbacks.onDone?.(payload.answer ?? "");
+          else if (payload.type === "done") callbacks.onDone?.(payload.answer ?? "", payload.citations);
           else if (payload.type === "error") callbacks.onError?.(payload.message ?? "Unknown error");
         },
       });

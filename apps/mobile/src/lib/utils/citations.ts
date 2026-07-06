@@ -1,10 +1,10 @@
 /**
- * Remove inline citation markers the LLM may emit: [^n], (^n), [n].
+ * Remove inline citation markers the LLM emits: [^n], (^n), [n].
  *
- * The current system prompt no longer asks for markers, but stored messages
- * from before the prompt change (and occasional model habit) still contain
- * them. [^n] and (^n) are citation-only syntax and are always stripped; [n]
- * is only stripped when n matches a known citation id, so plain text like
+ * The system prompt asks for [n] markers so the server can filter citations
+ * to the ones the answer actually uses; they are display noise afterwards.
+ * [^n] and (^n) are citation-only syntax and are always stripped; [n] is
+ * only stripped when n matches a known citation id, so plain text like
  * arr[0] survives. A single leading space is consumed with the marker.
  */
 export function stripCitationMarks(content: string, citationIds: ReadonlySet<number>): string {

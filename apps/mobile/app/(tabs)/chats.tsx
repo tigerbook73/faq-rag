@@ -24,11 +24,14 @@ function SessionRow({
 }) {
   return (
     <Swipeable renderRightActions={() => <DeleteAction onPress={onDelete} />}>
-      <Pressable onPress={onPress} className="border-b border-gray-100 bg-white px-4 py-3">
-        <Text className="text-base font-medium text-gray-900" numberOfLines={1}>
+      <Pressable
+        onPress={onPress}
+        className="border-b border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950"
+      >
+        <Text className="text-base font-medium text-gray-900 dark:text-gray-100" numberOfLines={1}>
           {session.title || "New chat"}
         </Text>
-        <Text className="mt-0.5 text-xs text-gray-500">{relativeDate(session.updatedAt)}</Text>
+        <Text className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{relativeDate(session.updatedAt)}</Text>
       </Pressable>
     </Swipeable>
   );
@@ -38,9 +41,9 @@ export default function ChatsScreen() {
   const { sessions, isLoading, handleNew, handleDelete, navigateToSession } = useChatSessions();
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3">
-        <Text className="text-lg font-semibold text-gray-800">Chats</Text>
+    <View className="flex-1 bg-white dark:bg-gray-950">
+      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+        <Text className="text-lg font-semibold text-gray-800 dark:text-gray-200">Chats</Text>
         <Button size="sm" onPress={() => void handleNew()}>
           + New Chat
         </Button>
@@ -48,7 +51,7 @@ export default function ChatsScreen() {
 
       {!isLoading && sessions.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-4">
-          <Text className="text-sm text-gray-500">No chats yet</Text>
+          <Text className="text-sm text-gray-500 dark:text-gray-400">No chats yet</Text>
           <Button onPress={() => void handleNew()}>New Chat</Button>
         </View>
       ) : (
