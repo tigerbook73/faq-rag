@@ -10,6 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useSWR from "swr";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -39,7 +40,7 @@ export default function ChatScreen() {
 
   if (isSessionLoading || !sessionData) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-gray-950">
         <Stack.Screen options={{ headerShown: true, title: "Chat" }} />
         <ActivityIndicator />
       </View>
@@ -53,6 +54,7 @@ export default function ChatScreen() {
 
 function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialSession: ChatSession }) {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
   const { provider, setProvider } = useProvider();
 
   const [session, setSession] = useState<ChatSession | null>(initialSession);
@@ -109,7 +111,7 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-gray-950">
       <Stack.Screen
         options={{
           headerShown: true,
@@ -118,10 +120,10 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
           headerRight: () => (
             <Pressable
               onPress={() => setProviderSheetVisible(true)}
-              className="rounded-lg border border-gray-200 px-2.5 py-1"
+              className="rounded-lg border border-gray-200 px-2.5 py-1 dark:border-gray-700"
               testID="provider-button"
             >
-              <Text className="text-xs font-medium text-gray-700">{PROVIDER_LABEL[provider]}</Text>
+              <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">{PROVIDER_LABEL[provider]}</Text>
             </Pressable>
           ),
         }}
@@ -134,7 +136,9 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
       >
         {messages.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
-            <Text className="text-center text-sm text-gray-500">Ask a question about your documents</Text>
+            <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
+              Ask a question about your documents
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -156,23 +160,23 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
         )}
 
         <View
-          className="flex-row items-end gap-2 border-t border-gray-100 px-4 pt-2"
+          className="flex-row items-end gap-2 border-t border-gray-100 px-4 pt-2 dark:border-gray-800"
           style={{ paddingBottom: Math.max(insets.bottom, 8) }}
         >
           <TextInput
             value={input}
             onChangeText={setInput}
             placeholder="Ask a question…"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colorScheme === "dark" ? "#6b7280" : "#9ca3af"}
             multiline
-            className="max-h-32 min-h-10 flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900"
+            className="max-h-32 min-h-10 flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:text-gray-100"
             editable={!loading}
             testID="chat-input"
           />
           <Pressable
             onPress={handleSend}
             disabled={loading || !input.trim()}
-            className={`rounded-xl px-4 py-2.5 ${loading || !input.trim() ? "bg-gray-300" : "bg-blue-600"}`}
+            className={`rounded-xl px-4 py-2.5 ${loading || !input.trim() ? "bg-gray-300 dark:bg-gray-700" : "bg-blue-600"}`}
             testID="chat-send"
           >
             <Text className="text-sm font-medium text-white">{loading ? "…" : "Send"}</Text>

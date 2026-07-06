@@ -57,13 +57,14 @@ describe("streamChat", () => {
       body: sseBody([
         frame({ type: "citations", citations }),
         frame({ type: "token", token: "Hi" }),
-        frame({ type: "done", answer: "Hi" }),
+        frame({ type: "done", answer: "Hi", citations }),
       ]),
     });
 
     const onCitations = jest.fn();
     const onToken = jest.fn();
-    const callbacks: StreamChatCallbacks = { onCitations, onToken };
+    const onDone = jest.fn();
+    const callbacks: StreamChatCallbacks = { onCitations, onToken, onDone };
     const done = waitFor(callbacks, "onDone");
 
     streamChat({ question: "q", provider: "claude", history: [] }, callbacks);
@@ -71,6 +72,7 @@ describe("streamChat", () => {
 
     expect(onCitations).toHaveBeenCalledWith(citations);
     expect(onToken).toHaveBeenCalledWith("Hi");
+    expect(onDone).toHaveBeenCalledWith("Hi", citations);
   });
 
   it("dispatches an error event from the stream", async () => {

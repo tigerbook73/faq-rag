@@ -15,9 +15,10 @@ interface Props {
 }
 
 // Remove inline citation markers ([^n], (^n), [n]) before rendering. The
-// system prompt no longer asks for them, but stored messages from before the
-// prompt change still contain them. [n] is only stripped when n matches a
-// known citation id, so plain text like arr[0] survives.
+// system prompt asks for [n] markers so the server can filter citations to
+// the ones the answer actually uses; they are display noise afterwards. [n]
+// is only stripped when n matches a known citation id, so plain text like
+// arr[0] survives.
 function stripCitationMarks(content: string, citations?: Citation[]): string {
   const ids = new Set(citations?.map((c) => c.id) ?? []);
   return content

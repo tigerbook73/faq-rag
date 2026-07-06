@@ -45,7 +45,7 @@ export async function mockChatRoute(page: Page): Promise<void> {
       sse({ type: "citations", citations: MOCK_CITATIONS, provider: "claude" }) +
       sse({ type: "token", token: "Employees receive " }) +
       sse({ type: "token", token: "15 vacation days per year. [1]" }) +
-      sse({ type: "done", answer: MOCK_ANSWER });
+      sse({ type: "done", answer: MOCK_ANSWER, citations: MOCK_CITATIONS });
 
     route.fulfill({
       status: 200,

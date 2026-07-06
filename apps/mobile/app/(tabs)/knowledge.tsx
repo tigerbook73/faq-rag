@@ -8,11 +8,11 @@ import { formatBytes } from "../../src/lib/utils/format";
 import { relativeDate } from "../../src/lib/utils/relative-date";
 
 const STATUS_STYLE: Record<DocumentItem["status"], { badge: string; text: string; label: string }> = {
-  indexed: { badge: "bg-green-100", text: "text-green-700", label: "indexed" },
-  indexing: { badge: "bg-blue-100", text: "text-blue-700", label: "indexing" },
-  failed: { badge: "bg-red-100", text: "text-red-700", label: "failed" },
-  pending: { badge: "bg-gray-100", text: "text-gray-600", label: "pending" },
-  uploaded: { badge: "bg-gray-100", text: "text-gray-600", label: "uploaded" },
+  indexed: { badge: "bg-green-100 dark:bg-green-950", text: "text-green-700 dark:text-green-400", label: "indexed" },
+  indexing: { badge: "bg-blue-100 dark:bg-blue-950", text: "text-blue-700 dark:text-blue-400", label: "indexing" },
+  failed: { badge: "bg-red-100 dark:bg-red-950", text: "text-red-700 dark:text-red-400", label: "failed" },
+  pending: { badge: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-300", label: "pending" },
+  uploaded: { badge: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-300", label: "uploaded" },
 };
 
 function StatusBadge({ status }: { status: DocumentItem["status"] }) {
@@ -47,27 +47,27 @@ const DocumentRow = memo(function DocumentRow({
       onPress={() => onPress(doc)}
       onLongPress={() => onLongPress(doc)}
       delayLongPress={400}
-      className="border-b border-gray-100 bg-white px-4 py-3 active:bg-gray-50"
+      className="border-b border-gray-100 bg-white px-4 py-3 active:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:active:bg-gray-900"
       testID={`doc-row-${doc.id}`}
     >
       <View className="flex-row items-center justify-between gap-2">
         <View className="flex-1 flex-row items-center gap-2">
-          <Text className="shrink text-sm font-medium text-gray-900" numberOfLines={1}>
+          <Text className="shrink text-sm font-medium text-gray-900 dark:text-gray-100" numberOfLines={1}>
             {doc.name}
           </Text>
           {doc.isBuiltIn && (
-            <View className="rounded-full border border-gray-200 px-1.5 py-0.5">
-              <Text className="text-[10px] text-gray-500">built-in</Text>
+            <View className="rounded-full border border-gray-200 px-1.5 py-0.5 dark:border-gray-700">
+              <Text className="text-[10px] text-gray-500 dark:text-gray-400">built-in</Text>
             </View>
           )}
         </View>
         <StatusBadge status={doc.status} />
       </View>
-      <Text className="mt-1 text-xs text-gray-500">
+      <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
         {formatBytes(doc.sizeBytes)} · {chunkLabel(doc)} · {relativeDate(new Date(doc.createdAt).getTime())}
       </Text>
       {doc.status === "failed" && expanded && doc.errorMsg && (
-        <Text className="mt-1.5 text-xs text-red-600">{doc.errorMsg}</Text>
+        <Text className="mt-1.5 text-xs text-red-600 dark:text-red-400">{doc.errorMsg}</Text>
       )}
     </Pressable>
   );
@@ -88,28 +88,28 @@ function DocumentActionSheet({
   return (
     <Modal visible={doc !== null} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-        <Pressable className="rounded-t-2xl bg-white pb-8 pt-2" onPress={(e) => e.stopPropagation()}>
-          <Text className="px-5 py-3 text-xs font-medium uppercase text-gray-400" numberOfLines={1}>
+        <Pressable className="rounded-t-2xl bg-white pb-8 pt-2 dark:bg-gray-900" onPress={(e) => e.stopPropagation()}>
+          <Text className="px-5 py-3 text-xs font-medium uppercase text-gray-400 dark:text-gray-500" numberOfLines={1}>
             {doc?.name}
           </Text>
           <Pressable
-            className={`px-5 py-3.5 active:bg-gray-50 ${canReindex ? "" : "opacity-40"}`}
+            className={`px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800 ${canReindex ? "" : "opacity-40"}`}
             disabled={!canReindex}
             onPress={() => {
               onClose();
               onReindex();
             }}
           >
-            <Text className="text-base text-gray-800">Reindex</Text>
+            <Text className="text-base text-gray-800 dark:text-gray-200">Reindex</Text>
           </Pressable>
           <Pressable
-            className="px-5 py-3.5 active:bg-gray-50"
+            className="px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800"
             onPress={() => {
               onClose();
               onDelete();
             }}
           >
-            <Text className="text-base text-red-600">Delete</Text>
+            <Text className="text-base text-red-600 dark:text-red-400">Delete</Text>
           </Pressable>
         </Pressable>
       </Pressable>
@@ -143,9 +143,9 @@ export default function KnowledgeScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3">
-        <Text className="text-lg font-semibold text-gray-800">Knowledge</Text>
+    <View className="flex-1 bg-white dark:bg-gray-950">
+      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+        <Text className="text-lg font-semibold text-gray-800 dark:text-gray-200">Knowledge</Text>
         <Pressable
           onPress={() => void pickAndUpload()}
           disabled={uploadState.phase !== "idle" && uploadState.phase !== "error"}
@@ -162,7 +162,7 @@ export default function KnowledgeScreen() {
         </View>
       ) : documents.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-sm text-gray-500">No documents yet</Text>
+          <Text className="text-center text-sm text-gray-500 dark:text-gray-400">No documents yet</Text>
         </View>
       ) : (
         <FlatList

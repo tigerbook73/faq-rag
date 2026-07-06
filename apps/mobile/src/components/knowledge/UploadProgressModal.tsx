@@ -32,34 +32,34 @@ export function UploadProgressModal({ state, onDismiss }: { state: UploadState; 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={isError ? onDismiss : undefined}>
       <View className="flex-1 items-center justify-center bg-black/40 px-8">
-        <View className="w-full max-w-sm rounded-2xl bg-white p-5">
-          <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+        <View className="w-full max-w-sm rounded-2xl bg-white p-5 dark:bg-gray-900">
+          <Text className="text-sm font-semibold text-gray-900 dark:text-gray-100" numberOfLines={1}>
             {state.fileName ?? "Upload"}
           </Text>
 
           {isError ? (
             <>
-              <Text className="mt-3 text-sm text-red-600" testID="upload-error">
+              <Text className="mt-3 text-sm text-red-600 dark:text-red-400" testID="upload-error">
                 {state.error}
               </Text>
               <Pressable
                 onPress={onDismiss}
-                className="mt-4 self-end rounded-lg bg-gray-100 px-4 py-2"
+                className="mt-4 self-end rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-800"
                 testID="upload-dismiss"
               >
-                <Text className="text-sm font-medium text-gray-700">关闭</Text>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">关闭</Text>
               </Pressable>
             </>
           ) : (
             <>
               <View className="mt-3 flex-row items-center gap-2">
                 <ActivityIndicator size="small" />
-                <Text className="text-sm text-gray-600" testID="upload-phase">
+                <Text className="text-sm text-gray-600 dark:text-gray-300" testID="upload-phase">
                   {phaseLabel(state)}
                 </Text>
               </View>
               {fraction !== null && (
-                <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                   <View className="h-full rounded-full bg-blue-600" style={{ width: `${fraction * 100}%` }} />
                 </View>
               )}

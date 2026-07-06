@@ -7,7 +7,7 @@ const buttonStyle = tva({
   variants: {
     variant: {
       solid: "bg-blue-600",
-      outline: "bg-transparent border border-blue-600",
+      outline: "bg-transparent border border-blue-600 dark:border-blue-400",
       ghost: "bg-transparent",
     },
     size: {
@@ -24,8 +24,8 @@ const textStyle = tva({
   variants: {
     variant: {
       solid: "text-white",
-      outline: "text-blue-600",
-      ghost: "text-blue-600",
+      outline: "text-blue-600 dark:text-blue-400",
+      ghost: "text-blue-600 dark:text-blue-400",
     },
   },
   defaultVariants: { variant: "solid" },

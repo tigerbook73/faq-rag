@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { validationErrorResponse } from "@/lib/server/api";
 import { retrieve } from "@/lib/server/retrieval/query";
-import { sanitizeChunkContent } from "@/lib/server/retrieval/utils";
+import { sanitizeChunkContent, filterCitationsByAnswer } from "@/lib/server/retrieval/utils";
 import { getProvider } from "@/lib/server/llm/router";
 import { SYSTEM_PROMPT } from "@/lib/server/llm/prompts";
 import { truncateHistory } from "@/lib/server/llm/truncate";
@@ -68,7 +68,10 @@ export async function POST(req: NextRequest) {
         }
 
         log.info({ llm_total_ms: Date.now() - tLlm, answer_len: answer.length }, "llm done");
-        const donePayload = `data: ${JSON.stringify({ type: "done", answer })}\n\n`;
+        // The initial "citations" event carries every retrieved chunk; only
+        // after the full answer exists can we tell which ones were cited.
+        const usedCitations = filterCitationsByAnswer(answer, citations);
+        const donePayload = `data: ${JSON.stringify({ type: "done", answer, citations: usedCitations })}\n\n`;
         controller.enqueue(encoder.encode(donePayload));
       } catch (err) {
         log.error({ err }, "llm error");
