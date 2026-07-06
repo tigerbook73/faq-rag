@@ -68,12 +68,12 @@ export function ChatDrawerContent(props: DrawerContentComponentProps) {
       </DrawerContentScrollView>
 
       <View
-        className="border-t border-gray-100 px-4 pt-3 dark:border-gray-800"
+        className="items-start border-t border-gray-100 px-4 pt-3 dark:border-gray-800"
         style={{ paddingBottom: Math.max(insets.bottom, 12) }}
       >
         <Pressable
           onPress={closeAndRun(() => void handleNew())}
-          className="flex-row items-center justify-center gap-2 rounded-full bg-blue-600 py-2.5 active:bg-blue-700"
+          className="flex-row items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 active:bg-blue-700"
         >
           <Ionicons name="add" size={18} color="#fff" />
           <Text className="text-sm font-semibold text-white">New Chat</Text>
