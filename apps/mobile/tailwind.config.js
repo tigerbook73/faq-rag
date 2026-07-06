@@ -8,6 +8,6 @@ module.exports = {
   // directly on web; native is unaffected either way (its runtime resolves
   // dark: variants from Appearance directly, regardless of this setting).
   darkMode: "media",
-  content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: ["./src/**/*.{ts,tsx}"],
   presets: [require("nativewind/preset")],
 };

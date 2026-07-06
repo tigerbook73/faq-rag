@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { Stack } from "expo-router";
 import Constants from "expo-constants";
-import { useProvider, PROVIDER_LABEL, PROVIDERS } from "../src/context/provider-context";
+import { useProvider, PROVIDER_LABEL, PROVIDERS } from "../context/provider-context";
 
 export default function AboutScreen() {
   const { provider } = useProvider();

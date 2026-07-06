@@ -1,7 +1,7 @@
 import { useWindowDimensions } from "react-native";
 import { Drawer } from "expo-router/drawer";
 import { useColorScheme } from "nativewind";
-import { ChatDrawerContent } from "../../src/components/chat/ChatDrawerContent";
+import { ChatDrawerContent } from "../../components/chat/ChatDrawerContent";
 
 export default function DrawerLayout() {
   const { colorScheme } = useColorScheme();
@@ -21,6 +21,7 @@ export default function DrawerLayout() {
       screenOptions={{
         headerShown: false,
         drawerType: "front",
+        swipeEnabled: true,
         overlayColor: "rgba(0,0,0,0.4)",
         drawerStyle: {
           width: drawerWidth,
@@ -28,6 +29,7 @@ export default function DrawerLayout() {
         },
       }}
     >
+      <Drawer.Screen name="chat/new" />
       <Drawer.Screen name="chat/[id]" />
     </Drawer>
   );

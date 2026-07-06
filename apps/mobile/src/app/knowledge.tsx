@@ -4,13 +4,13 @@ import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import type { DocumentItem } from "@faq-rag/shared";
-import { useDocuments } from "../src/hooks/useDocuments";
-import { useDocumentUpload } from "../src/hooks/useDocumentUpload";
-import { UploadProgressModal } from "../src/components/knowledge/UploadProgressModal";
-import { IconButton } from "../src/components/ui/icon-button";
-import { Badge } from "../src/components/ui/badge";
-import { formatBytes } from "../src/lib/utils/format";
-import { relativeDate } from "../src/lib/utils/relative-date";
+import { useDocuments } from "../hooks/useDocuments";
+import { useDocumentUpload } from "../hooks/useDocumentUpload";
+import { UploadProgressModal } from "../components/knowledge/UploadProgressModal";
+import { IconButton } from "../components/ui/icon-button";
+import { Badge } from "../components/ui/badge";
+import { formatBytes } from "../lib/utils/format";
+import { relativeDate } from "../lib/utils/relative-date";
 
 const STATUS_TONE: Record<DocumentItem["status"], { tone: "success" | "info" | "danger" | "neutral"; label: string }> =
   {

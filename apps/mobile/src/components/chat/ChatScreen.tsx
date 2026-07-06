@@ -9,69 +9,38 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
+import { useNavigation } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import useSWR from "swr";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import type { Citation, Message } from "@faq-rag/shared";
-import { getSession, type ChatSession } from "../../../src/lib/api/session";
-import { setLastChat, getDraft, setDraft } from "../../../src/lib/api/storage";
-import { MessageBubble } from "../../../src/components/chat/MessageBubble";
-import { CitationSheet } from "../../../src/components/chat/CitationSheet";
-import { ProviderSheet } from "../../../src/components/chat/ProviderSheet";
-import { IconButton } from "../../../src/components/ui/icon-button";
-import { useProvider, PROVIDER_LABEL } from "../../../src/context/provider-context";
-import { useStreamingChat } from "../../../src/hooks/useStreamingChat";
-import { useChatSessions } from "../../../src/hooks/useChatSessions";
+import type { ChatSession } from "../../lib/api/session";
+import { setLastChat, getDraft, setDraft } from "../../lib/api/storage";
+import { MessageBubble } from "./MessageBubble";
+import { CitationSheet } from "./CitationSheet";
+import { ProviderSheet } from "./ProviderSheet";
+import { IconButton } from "../ui/icon-button";
+import { useProvider, PROVIDER_LABEL } from "../../context/provider-context";
+import { useStreamingChat } from "../../hooks/useStreamingChat";
+import { useChatSessions } from "../../hooks/useChatSessions";
 
 // This screen is a direct child of the (drawer) group's Drawer navigator;
 // useNavigation()'s generic type doesn't know that, so this only narrows to
 // the drawer-specific method (openDrawer) that's actually available at runtime.
 type ChatDrawerNavigation = DrawerNavigationProp<Record<string, object | undefined>>;
 
-export default function ChatScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
-  const navigation = useNavigation<ChatDrawerNavigation>();
-  const insets = useSafeAreaInsets();
-
-  const { data: sessionData, isLoading: isSessionLoading } = useSWR<ChatSession | null>(
-    id ? `/api/sessions/${id}` : null,
-    () => getSession(id),
-    { revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false },
-  );
-
-  useEffect(() => {
-    // Session was deleted/pruned server-side; go back to "/" so it can
-    // validate chat:last and land on a usable session (there's no "/chats"
-    // list route to bounce to anymore).
-    if (!isSessionLoading && sessionData === null) router.replace("/");
-  }, [isSessionLoading, sessionData, router]);
-
-  if (isSessionLoading || !sessionData) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-gray-950">
-        <IconButton
-          icon="menu"
-          onPress={() => navigation.openDrawer()}
-          accessibilityLabel="Open menu"
-          className="absolute left-1"
-          style={{ top: insets.top }}
-        />
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  // key remounts the loaded screen (resetting its local state) when navigating
-  // between different chat sessions.
-  return <LoadedChatScreen key={sessionData.id} chatId={sessionData.id} initialSession={sessionData} />;
-}
-
-function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialSession: ChatSession }) {
+// Shared by app/(drawer)/chat/[id].tsx (existing session) and
+// app/(drawer)/chat/new.tsx (chatId=null, ephemeral — nothing is persisted
+// server-side until the first message is sent, mirroring apps/web's /chat/new).
+export function LoadedChatScreen({
+  chatId,
+  initialSession,
+}: {
+  chatId: string | null;
+  initialSession: ChatSession | null;
+}) {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const { provider, setProvider } = useProvider();
@@ -79,7 +48,7 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
   const { handleNew } = useChatSessions();
 
   const [session, setSession] = useState<ChatSession | null>(initialSession);
-  const [messages, setMessages] = useState<Message[]>(initialSession.messages);
+  const [messages, setMessages] = useState<Message[]>(initialSession?.messages ?? []);
   const [input, setInput] = useState("");
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [providerSheetVisible, setProviderSheetVisible] = useState(false);
@@ -90,8 +59,12 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
   const { loading, send } = useStreamingChat({ chatId, messages, setMessages, session, setSession, provider });
 
   useEffect(() => {
-    void setLastChat(chatId);
+    if (chatId) void setLastChat(chatId);
   }, [chatId]);
+
+  // Draft is keyed by chatId, falling back to "new" for the not-yet-created
+  // chat (mirrors apps/web's STORAGE_KEYS.DRAFT(chatId ?? "new")).
+  const draftKey = chatId ?? "new";
 
   // Restore / persist the input draft (debounced), keyed per chat. Persisting
   // must wait for the restore to settle: the initial empty input would
@@ -99,26 +72,26 @@ function LoadedChatScreen({ chatId, initialSession }: { chatId: string; initialS
   // and can wipe the stored draft.
   const [draftRestored, setDraftRestored] = useState(false);
   useEffect(() => {
-    void getDraft(chatId)
+    void getDraft(draftKey)
       .then((draft) => {
         if (draft) setInput((current) => current || draft);
       })
       .finally(() => setDraftRestored(true));
-  }, [chatId]);
+  }, [draftKey]);
 
   useEffect(() => {
     if (!draftRestored) return;
-    const timer = setTimeout(() => void setDraft(chatId, input), 300);
+    const timer = setTimeout(() => void setDraft(draftKey, input), 300);
     return () => clearTimeout(timer);
-  }, [chatId, input, draftRestored]);
+  }, [draftKey, input, draftRestored]);
 
   const handleSend = useCallback(() => {
     const question = input.trim();
     if (!question || loading) return;
     setInput("");
-    void setDraft(chatId, "");
+    void setDraft(draftKey, "");
     void send(question);
-  }, [input, loading, chatId, send]);
+  }, [input, loading, draftKey, send]);
 
   const handleCitationClick = useCallback((c: Citation) => {
     setSelectedCitation(c);

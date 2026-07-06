@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
-import { randomUUID } from "expo-crypto";
-import { getLastChat } from "../src/lib/api/storage";
-import { getSession, createSession } from "../src/lib/api/session";
+import { getLastChat } from "../lib/api/storage";
+import { getSession } from "../lib/api/session";
 
 // There's no standalone chat-list route to land on anymore (the session list
-// lives inside the drawer), so "/" must always resolve to a concrete chat.
-// The stored chat:last id isn't trustworthy on its own — the session it
-// points at may have been deleted or pruned server-side — so it's verified
-// with getSession() before redirecting, falling back to creating a fresh
-// session when it's missing or gone.
+// lives inside the drawer), so "/" must resolve to either the last-used chat
+// or the ephemeral "new chat" screen. The stored chat:last id isn't
+// trustworthy on its own — the session it points at may have been deleted or
+// pruned server-side — so it's verified with getSession() before redirecting.
+// Falls back to /chat/new (not an eagerly-created session) when it's missing
+// or gone, mirroring apps/web's getLastChatHref().
 export default function Index() {
   const [href, setHref] = useState<string | null>(null);
 
@@ -25,8 +25,7 @@ export default function Index() {
           return;
         }
       }
-      const session = await createSession({ id: randomUUID() });
-      if (!cancelled) setHref(`/chat/${session.id}`);
+      if (!cancelled) setHref("/chat/new");
     }
 
     void resolve();
