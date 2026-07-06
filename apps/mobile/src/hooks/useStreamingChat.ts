@@ -4,7 +4,6 @@ import type { Message, Citation } from "@faq-rag/shared";
 import { streamChat, type Provider } from "../lib/api/chat";
 import { updateSession, type ChatSession } from "../lib/api/session";
 import { setLastChat } from "../lib/api/storage";
-import { CITATION_MARK_PATTERNS } from "../lib/utils/citations";
 
 const INTERRUPTED_MARK = "\n\n⚠️ _回答被中断_";
 
@@ -18,8 +17,8 @@ interface Params {
 }
 
 // Mobile port of apps/web/src/components/chat/useChatWindow.ts's
-// useStreamingChat: optimistic user message, SSE token streaming, citation
-// filtering by usage, and PATCH persistence after each turn.
+// useStreamingChat: optimistic user message, SSE token streaming, and PATCH
+// persistence after each turn.
 export function useStreamingChat({ chatId, messages, setMessages, session, setSession, provider }: Params) {
   const [loading, setLoading] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
@@ -109,13 +108,7 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
           },
           onDone: (answer) => {
             const finalContent = answer || assistantContent;
-            const usedNums = new Set(
-              CITATION_MARK_PATTERNS.flatMap((re) => [...finalContent.matchAll(re)]).map((m) => parseInt(m[1], 10)),
-            );
-            finish([
-              ...withUser,
-              { role: "assistant", content: finalContent, citations: citations.filter((c) => usedNums.has(c.id)) },
-            ]);
+            finish([...withUser, { role: "assistant", content: finalContent, citations }]);
           },
           onError: (message) => {
             const content = assistantContent ? assistantContent + INTERRUPTED_MARK : `⚠️ ${message}`;
