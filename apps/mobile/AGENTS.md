@@ -89,4 +89,4 @@ Provider 集合(Claude / DeepSeek / OpenAI)与 web 端完全一致,定义见 `..
 - **本地存储 key**:新增 key 时同步检查是否需要与 `apps/web/src/lib/client/constants.ts` 的 `STORAGE_KEYS` 保持命名一致,便于跨端理解。
 - **Schema 校验**:所有请求/响应校验都从 `@faq-rag/shared` 导入类型和 schema,不要在本包内重新定义 —— 需要新增或修改字段时去改 `packages/shared`,详见 `../../packages/shared/AGENTS.md`。
 - **无 DOM 环境**:本项目的 TS 配置是 `lib: ["es2020"]`(无 `dom`),访问 `window`/`location` 等 web-only API 前需要局部窄化类型(见 `src/lib/api/config.ts` 中 `getWebHost()` 的写法),不要引入全局 `Window` 声明。
-- **云端上传流程**:与 web 端一致,见 `../web/AGENTS.md` 的"云端上传流程"约定。
+- **上传流程**:与 web 端一致,见 `../web/AGENTS.md` 的"上传流程"约定。
