@@ -1,92 +1,65 @@
 # apps/mobile — @faq-rag/mobile
 
-Expo Router 应用,不含任何服务端代码 —— 每个屏幕都通过普通 HTTP 调用 `apps/web` 暴露的 `/api/*` 路由。与 web 端行为一致:无需登录、跨语言 RAG 问答;区别只是原生 UI 而非 webview。仓库整体结构见 `../../AGENTS.md`,后端 API 的实现细节见 `../web/AGENTS.md`。
+Expo Router / React Native 客户端。这里不放服务端代码;所有数据都通过普通 HTTP 调用 `apps/web` 的 `/api/*`。
 
-以下所有路径均相对于本目录(`apps/mobile/`),除非另有前缀说明。
-
----
+以下路径相对于 `apps/mobile/`。
 
 ## 命令
 
 ```bash
-pnpm dev            # expo start(按 w/i/a 切换 web/iOS/Android)
-pnpm android        # expo run:android
-pnpm ios            # expo run:ios
-pnpm lint           # expo lint --fix
+pnpm dev        # expo start
+pnpm android
+pnpm ios
+pnpm lint       # expo lint --fix
 pnpm typecheck
-pnpm format
-pnpm test           # jest --watchAll=false(jest-expo)
-pnpm verify         # lint && typecheck && format && test
+pnpm test       # jest --watchAll=false
+pnpm verify     # lint + typecheck + format + test
 ```
 
-单测运行单个文件:
+单测: `npx jest path/to/file.test.ts`。本包暂无 Playwright/e2e。
+
+涉及 NativeWind/Babel/Metro、workspace 依赖解析或 web fallback 上传时,额外跑:
 
 ```bash
-npx jest path/to/file.test.ts
+pnpm --filter @faq-rag/mobile exec expo export --platform web --output-dir /tmp/faq-rag-mobile-web-export
 ```
 
-无 Playwright/e2e 覆盖(暂缺)。
+## 架构边界
 
----
+- `src/app/_layout.tsx`: 根 Stack,主题、手势、键盘、bottom-sheet provider。
+- `src/app/(drawer)/_layout.tsx`: drawer navigator,只包 `chat/new` 与 `chat/[id]`。
+- `src/lib/api/*`: 对 web `/api/*` 的 fetch 封装;响应 schema 从 `@faq-rag/shared` 导入。
+- `src/hooks/use{ChatSessions,Documents,DocumentUpload,StreamingChat}.ts`: SWR 与业务流程封装。
 
-## 技术栈
+## API Host
 
-| 层次        | 选型                                                                                                                                                                       |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 框架        | Expo Router(React Native 0.86,React 19)                                                                                                                                    |
-| UI          | NativeWind(Tailwind)+ gluestack-ui 基础组件                                                                                                                                |
-| 组件库      | `src/components/ui/` 下的本地组件集(button、badge、icon-button、list-item、action-sheet、screen-header、gluestack-ui-provider)—— **不是** shadcn,不要照搬 web 端的组件结构 |
-| 状态/数据   | SWR + 自研 `src/lib/api/*` fetch 封装                                                                                                                                      |
-| 本地存储    | `@react-native-async-storage/async-storage`                                                                                                                                |
-| Schema 校验 | `@faq-rag/shared`(`packages/shared`)提供的 Zod schema                                                                                                                      |
-| 测试        | Jest(jest-expo 预设)                                                                                                                                                       |
+`src/lib/api/config.ts#getApiUrl()` 的顺序:
 
----
+1. `EXPO_PUBLIC_API_URL` 显式值优先,生产/EAS 必须设置。
+2. 本地开发自动从 Expo web `location.hostname` 或 Metro `Constants.expoConfig.hostUri` 推断 host,端口默认 `EXPO_PUBLIC_API_PORT || 3000`。
+3. 无法推断时直接抛错。不要静默回退到 `localhost`,真机会连错机器。
 
-## 架构要点
+## NativeWind / UI
 
-- **API host 解析**(`src/lib/api/config.ts` 的 `getApiUrl()`):
-  1. `EXPO_PUBLIC_API_URL` 一旦设置,始终优先生效(生产/EAS 构建必须设置,因为没有 dev server 可供自动探测)。
-  2. 否则自动探测:Expo web 下取 `window.location.hostname`,原生端取 Metro 的 `Constants.expoConfig.hostUri` 中的 host,再拼上 `EXPO_PUBLIC_API_PORT`(默认 `3000`)。
-  3. 两者都拿不到时直接抛错并给出可执行的修复建议 —— **刻意不做**"静默回退到 localhost",因为那种默认值只会在真机上出问题,而真机恰恰是最难调试的场景。
+- 本包用 NativeWind + 本地 `src/components/ui/*`,不是 shadcn;不要复制 web 组件结构。
+- NativeWind v4 在这里仍需要 `tailwind.config.js`;不要按 web 的 Tailwind v4 CSS-first 模式删除它。
+- `babel.config.js` 中 `nativewind/babel` 是 preset 位置;`metro.config.js` 用 `withNativeWind(config, { input: "./global.css" })`。
+- 抽屉宽度用固定计算值 `min(windowWidth * 0.84, 320)`,不要改回百分比 + maxWidth;react-native-web 会出现测量和动画宽度不一致。
+- 改间距、字号、头部、抽屉或点击区域前先读 `../../docs/ui-system.md` 的 Mobile Rules。
 
-- **导航结构**:`src/app/_layout.tsx` 是根 Stack(主题、手势处理、键盘控制器、bottom-sheet provider)。`src/app/(drawer)/_layout.tsx` 用 `expo-router/drawer` 把 `chat/new` 和 `chat/[id]` 包在抽屉导航里;抽屉宽度用固定像素值计算(`min(windowWidth * 0.84, 320)`),而不是百分比 —— 因为 react-native-web 下,抽屉的实际布局宽度会忽略 `maxWidth`,但展开动画又会遵守它,用百分比会导致两者不一致,抽屉卡在半开状态。
+## 本地状态
 
-- **主题**:NativeWind 的 color scheme 同时驱动 `dark:` Tailwind variant 和导航主题。`_layout.tsx` 中显式调用 `SystemUI.setBackgroundColorAsync` 按当前主题设置原生根视图背景色 —— 否则状态栏和 home indicator 区域背后的原生根视图会一直保持系统默认的白色,不跟随 app 主题切换。
+- `AsyncStorage` 存 `chat:last`、`chat:draft:<id>`、`chat:provider`;key 见 `src/lib/api/storage.ts`。
+- 草稿恢复是异步的。保存前必须确认当前 `draftKey` 已恢复完成,避免切换会话时旧输入覆盖/删除新会话草稿。
+- 新增跨端 key 时先看 `@faq-rag/shared` 的 `STORAGE_KEYS`;mobile-only key 留在本包。
 
-- **数据层**:`src/hooks/use{ChatSessions,Documents,DocumentUpload,StreamingChat}.ts` 用 SWR 包装 `src/lib/api/*` 的 fetch client。`src/lib/api/utils/crypto.ts` 用 `expo-crypto` 做哈希(web 端对应用 Node 的 `crypto`)。
+## 上传与聊天
 
-- **测试**:`src/lib/api/__tests__/*` 覆盖了 fetch client(jest-expo)。
+- 上传流程必须与 web 一致:prepare -> signed URL upload -> index -> embedBatch loop -> SWR refresh。
+- web fallback 上传要保持 Supabase multipart 形状:空字段名 file + `cacheControl=3600`,不要改成裸 PUT。
+- 聊天 SSE 用 `eventsource-parser`;mobile 解析逻辑应与 web 保持同一事件语义(`citations`/`token`/`done`/`error`)。
+- `expo-file-system` `File.upload()` 是 native 路径;web 由 picker 暴露 DOM `File`,相关类型在 `winter-runtime.d.ts`。
 
----
+## TypeScript 环境
 
-## 会话与本地存储
-
-会话数据结构与 web 端一致(见 `../web/AGENTS.md` 的"会话持久化"),但本地缓存机制不同:
-
-- 用 `AsyncStorage`(而非 web 端的 localStorage)存储 `chat:last`、按会话的草稿(`chat:draft:<id>`)、上次选择的 provider(`chat:provider`)—— 见 `src/lib/api/storage.ts`。key 命名有意与 `apps/web/src/lib/client/constants.ts` 的 `STORAGE_KEYS` 保持一致。
-- `src/lib/api/{session,chat,document}.ts` 是对 `/api/*` 路由的薄 `fetch` 封装,用 `@faq-rag/shared` 的 Zod schema 校验响应。
-- 没有 SWR fallback 预取(没有服务端组件)—— 会话列表和单会话数据都是冷启动后在客户端经 SWR 拉取。
-- 聊天流式响应(`src/lib/api/chat.ts`)与 web 端一样依赖 `eventsource-parser` 解析 SSE,两端解析逻辑保持一致。
-
----
-
-## LLM Provider
-
-Provider 集合(Claude / DeepSeek / OpenAI)与 web 端完全一致,定义见 `../web/AGENTS.md` 的"LLM Provider 抽象"。Mobile 端通过 `ProviderSheet` 选择,状态保存在 `src/context/provider-context.tsx`(镜像 web 端的 provider context)。
-
----
-
-## UI 尺寸体系(mobile 端落地)
-
-修改间距、字号、点击区域大小之前,先读 `../../docs/ui-system.md` 中的 "Mobile Rules" 小节。本地组件库(`src/components/ui/*`)是产品自有的 gluestack-ui 封装,不是 shadcn,尺寸调整直接改这里的组件,不要去找 web 端的生成式组件。NativeWind v4 在本项目中仍需要 `tailwind.config.js`(与 web 端 Tailwind v4 的纯 CSS-first 配置不同,这是 NativeWind 的限制,不要尝试删除)。
-
----
-
-## 关键约定
-
-- **API host**:见上方"架构要点"—— 生产/EAS 构建必须显式设置 `EXPO_PUBLIC_API_URL`(参考 `.env.example`),不要依赖自动探测。
-- **本地存储 key**:新增 key 时同步检查是否需要与 `apps/web/src/lib/client/constants.ts` 的 `STORAGE_KEYS` 保持命名一致,便于跨端理解。
-- **Schema 校验**:所有请求/响应校验都从 `@faq-rag/shared` 导入类型和 schema,不要在本包内重新定义 —— 需要新增或修改字段时去改 `packages/shared`,详见 `../../packages/shared/AGENTS.md`。
-- **无 DOM 环境**:本项目的 TS 配置是 `lib: ["es2020"]`(无 `dom`),访问 `window`/`location` 等 web-only API 前需要局部窄化类型(见 `src/lib/api/config.ts` 中 `getWebHost()` 的写法),不要引入全局 `Window` 声明。
-- **上传流程**:与 web 端一致,见 `../web/AGENTS.md` 的"上传流程"约定。
+`tsconfig` 不包含 DOM lib。访问 `window`/`location` 等 web-only API 时用局部窄化,不要新增全局 `Window` 声明。
