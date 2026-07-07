@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PROVIDER, DEFAULT_PROVIDER } from "../constants/providers";
 
 export const ChatHistoryMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -6,13 +7,12 @@ export const ChatHistoryMessageSchema = z.object({
 });
 export type ChatHistoryMessage = z.infer<typeof ChatHistoryMessageSchema>;
 
-// Provider values must be kept in sync with apps/web/src/lib/server/llm/providers.ts's
-// PROVIDER const — packages/shared cannot import from an app, so this list is duplicated.
-// Default matches the project-wide fallback (claude), not an env-driven value, since
-// NEXT_PUBLIC_DEFAULT_PROVIDER is a Next.js-only mechanism unavailable to this package.
+// Server-side fallback when the request omits `provider`. Fixed to the shared
+// DEFAULT_PROVIDER (not env-driven) — per-app UI default selection is a
+// separate concern, handled by each app's provider-context using its own env var.
 export const ChatRequestInputSchema = z.object({
   question: z.string().min(1).max(4000),
-  provider: z.enum(["claude", "deepseek", "openai"]).default("claude"),
+  provider: z.enum([PROVIDER.CLAUDE, PROVIDER.DEEPSEEK, PROVIDER.OPENAI]).default(DEFAULT_PROVIDER),
   history: z.array(ChatHistoryMessageSchema).max(50).default([]),
 });
 export type ChatRequestInput = z.infer<typeof ChatRequestInputSchema>;

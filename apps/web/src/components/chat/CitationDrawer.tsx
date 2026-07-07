@@ -3,7 +3,7 @@
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import type { Citation } from "@/lib/shared/schemas/session";
+import type { Citation } from "@faq-rag/shared";
 
 interface Props {
   open: boolean;

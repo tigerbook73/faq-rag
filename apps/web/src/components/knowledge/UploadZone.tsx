@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
-import { type DocumentItem } from "@/lib/shared/schemas/document";
+import { type DocumentItem } from "@faq-rag/shared";
 import { prepareUpload, confirmIndex } from "@/lib/client/documents-api";
 import { useEmbedService } from "@/context/embed-service-context";
 

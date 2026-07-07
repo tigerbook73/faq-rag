@@ -4,7 +4,7 @@ import {
   type PrepareUploadInput,
   type PrepareUploadOutput,
   type EmbedBatchResult,
-} from "../shared/schemas/document";
+} from "@faq-rag/shared";
 
 export async function prepareUpload(input: PrepareUploadInput): Promise<PrepareUploadOutput> {
   const res = await fetch("/api/documents/prepare", {

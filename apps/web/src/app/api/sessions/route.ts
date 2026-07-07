@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CreateSessionInputSchema } from "@/lib/shared/schemas/session";
+import { CreateSessionInputSchema } from "@faq-rag/shared";
 import { validationErrorResponse } from "@/lib/server/api";
 import { createSession, listSessions } from "@/lib/server/data/sessions";
 

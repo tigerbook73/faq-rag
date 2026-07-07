@@ -8,8 +8,8 @@ import { mutate as swrMutate } from "swr";
 import { STORAGE_KEYS } from "@/lib/client/constants";
 import { createParser } from "eventsource-parser";
 import { toast } from "sonner";
-import type { Citation } from "@/lib/shared/schemas/session";
-import type { Provider } from "@/lib/server/llm/providers";
+import type { Citation } from "@faq-rag/shared";
+import type { Provider } from "@faq-rag/shared";
 import { startChatStream } from "@/lib/client/session-api";
 
 // ── Draft persistence ──────────────────────────────────────────────────────────

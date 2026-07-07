@@ -1,5 +1,5 @@
 import { getProvider } from "./router";
-import { PROVIDER } from "./providers";
+import { PROVIDER } from "@faq-rag/shared";
 
 // Mocking providers to avoid actual client initialization
 jest.mock("./openai", () => ({

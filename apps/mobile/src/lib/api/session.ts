@@ -1,47 +1,18 @@
 import { z } from "zod";
 import {
-  MessageSchema,
-  SessionSummarySchema,
   CreateSessionInputSchema,
   UpdateSessionInputSchema,
+  SessionRawSchema,
+  toSession,
   type Message,
   type Citation,
   type CreateSessionInput,
   type UpdateSessionInput,
+  type ChatSession,
 } from "@faq-rag/shared";
 import { getApiUrl } from "./config";
 
-export type { Message, Citation };
-
-export interface ChatSession {
-  id: string;
-  title: string;
-  messages: Message[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-// Full session shape returned by GET /api/sessions/[id] (list endpoint omits messages).
-const SessionRawSchema = SessionSummarySchema.extend({
-  messages: z.array(z.object({ role: z.string(), content: z.string(), citations: z.unknown().optional() })).optional(),
-});
-
-function toSession(raw: z.infer<typeof SessionRawSchema>): ChatSession {
-  return {
-    id: raw.id,
-    title: raw.title,
-    createdAt: new Date(raw.createdAt as string | Date).getTime(),
-    updatedAt: new Date(raw.updatedAt as string | Date).getTime(),
-    messages: (raw.messages ?? []).map((m) => {
-      const parsed = MessageSchema.safeParse({
-        role: m.role,
-        content: m.content,
-        citations: Array.isArray(m.citations) ? m.citations : undefined,
-      });
-      return parsed.success ? parsed.data : { role: m.role as "user" | "assistant", content: m.content };
-    }),
-  };
-}
+export type { Message, Citation, ChatSession };
 
 export async function listSessions(): Promise<ChatSession[]> {
   const res = await fetch(`${getApiUrl()}/api/sessions`);

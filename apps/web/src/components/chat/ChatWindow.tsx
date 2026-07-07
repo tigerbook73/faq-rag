@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { MessageBubble } from "./MessageBubble";
 import { CitationDrawer } from "./CitationDrawer";
-import { type Citation } from "@/lib/shared/schemas/session";
+import { type Citation } from "@faq-rag/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { type Message, type ChatSession, fetchSession } from "@/lib/client/session-api";

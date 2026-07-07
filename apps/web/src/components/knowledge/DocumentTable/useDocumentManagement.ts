@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { config } from "@/lib/shared/config";
-import { type DocumentItem as Document } from "@/lib/shared/schemas/document";
+import { type DocumentItem as Document } from "@faq-rag/shared";
 import { deleteDocument, reindexDocument } from "@/lib/client/documents-api";
 import { fetcher } from "@/lib/client/swr";
 import { useEmbedService } from "@/context/embed-service-context";

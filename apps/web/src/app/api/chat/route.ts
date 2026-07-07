@@ -7,7 +7,7 @@ import { getProvider } from "@/lib/server/llm/router";
 import { SYSTEM_PROMPT } from "@/lib/server/llm/prompts";
 import { truncateHistory } from "@/lib/server/llm/truncate";
 import { logger } from "@/lib/server/logger";
-import { ChatRequestInputSchema, type ChatRequestInput } from "@/lib/shared/schemas/chat";
+import { ChatRequestInputSchema, type ChatRequestInput } from "@faq-rag/shared";
 
 export async function POST(req: NextRequest) {
   const parsed = ChatRequestInputSchema.safeParse(await req.json());

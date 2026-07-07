@@ -4,7 +4,7 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import type { Citation } from "@/lib/shared/schemas/session";
+import type { Citation } from "@faq-rag/shared";
 
 interface Props {
   role: "user" | "assistant";

@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
-import { PROVIDER, type Provider } from "@/lib/server/llm/providers";
+import type { Provider } from "@faq-rag/shared";
+import { config } from "@/lib/shared/config";
 
 interface ProviderContextValue {
   provider: Provider;
@@ -9,14 +10,12 @@ interface ProviderContextValue {
 }
 
 const ProviderContext = createContext<ProviderContextValue>({
-  provider: PROVIDER.DEEPSEEK,
+  provider: config.llm.defaultProvider,
   setProvider: () => {},
 });
 
-const defaultProvider = (process.env.NEXT_PUBLIC_DEFAULT_PROVIDER as Provider | undefined) ?? PROVIDER.DEEPSEEK;
-
 export function ProviderContextProvider({ children }: { children: React.ReactNode }) {
-  const [provider, setProviderState] = useState<Provider>(defaultProvider);
+  const [provider, setProviderState] = useState<Provider>(config.llm.defaultProvider);
   const setProvider = useCallback((p: Provider) => setProviderState(p), []);
   return <ProviderContext.Provider value={{ provider, setProvider }}>{children}</ProviderContext.Provider>;
 }
