@@ -1,5 +1,6 @@
 import { useState, useCallback, memo } from "react";
-import { View, Text, FlatList, Pressable, Modal, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, Pressable, Modal, ActivityIndicator, RefreshControl } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
@@ -204,7 +205,7 @@ export default function KnowledgeScreen() {
           <Text className="text-center text-sm text-gray-500 dark:text-gray-400">No documents yet</Text>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={documents}
           keyExtractor={(d) => d.id}
           renderItem={({ item }) => (

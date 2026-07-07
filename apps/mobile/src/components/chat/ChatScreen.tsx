@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
 import { useNavigation } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
@@ -50,7 +51,6 @@ export function LoadedChatScreen({
   // between the input row and the keyboard.
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
 
-  const listRef = useRef<FlatList<Message>>(null);
   const citationSheetRef = useRef<BottomSheetModal>(null);
 
   const { loading, send } = useStreamingChat({ chatId, messages, setMessages, session, setSession, provider });
@@ -95,12 +95,6 @@ export function LoadedChatScreen({
     citationSheetRef.current?.present();
   }, []);
 
-  const scrollToEnd = useCallback(() => {
-    // animated: false — this fires on every streamed content-size change, and
-    // overlapping animated scrolls thrash the animator and fight user scroll.
-    listRef.current?.scrollToEnd({ animated: false });
-  }, []);
-
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
       <ScreenHeader>
@@ -135,12 +129,11 @@ export function LoadedChatScreen({
             </Text>
           </View>
         ) : (
-          <FlatList
-            ref={listRef}
+          <FlashList
             data={messages}
             keyExtractor={(_, i) => String(i)}
             contentContainerStyle={{ padding: 16 }}
-            onContentSizeChange={scrollToEnd}
+            maintainVisibleContentPosition={{ startRenderingFromBottom: true, autoscrollToBottomThreshold: 0.2 }}
             renderItem={({ item, index }) => (
               <MessageBubble
                 role={item.role}
