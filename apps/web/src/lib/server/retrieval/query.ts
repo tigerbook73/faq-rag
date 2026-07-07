@@ -11,7 +11,7 @@ async function translateQuery(query: string, targetLang: "zh" | "en", client: Op
   const prompt =
     targetLang === "zh"
       ? `Translate the following query to Chinese. Return only the translation, no explanation:\n${query}`
-      : `将以下查询翻译为英语。只返回翻译结果，不要解释：\n${query}`;
+      : `Translate the following query to English. Return only the translation, no explanation:\n${query}`;
 
   const resp = await client.chat.completions.create({
     model,

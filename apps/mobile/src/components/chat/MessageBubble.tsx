@@ -126,7 +126,7 @@ function CitationList({
     <View className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
       <Pressable onPress={() => setOpen((v) => !v)} className="py-1">
         <Text className="text-xs text-gray-500 dark:text-gray-400">
-          {open ? "▾" : "▸"} 引用来源 ({citations.length})
+          {open ? "▾" : "▸"} Sources ({citations.length})
         </Text>
       </Pressable>
       {open && (
@@ -139,7 +139,7 @@ function CitationList({
             >
               <Text className="text-xs font-medium text-gray-500 dark:text-gray-400" numberOfLines={1}>
                 [{c.id}] {c.documentName}{" "}
-                <Text className="text-gray-400 dark:text-gray-500">{(c.score * 100).toFixed(0)}% 相似</Text>
+                <Text className="text-gray-400 dark:text-gray-500">{(c.score * 100).toFixed(0)}% match</Text>
               </Text>
               <Text className="mt-0.5 text-xs text-gray-700 dark:text-gray-300" numberOfLines={3}>
                 {c.preview}

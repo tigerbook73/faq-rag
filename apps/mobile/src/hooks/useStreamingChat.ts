@@ -7,7 +7,7 @@ import { streamChat, type Provider } from "../lib/api/chat";
 import { updateSession, type ChatSession } from "../lib/api/session";
 import { setLastChat } from "../lib/api/storage";
 
-const INTERRUPTED_MARK = "\n\n⚠️ _回答被中断_";
+const INTERRUPTED_MARK = "\n\n⚠️ _Response interrupted_";
 
 interface Params {
   chatId: string | null;
@@ -135,7 +135,7 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
             if (assistantContent) {
               finish([...withUser, { role: "assistant", content: assistantContent + INTERRUPTED_MARK }]);
             } else {
-              finish([...withUser, { role: "assistant", content: "⚠️ 回答被中断" }]);
+              finish([...withUser, { role: "assistant", content: "⚠️ Response interrupted" }]);
             }
           },
         },

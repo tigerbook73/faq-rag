@@ -213,7 +213,7 @@ export function useStreamingChat({
         } catch {
           // stream interrupted mid-response — save whatever was generated
           if (assistantContent && !doneMessages) {
-            const interrupted = assistantContent + "\n\n⚠️ _回答被中断_";
+            const interrupted = assistantContent + "\n\n⚠️ _Response interrupted_";
             const finalMessages: Message[] = [...withUser, { role: "assistant", content: interrupted, citations: [] }];
             setMessages(finalMessages);
             await persistMessages(finalMessages, sessionAtSend, resolvedId);
@@ -227,7 +227,7 @@ export function useStreamingChat({
           if (!chatId) router.replace(`/chat/${resolvedId}`);
         } else if (!streamDone && assistantContent) {
           // stream ended without "done" event (e.g. server crash) — save partial content
-          const partial = assistantContent + "\n\n⚠️ _回答被中断_";
+          const partial = assistantContent + "\n\n⚠️ _Response interrupted_";
           const finalMessages: Message[] = [...withUser, { role: "assistant", content: partial, citations: [] }];
           setMessages(finalMessages);
           await persistMessages(finalMessages, sessionAtSend, resolvedId);
