@@ -8,5 +8,5 @@ interface GluestackUIProviderProps {
 
 /** Minimal Gluestack UI v2 provider — wraps app for theming context. */
 export function GluestackUIProvider({ children }: GluestackUIProviderProps) {
-  return <View className="flex-1">{children}</View>;
+  return <View className="flex-1 bg-white dark:bg-gray-950">{children}</View>;
 }
