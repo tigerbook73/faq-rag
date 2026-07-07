@@ -1,7 +1,6 @@
 import { useState, useCallback, memo } from "react";
 import { View, Text, FlatList, Pressable, Modal, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import type { DocumentItem } from "@faq-rag/shared";
@@ -9,6 +8,7 @@ import { useDocuments } from "../hooks/useDocuments";
 import { useDocumentUpload } from "../hooks/useDocumentUpload";
 import { UploadProgressModal } from "../components/knowledge/UploadProgressModal";
 import { IconButton } from "../components/ui/icon-button";
+import { ScreenHeader } from "../components/ui/screen-header";
 import { Badge } from "../components/ui/badge";
 import { formatBytes } from "../lib/utils/format";
 import { relativeDate } from "../lib/utils/relative-date";
@@ -132,7 +132,6 @@ export default function KnowledgeScreen() {
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const toggleExpanded = useCallback((doc: DocumentItem) => {
     setExpandedId((cur) => (cur === doc.id ? null : doc.id));
@@ -157,10 +156,7 @@ export default function KnowledgeScreen() {
     <View className="flex-1 bg-white dark:bg-gray-950">
       <Stack.Screen options={{ title: "Knowledge" }} />
 
-      <View
-        className="flex-row items-center border-b border-gray-100 px-1 dark:border-gray-800"
-        style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
-      >
+      <ScreenHeader>
         <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
         <Text
           numberOfLines={1}
@@ -176,7 +172,7 @@ export default function KnowledgeScreen() {
           testID="upload-button"
           size={26}
         />
-      </View>
+      </ScreenHeader>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">

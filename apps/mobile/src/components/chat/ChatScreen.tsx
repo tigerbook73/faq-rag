@@ -14,6 +14,7 @@ import { MessageBubble } from "./MessageBubble";
 import { CitationSheet } from "./CitationSheet";
 import { ProviderSheet } from "./ProviderSheet";
 import { IconButton } from "../ui/icon-button";
+import { ScreenHeader } from "../ui/screen-header";
 import { useProvider, PROVIDER_LABEL } from "../../context/provider-context";
 import { useStreamingChat } from "../../hooks/useStreamingChat";
 import { useChatSessions } from "../../hooks/useChatSessions";
@@ -102,10 +103,7 @@ export function LoadedChatScreen({
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
-      <View
-        className="flex-row items-center border-b border-gray-100 px-1 dark:border-gray-800"
-        style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
-      >
+      <ScreenHeader>
         <IconButton icon="menu" onPress={() => navigation.openDrawer()} accessibilityLabel="Open menu" size={26} />
         <Text
           numberOfLines={1}
@@ -121,7 +119,7 @@ export function LoadedChatScreen({
           <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">{PROVIDER_LABEL[provider]}</Text>
         </Pressable>
         <IconButton icon="create-outline" onPress={() => void handleNew()} accessibilityLabel="New chat" size={26} />
-      </View>
+      </ScreenHeader>
 
       <KeyboardAvoidingView className="flex-1" behavior="padding">
         {messages.length === 0 ? (

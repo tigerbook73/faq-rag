@@ -8,6 +8,7 @@ import { useChatSessions } from "../../hooks/useChatSessions";
 import type { ChatSession } from "../../lib/api/session";
 import { ListItem } from "../ui/list-item";
 import { IconButton } from "../ui/icon-button";
+import { ScreenHeader } from "../ui/screen-header";
 import { ActionSheet } from "../ui/action-sheet";
 import { SessionRow } from "./SessionRow";
 import { RenameSessionDialog } from "./RenameSessionDialog";
@@ -29,13 +30,10 @@ export function ChatDrawerContent(props: DrawerContentComponentProps) {
 
   return (
     <View style={{ flex: 1 }}>
-      <View
-        className="flex-row items-center justify-between border-b border-gray-100 px-4 pb-3 dark:border-gray-800"
-        style={{ paddingTop: insets.top + 12 }}
-      >
+      <ScreenHeader className="justify-between px-4">
         <Text className="text-base font-semibold text-gray-900 dark:text-gray-100">FAQ RAG</Text>
         <IconButton icon="close" onPress={() => props.navigation.closeDrawer()} accessibilityLabel="Close menu" />
-      </View>
+      </ScreenHeader>
 
       <DrawerContentScrollView {...props} contentContainerStyle={{ flexGrow: 1 }}>
         <ListItem icon="library-outline" label="Knowledge" onPress={closeAndRun(() => router.push("/knowledge"))} />

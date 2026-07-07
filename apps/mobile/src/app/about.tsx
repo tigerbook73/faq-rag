@@ -1,23 +1,19 @@
 import { View, Text } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useProvider, PROVIDER_LABEL, PROVIDERS } from "../context/provider-context";
 import { IconButton } from "../components/ui/icon-button";
+import { ScreenHeader } from "../components/ui/screen-header";
 
 export default function AboutScreen() {
   const { provider } = useProvider();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
       <Stack.Screen options={{ title: "About" }} />
 
-      <View
-        className="flex-row items-center border-b border-gray-100 px-1 dark:border-gray-800"
-        style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
-      >
+      <ScreenHeader>
         <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
         <Text
           numberOfLines={1}
@@ -26,7 +22,7 @@ export default function AboutScreen() {
           About
         </Text>
         <View className="h-10 w-10" />
-      </View>
+      </ScreenHeader>
 
       <View className="items-center px-6 pt-10">
         <Text className="text-lg font-semibold text-gray-800 dark:text-gray-200">FAQ RAG</Text>
