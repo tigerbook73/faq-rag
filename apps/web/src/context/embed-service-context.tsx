@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useSWRConfig } from "swr";
 import { embedBatch } from "@/lib/client/documents-api";
 import { fetcher } from "@/lib/client/swr";
-import type { DocumentItem } from "@/lib/shared/schemas/document";
+import type { DocumentItem } from "@faq-rag/shared";
 
 interface EmbedServiceContextValue {
   triggerEmbed: (docId: string) => void;

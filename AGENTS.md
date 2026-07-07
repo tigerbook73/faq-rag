@@ -16,11 +16,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 pnpm workspaces + Turborepo。根目录 `package.json` 中的脚本通过 `turbo run <task> --filter=...` 分发到各个 workspace。
 
-| 目录              | 包名              | 说明                                                                   | 详细文档                    |
-| ----------------- | ----------------- | ---------------------------------------------------------------------- | --------------------------- |
-| `apps/web`        | `@faq-rag/web`    | Next.js 16 应用 — UI + 全部后端 API 路由 + 数据库访问                  | `apps/web/AGENTS.md`        |
-| `apps/mobile`     | `@faq-rag/mobile` | Expo Router 应用 — 通过 HTTP 调用 `apps/web` 的 API,自身不含服务端代码 | `apps/mobile/AGENTS.md`     |
-| `packages/shared` | `@faq-rag/shared` | 跨平台 Zod schema(chat/document/session),被 `apps/mobile` 引用         | `packages/shared/AGENTS.md` |
+| 目录              | 包名              | 说明                                                                                    | 详细文档                    |
+| ----------------- | ----------------- | --------------------------------------------------------------------------------------- | --------------------------- |
+| `apps/web`        | `@faq-rag/web`    | Next.js 16 应用 — UI + 全部后端 API 路由 + 数据库访问                                   | `apps/web/AGENTS.md`        |
+| `apps/mobile`     | `@faq-rag/mobile` | Expo Router 应用 — 通过 HTTP 调用 `apps/web` 的 API,自身不含服务端代码                  | `apps/mobile/AGENTS.md`     |
+| `packages/shared` | `@faq-rag/shared` | 跨平台 Zod schema + 常量(chat/document/session),被 `apps/web` 和 `apps/mobile` 共同引用 | `packages/shared/AGENTS.md` |
 
 每个目录都有自己的 `CLAUDE.md`(仅作入口,内容为 `@AGENTS.md` 导入)和 `AGENTS.md`(实际约定与架构说明)。在对应目录下工作时,优先阅读该目录的 `AGENTS.md`,本文件只记录跨包的全局信息。
 

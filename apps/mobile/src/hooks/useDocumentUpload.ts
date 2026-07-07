@@ -2,12 +2,12 @@ import { useCallback, useState } from "react";
 import { Platform } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { mutate as swrMutate } from "swr";
+import { MAX_UPLOAD_BYTES_CLOUD, MAX_UPLOAD_BYTES_LOCAL } from "@faq-rag/shared";
 import { prepareUpload, uploadToSupabase, confirmIndex, embedBatch } from "../lib/api/document";
 import { computeSHA256, computeFileSHA256 } from "../lib/api/utils/crypto";
 import { formatBytes } from "../lib/utils/format";
 
-// Matches apps/web config.embedding.maxBytesLocal / maxBytesCloud.
-const MAX_BYTES = process.env.EXPO_PUBLIC_IS_CLOUD === "true" ? 50 * 1024 : 1024 * 1024;
+const MAX_BYTES = process.env.EXPO_PUBLIC_IS_CLOUD === "true" ? MAX_UPLOAD_BYTES_CLOUD : MAX_UPLOAD_BYTES_LOCAL;
 
 const ALLOWED_EXTENSIONS = ["pdf", "docx", "md", "txt"];
 const PICKER_MIME_TYPES = [

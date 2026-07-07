@@ -1,10 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "@faq-rag/shared";
 import type { Provider } from "./chat";
 
-// Naming mirrors apps/web/src/lib/client/constants.ts's STORAGE_KEYS.
 const KEYS = {
-  LAST_CHAT: "chat:last",
-  DRAFT: (chatId: string) => `chat:draft:${chatId}`,
+  ...STORAGE_KEYS,
   PROVIDER: "chat:provider",
 } as const;
 

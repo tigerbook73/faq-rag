@@ -1,5 +1,5 @@
 import type { LLMProvider } from "./types";
-import { PROVIDER } from "./providers";
+import { PROVIDER } from "@faq-rag/shared";
 import { getDeepseekClient } from "./clients";
 import { config } from "@/lib/shared/config";
 import { logger } from "../logger";

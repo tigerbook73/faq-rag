@@ -12,7 +12,7 @@ import {
   findDuplicateDocument,
   setDocumentFileRef,
 } from "@/lib/server/data/documents";
-import { PrepareUploadInputSchema } from "@/lib/shared/schemas/document";
+import { PrepareUploadInputSchema } from "@faq-rag/shared";
 
 const ALLOWED_EXTS = new Set([".md", ".txt", ".pdf", ".docx"]);
 const ALLOWED_MIME_TYPES = new Set([

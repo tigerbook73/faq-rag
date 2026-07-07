@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validationErrorResponse } from "@/lib/server/api";
 import { listDocumentsPage } from "@/lib/server/data/documents";
-import { DocumentListQuerySchema } from "@/lib/shared/schemas/document";
+import { DocumentListQuerySchema } from "@faq-rag/shared";
 
 export async function GET(req: NextRequest) {
   const params = Object.fromEntries(req.nextUrl.searchParams);

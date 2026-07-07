@@ -3,7 +3,7 @@ export interface Msg {
   content: string;
 }
 
-import type { Provider } from "./providers";
+import type { Provider } from "@faq-rag/shared";
 
 export interface LLMProvider {
   name: Provider;

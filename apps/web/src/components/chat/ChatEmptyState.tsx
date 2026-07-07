@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/client/swr";
-import { type DocumentItem } from "@/lib/shared/schemas/document";
+import { type DocumentItem } from "@faq-rag/shared";
 
 const NESTJS_SAMPLE_QUESTIONS = [
   "What are the core building blocks of NestJS?",

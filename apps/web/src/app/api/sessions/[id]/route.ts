@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UpdateSessionInputSchema } from "@/lib/shared/schemas/session";
+import { UpdateSessionInputSchema } from "@faq-rag/shared";
 import { notFoundResponse, validationErrorResponse } from "@/lib/server/api";
 import { deleteSession, getSession, upsertSession } from "@/lib/server/data/sessions";
 

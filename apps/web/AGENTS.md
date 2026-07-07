@@ -110,7 +110,7 @@ Service Layer(src/lib/)
   ├── db/              client.ts — Prisma 单例
   ├── ingest/          解析 → 语义切分 → embedding → pgvector($executeRaw);索引在独立 worker 线程中执行
   ├── retrieval/       检测语言 → 翻译 + HyDE → embedding → 向量检索 → 重排
-  ├── llm/             provider 抽象(claude.ts, deepseek.ts, router.ts, providers.ts, truncate.ts, prompts.ts)
+  ├── llm/             provider 抽象(claude.ts, deepseek.ts, openai.ts, router.ts, truncate.ts, prompts.ts)
   ├── embeddings/      bge.ts — 本地 bge-m3 单例 + getEmbeddingsBatch()
   ├── lang/            detect.ts — franc-min 封装
   ├── storage/         index.ts — Supabase Storage 辅助函数
@@ -124,8 +124,7 @@ Service Layer(src/lib/)
   ├── swr.ts           共用 SWR fetcher
   └── constants.ts     客户端常量(STORAGE_KEYS 等)
   shared/
-  ├── schemas/         Zod schema:chat.ts, document.ts, session.ts(web 自己的一份拷贝 — 见下方"与 packages/shared 的关系")
-  ├── config.ts        核心常量(TOP_K、CHUNK_SIZE、POLL_INTERVAL_MS 等)
+  ├── config.ts        核心常量(TOP_K、CHUNK_SIZE 等;chat/document/session schema 已迁至 @faq-rag/shared,见下方"与 packages/shared 的关系")
   ├── form-utils.ts    表单相关辅助函数
   └── utils.ts         通用工具函数
 
@@ -136,9 +135,7 @@ PostgreSQL + pgvector
 
 ## 与 packages/shared 的关系
 
-`apps/web` **不**引用 `@faq-rag/shared`,而是在 `src/lib/shared/schemas/` 保留了同一套 schema 的独立拷贝。原因:web 版的 schema 需要引入 server-only 的值(例如 `src/lib/server/llm/providers.ts` 的 `PROVIDER` 常量作为默认值),而 `packages/shared` 是给 `apps/mobile` 用的纯前端包,不能依赖任何 app 的代码。
-
-**改动 chat/document/session 的 schema 形状时,必须同时更新两处**:本目录的 `src/lib/shared/schemas/*` 和 `../../packages/shared/src/schemas/*`,并保持枚举值、默认值一致 —— 目前没有类型层面的机制强制这一点。完整背景见 `../../packages/shared/AGENTS.md`。
+`apps/web` 直接引用 `@faq-rag/shared`(chat/document/session 的 Zod schema、`ChatSession`/`toSession()`、`PROVIDER`/`PROVIDER_LABEL`/`DEFAULT_PROVIDER`、数值常量、`STORAGE_KEYS` 均来自该包),不再维护本地拷贝。`provider` 的默认值分两层(API 校验兜底 vs. UI 初始选中,互不影响),完整说明见 `../../packages/shared/AGENTS.md`。
 
 ---
 
@@ -222,26 +219,7 @@ interface Message {
 
 ## LLM Provider 抽象
 
-```ts
-// src/lib/server/llm/types.ts
-interface LLMProvider {
-  name: "claude" | "deepseek";
-  chat(params: { system: string; messages: Msg[] }): AsyncIterable<string>;
-}
-```
-
-```ts
-// src/lib/server/llm/providers.ts
-export const PROVIDER = { CLAUDE: "claude", DEEPSEEK: "deepseek", OPENAI: "openai" } as const;
-export type Provider = (typeof PROVIDER)[keyof typeof PROVIDER];
-export const PROVIDER_LABEL: Record<Provider, string> = {
-  claude: "Claude",
-  deepseek: "DeepSeek",
-  openai: "OpenAI",
-};
-```
-
-`router.ts` 中的 `getProvider(name)` 在 name 无法识别或为 undefined 时返回 `claudeProvider`。Web UI 的默认值由 `NEXT_PUBLIC_DEFAULT_PROVIDER` 决定(`.env.example` 默认 `claude`)。`/api/chat` 的 `bodySchema` 在未传 provider 时降级为 `PROVIDER.DEEPSEEK`。
+`LLMProvider` 接口(`name` + `chat()`)定义在 `src/lib/server/llm/types.ts`;`PROVIDER`/`PROVIDER_LABEL`/`DEFAULT_PROVIDER` 定义在 `packages/shared/src/constants/providers.ts`。`router.ts` 中的 `getProvider(name)` 在 name 无法识别或为 undefined 时返回 `claudeProvider`。`provider` 默认值的两层逻辑(API 校验兜底 vs. UI 初始选中)见上方"与 packages/shared 的关系"。
 
 `/api/chat` 用 SSE 流式返回 `provider.chat(...)` 的 token,web 端用基于 `fetch` 的 reader 消费,mobile 端用 `apps/mobile/src/lib/api/chat.ts`(同样依赖 `eventsource-parser`)消费,两端解析逻辑一致。`retrieval/query.ts` 中的查询扩展(翻译 + HyDE)独立使用 DeepSeek 或 OpenAI client,与聊天所用的 provider 无关。
 
@@ -277,63 +255,3 @@ LLM 调用前会通过 `truncate.ts` 截断历史 —— 在 token 预算内(估
 - **Cross-encoder 已禁用**:`retrieval/query.ts` 中的 `rerankChunks` 被注释掉,改用 `deduplicateAndSort` 的余弦排序。如需启用需取消注释,并注意 ONNX 模型的冷启动延迟。
 - **`fileRef` 字段的双重语义**:Prisma 字段 `fileRef` 映射到数据库列 `file_path`。本地模式下存本地文件系统路径;云端模式(Supabase Storage)下存 storage 对象路径(`embed/{docId}/{sanitizedFilename}`)。`storage/index.ts` 中的 `readUploadedFile` / `saveUploadedFile` 封装了这层差异。
 - **云端上传流程**:客户端(web 或 mobile)调用 `POST /api/documents/prepare` → 得到 `{ docId, signedUrl, token }` → PUT 到 Supabase Storage → `POST /api/documents/{docId}/index` 确认并加入索引队列。
-- **Schema 重复维护**:见上方"与 packages/shared 的关系" —— `src/lib/shared/schemas/*` 与 `../../packages/shared/src/schemas/*` 需手动保持同步,无构建期检查。
-
----
-
-## 重要文件位置
-
-| 路径                                             | 说明                                                                                |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `proxy.ts`                                       | Next.js 16 中间件 —— 将 `/` 重定向到 `/chat/last`,其余路由放行                      |
-| `src/app/layout.tsx`                             | 根布局 —— 不传递任何鉴权状态,渲染 `<Providers>`                                     |
-| `src/app/providers.tsx`                          | 客户端外壳 —— `AppLayout` 渲染侧边栏/顶栏                                           |
-| `src/app/api/chat/route.ts`                      | 聊天接口 —— 检索 + LLM 流式返回(SSE)                                                |
-| `src/app/api/documents/prepare/route.ts`         | POST:校验文件、创建 pending 文档、返回 Supabase 签名上传 URL                        |
-| `src/app/api/documents/[id]/index/route.ts`      | POST:确认上传完成,加入索引队列                                                      |
-| `src/app/api/sessions/route.ts`                  | 会话列表 —— GET(列表)/ POST(创建)                                                   |
-| `src/app/api/sessions/[id]/route.ts`             | 单个会话 —— GET / PATCH(标题 + 消息)/ DELETE                                        |
-| `src/app/chat/layout.tsx`                        | 聊天布局 —— 异步 SC,经 `listSessions` 预取会话列表,子组件包裹在 `<SWRBootstrap>` 中 |
-| `src/components/chat/SWRBootstrap.tsx`           | 客户端组件,用 `<SWRConfig fallback>` 将服务端预取的会话列表水合进 SWR               |
-| `src/app/chat/[id]/page.tsx`                     | 渲染 ChatWindow,chatId 来自 URL(无服务端水合)                                       |
-| `src/app/chat/new/page.tsx`                      | 渲染 ChatWindow,chatId=null                                                         |
-| `src/app/chat/last/page.tsx`                     | 客户端重定向到最近一次活跃会话                                                      |
-| `src/app/knowledge/page.tsx`                     | 知识库页 —— 上传 + 文档列表                                                         |
-| `src/app/about/page.tsx`                         | 关于页                                                                              |
-| `src/components/layout/TopBar.tsx`               | 全局顶栏 —— 品牌、导航、provider 选择、主题切换                                     |
-| `src/components/layout/AppSidebar.tsx`           | 全局侧边栏 —— `/chat/*` 下展示会话列表,其它页面展示 About 链接                      |
-| `src/context/page-title-context.tsx`             | 聊天页副标题 context(ChatWindow → TopBar)                                           |
-| `src/context/provider-context.tsx`               | LLM provider context(从 ChatWindow 中提升上来)                                      |
-| `src/lib/chat-storage.ts`                        | 会话 API 封装(upsertSession、deleteSession、pruneOld…)                              |
-| `src/lib/shared/config.ts`                       | 核心常量(TOP_K、CHUNK_SIZE、POLL_INTERVAL_MS 等)                                    |
-| `src/lib/rate-limit.ts`                          | 基于内存的按 IP 限流                                                                |
-| `src/lib/server/llm/providers.ts`                | PROVIDER 常量 + PROVIDER_LABEL                                                      |
-| `src/lib/server/llm/router.ts`                   | LLM provider 选择逻辑(默认 Claude)                                                  |
-| `src/lib/server/llm/truncate.ts`                 | 基于 token 预算的历史截断(保留最近对话,估算 ≤6000)                                  |
-| `src/lib/server/llm/openai.ts`                   | OpenAI GPT provider(默认 `gpt-4o-mini`)                                             |
-| `src/lib/server/llm/clients.ts`                  | 共用 LLM client 单例(deepseekClient、openaiClient)                                  |
-| `src/lib/server/embeddings/router.ts`            | Embedding 分发:本地 bge-m3 vs OpenAI,依据 `IS_CLOUD`                                |
-| `src/lib/server/embeddings/openai-embed.ts`      | OpenAI `text-embedding-3-small` —— 单条 + 批量                                      |
-| `src/lib/server/storage/index.ts`                | Supabase Storage 辅助函数:保存 / 读取 / 删除上传的文件                              |
-| `src/lib/server/supabase/server.ts`              | Supabase service-role client                                                        |
-| `src/lib/server/retrieval/query.ts`              | 检索编排:翻译 + HyDE + embedding +(重排)                                            |
-| `src/lib/server/retrieval/vector-search.ts`      | pgvector 余弦检索(`<=>`)                                                            |
-| `src/lib/server/retrieval/rerank.ts`             | 候选 chunks 去重 + 按分数排序                                                       |
-| `src/lib/server/retrieval/cross-encoder.ts`      | Cross-encoder 重排(bge-reranker-base,sigmoid/softmax)                               |
-| `src/lib/server/ingest/pipeline.ts`              | 摄取流水线(解析 → 分块 → embedding → 存储)                                          |
-| `src/lib/server/ingest/parse.ts`                 | 文件解析器(md/txt/pdf/docx)                                                         |
-| `src/lib/server/ingest/split.ts`                 | 分块入口 —— 语义切分器,带固定长度兜底                                               |
-| `src/lib/server/ingest/semantic-splitter.ts`     | 基于 embedding 余弦边界检测的语义分块                                               |
-| `src/lib/server/ingest/indexing-worker.ts`       | Worker 线程入口 —— 只加载一次模型,通过 IPC 处理文档                                 |
-| `src/lib/server/ingest/indexing-queue.ts`        | 主线程接口:`enqueueIndexing(docId, filePath)`                                       |
-| `src/lib/server/embeddings/bge.ts`               | bge-m3 单例 —— `getEmbedding()` + `getEmbeddingsBatch()`                            |
-| `instrumentation.ts` / `instrumentation.node.ts` | 服务启动钩子 —— 恢复 pending 文档、预热 worker 线程                                 |
-| `src/components/chat/ChatWindow.tsx`             | 主聊天 UI —— SSE 流式接收、会话水合、发送逻辑                                       |
-| `src/components/chat/ChatSidebar.tsx`            | 会话列表 —— 新建/重命名/删除/导出/导航                                              |
-| `src/components/chat/CitationDrawer.tsx`         | 底部抽屉,展示引用来源详情                                                           |
-| `src/components/chat/MessageBubble.tsx`          | 消息渲染 —— Markdown、可折叠的引用来源列表                                          |
-| `src/components/chat/ProviderSelect.tsx`         | Provider 下拉选择(Claude / DeepSeek / OpenAI)                                       |
-| `src/app/api/ingest-hook/route.ts`               | Supabase Storage webhook —— 校验密钥,触发索引                                       |
-| `scripts/setup-webhook.ts`                       | CLI:读写 `app.ingest_config`(hook_url、hook_secret)                                 |
-| `prisma/schema.prisma`                           | 数据库 schema(Document、Chunk、Session、SessionMessage)                             |
-| `jest.config.ts`                                 | Jest + ts-jest 配置(CJS 模式,`types: ["jest","node"]`)                              |

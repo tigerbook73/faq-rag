@@ -1,11 +1,9 @@
 import { useCallback, useRef } from "react";
 import useSWR, { mutate as swrMutate } from "swr";
-import type { DocumentItem } from "@faq-rag/shared";
+import { POLL_INTERVAL_MS, type DocumentItem } from "@faq-rag/shared";
 import { listDocuments, deleteDocument, reindexDocument, embedBatch } from "../lib/api/document";
 
 const SWR_KEY = "/api/documents";
-// Matches apps/web/src/lib/shared/config.ts's ui.pollIntervalMs.
-const POLL_INTERVAL_MS = 3000;
 
 const ACTIVE_STATUSES = new Set<DocumentItem["status"]>(["pending", "uploaded", "indexing"]);
 
