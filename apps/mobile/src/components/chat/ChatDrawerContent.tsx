@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, Pressable, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { DrawerContentScrollView, type DrawerContentComponentProps } from "expo-router/drawer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useChatSessions } from "../../hooks/useChatSessions";
 import type { ChatSession } from "../../lib/api/session";
@@ -16,12 +17,23 @@ import { RenameSessionDialog } from "./RenameSessionDialog";
 export function ChatDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { sessions, isLoading, handleNew, handleDelete, handleRename, handleDeleteAll, navigateToSession } =
+  const { colorScheme } = useColorScheme();
+  const { sessions, isLoading, handleNew, handleDelete, handleRename, handleDeleteAll, navigateToSession, refresh } =
     useChatSessions();
 
   const [actionSession, setActionSession] = useState<ChatSession | null>(null);
   const [renameSession, setRenameSession] = useState<ChatSession | null>(null);
   const [clearAllVisible, setClearAllVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refresh]);
 
   const closeAndRun = (fn: () => void) => () => {
     props.navigation.closeDrawer();
@@ -35,7 +47,17 @@ export function ChatDrawerContent(props: DrawerContentComponentProps) {
         <IconButton icon="close" onPress={() => props.navigation.closeDrawer()} accessibilityLabel="Close menu" />
       </ScreenHeader>
 
-      <DrawerContentScrollView {...props} contentContainerStyle={{ flexGrow: 1 }}>
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={colorScheme === "dark" ? "#e5e7eb" : "#1f2937"}
+          />
+        }
+      >
         <ListItem icon="library-outline" label="Knowledge" onPress={closeAndRun(() => router.push("/knowledge"))} />
         <ListItem icon="information-circle-outline" label="About" onPress={closeAndRun(() => router.push("/about"))} />
         <View className="my-2 border-t border-gray-100 dark:border-gray-800" />

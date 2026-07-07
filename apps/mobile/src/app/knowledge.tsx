@@ -1,5 +1,5 @@
 import { useState, useCallback, memo } from "react";
-import { View, Text, FlatList, Pressable, Modal, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, Pressable, Modal, ActivityIndicator, RefreshControl } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
@@ -131,7 +131,18 @@ export default function KnowledgeScreen() {
   const { state: uploadState, pickAndUpload, reset: resetUpload } = useDocumentUpload();
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await mutate();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [mutate]);
 
   const toggleExpanded = useCallback((doc: DocumentItem) => {
     setExpandedId((cur) => (cur === doc.id ? null : doc.id));
@@ -204,6 +215,13 @@ export default function KnowledgeScreen() {
               onLongPress={openActions}
             />
           )}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void onRefresh()}
+              tintColor={colorScheme === "dark" ? "#e5e7eb" : "#1f2937"}
+            />
+          }
         />
       )}
 

@@ -61,5 +61,18 @@ export function useChatSessions() {
     [router],
   );
 
-  return { sessions, isLoading, handleNew, handleDelete, handleRename, handleDeleteAll, navigateToSession };
+  // No-arg mutate() re-fetches from listSessions rather than replaying a
+  // cached update, so this is a genuine server round-trip for pull-to-refresh.
+  const refresh = useCallback(() => mutate(), [mutate]);
+
+  return {
+    sessions,
+    isLoading,
+    handleNew,
+    handleDelete,
+    handleRename,
+    handleDeleteAll,
+    navigateToSession,
+    refresh,
+  };
 }
