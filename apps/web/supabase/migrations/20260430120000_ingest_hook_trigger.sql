@@ -36,7 +36,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Storage object path format: "embed/{docId}/{sanitizedFilename}" (see src/lib/storage/index.ts → saveUploadedFile)
+  -- Storage object path format: "embed/{docId}/{sanitizedFilename}".
   -- split_part(NEW.name, '/', 2) extracts the second segment, which is the docId (UUID).
   -- The /api/ingest-hook handler validates this value with z.string().uuid().
   PERFORM net.http_post(

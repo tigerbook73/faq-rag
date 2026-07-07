@@ -14,13 +14,6 @@ export function sanitizeFilename(name: string): string {
 // The ingest-hook PostgreSQL trigger (migration 20260430120000_ingest_hook_trigger)
 // filters on NEW.name LIKE 'embed/%' and extracts the docId via split_part(NEW.name, '/', 2).
 // Any format change here must be mirrored in that trigger's SQL.
-export async function saveUploadedFile(buffer: Buffer, docId: string, filename: string): Promise<string> {
-  const supabase = createSupabaseServiceClient();
-  const storagePath = `embed/${docId}/${sanitizeFilename(filename)}`;
-  const { error } = await supabase.storage.from(BUCKET).upload(storagePath, buffer, { upsert: false });
-  if (error) throw new Error(`Storage upload failed: ${error.message}`);
-  return storagePath;
-}
 
 export async function readUploadedFile(storagePath: string): Promise<Buffer> {
   const supabase = createSupabaseServiceClient();

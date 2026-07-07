@@ -6,9 +6,8 @@ import { logger } from "@/lib/server/logger";
 
 // Payload sent by the storage_notify_indexing trigger
 // (prisma/migrations/20260430120000_ingest_hook_trigger/migration.sql):
-//   body = jsonb_build_object('docId', split_part(NEW.name, '/', 1))
-// where NEW.name is the storage object path "{docId}/{sanitizedFilename}"
-// defined in src/lib/storage/index.ts → saveUploadedFile.
+//   body = jsonb_build_object('docId', split_part(NEW.name, '/', 2))
+// where NEW.name follows "embed/{docId}/{sanitizedFilename}".
 const bodySchema = z.object({ docId: z.string().uuid() });
 
 export async function POST(req: NextRequest) {
