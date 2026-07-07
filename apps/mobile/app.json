@@ -6,6 +6,6 @@
     "scheme": "faqrag",
     "userInterfaceStyle": "automatic",
     "platforms": ["ios", "android", "web"],
-    "plugins": ["expo-router"]
+    "plugins": ["expo-router", "expo-font"]
   }
 }

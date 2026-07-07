@@ -1,27 +1,31 @@
 import { useState, useCallback, memo } from "react";
-import { View, Text, FlatList, Pressable, Modal, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Modal, ActivityIndicator, RefreshControl } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { Stack, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import type { DocumentItem } from "@faq-rag/shared";
-import { useDocuments } from "../../src/hooks/useDocuments";
-import { useDocumentUpload } from "../../src/hooks/useDocumentUpload";
-import { UploadProgressModal } from "../../src/components/knowledge/UploadProgressModal";
-import { formatBytes } from "../../src/lib/utils/format";
-import { relativeDate } from "../../src/lib/utils/relative-date";
+import { useDocuments } from "../hooks/useDocuments";
+import { useDocumentUpload } from "../hooks/useDocumentUpload";
+import { UploadProgressModal } from "../components/knowledge/UploadProgressModal";
+import { IconButton } from "../components/ui/icon-button";
+import { ScreenHeader } from "../components/ui/screen-header";
+import { Badge } from "../components/ui/badge";
+import { formatBytes } from "../lib/utils/format";
+import { relativeDate } from "../lib/utils/relative-date";
 
-const STATUS_STYLE: Record<DocumentItem["status"], { badge: string; text: string; label: string }> = {
-  indexed: { badge: "bg-green-100 dark:bg-green-950", text: "text-green-700 dark:text-green-400", label: "indexed" },
-  indexing: { badge: "bg-blue-100 dark:bg-blue-950", text: "text-blue-700 dark:text-blue-400", label: "indexing" },
-  failed: { badge: "bg-red-100 dark:bg-red-950", text: "text-red-700 dark:text-red-400", label: "failed" },
-  pending: { badge: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-300", label: "pending" },
-  uploaded: { badge: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-300", label: "uploaded" },
-};
+const STATUS_TONE: Record<DocumentItem["status"], { tone: "success" | "info" | "danger" | "neutral"; label: string }> =
+  {
+    indexed: { tone: "success", label: "indexed" },
+    indexing: { tone: "info", label: "indexing" },
+    failed: { tone: "danger", label: "failed" },
+    pending: { tone: "neutral", label: "pending" },
+    uploaded: { tone: "neutral", label: "uploaded" },
+  };
 
 function StatusBadge({ status }: { status: DocumentItem["status"] }) {
-  const s = STATUS_STYLE[status];
-  return (
-    <View className={`rounded-full px-2 py-0.5 ${s.badge}`}>
-      <Text className={`text-xs font-medium ${s.text}`}>{s.label}</Text>
-    </View>
-  );
+  const s = STATUS_TONE[status];
+  return <Badge tone={s.tone}>{s.label}</Badge>;
 }
 
 function chunkLabel(doc: DocumentItem): string {
@@ -85,6 +89,10 @@ function DocumentActionSheet({
   onClose: () => void;
 }) {
   const canReindex = doc?.status === "indexed" || doc?.status === "failed";
+  const { colorScheme } = useColorScheme();
+  const reindexColor = colorScheme === "dark" ? "#e5e7eb" : "#1f2937";
+  const deleteColor = colorScheme === "dark" ? "#f87171" : "#dc2626";
+
   return (
     <Modal visible={doc !== null} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
@@ -93,22 +101,24 @@ function DocumentActionSheet({
             {doc?.name}
           </Text>
           <Pressable
-            className={`px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800 ${canReindex ? "" : "opacity-40"}`}
+            className={`flex-row items-center gap-3 px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800 ${canReindex ? "" : "opacity-40"}`}
             disabled={!canReindex}
             onPress={() => {
               onClose();
               onReindex();
             }}
           >
+            <Ionicons name="refresh-outline" size={18} color={reindexColor} />
             <Text className="text-base text-gray-800 dark:text-gray-200">Reindex</Text>
           </Pressable>
           <Pressable
-            className="px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800"
+            className="flex-row items-center gap-3 px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800"
             onPress={() => {
               onClose();
               onDelete();
             }}
           >
+            <Ionicons name="trash-outline" size={18} color={deleteColor} />
             <Text className="text-base text-red-600 dark:text-red-400">Delete</Text>
           </Pressable>
         </Pressable>
@@ -118,10 +128,22 @@ function DocumentActionSheet({
 }
 
 export default function KnowledgeScreen() {
-  const { documents, isLoading, handleDelete, handleReindex } = useDocuments();
+  const { documents, error, isLoading, mutate, handleDelete, handleReindex } = useDocuments();
   const { state: uploadState, pickAndUpload, reset: resetUpload } = useDocumentUpload();
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+  const { colorScheme } = useColorScheme();
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await mutate();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [mutate]);
 
   const toggleExpanded = useCallback((doc: DocumentItem) => {
     setExpandedId((cur) => (cur === doc.id ? null : doc.id));
@@ -144,28 +166,46 @@ export default function KnowledgeScreen() {
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
-      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
-        <Text className="text-lg font-semibold text-gray-800 dark:text-gray-200">Knowledge</Text>
-        <Pressable
+      <Stack.Screen options={{ title: "Knowledge", animation: "none" }} />
+
+      <ScreenHeader>
+        <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
+        <Text
+          numberOfLines={1}
+          className="flex-1 px-1 text-center text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
+          Knowledge
+        </Text>
+        <IconButton
+          icon="cloud-upload-outline"
           onPress={() => void pickAndUpload()}
           disabled={uploadState.phase !== "idle" && uploadState.phase !== "error"}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 active:bg-blue-700"
+          accessibilityLabel="Upload document"
           testID="upload-button"
-        >
-          <Text className="text-sm font-medium text-white">Upload</Text>
-        </Pressable>
-      </View>
+          size={26}
+        />
+      </ScreenHeader>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
+        </View>
+      ) : error ? (
+        <View className="flex-1 items-center justify-center gap-3 px-8">
+          <Text className="text-center text-sm text-red-600 dark:text-red-400">{error}</Text>
+          <Pressable
+            className="rounded-full border border-gray-200 px-4 py-1.5 active:bg-gray-50 dark:border-gray-700 dark:active:bg-gray-800"
+            onPress={() => void mutate()}
+          >
+            <Text className="text-sm text-gray-700 dark:text-gray-300">Retry</Text>
+          </Pressable>
         </View>
       ) : documents.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <Text className="text-center text-sm text-gray-500 dark:text-gray-400">No documents yet</Text>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={documents}
           keyExtractor={(d) => d.id}
           renderItem={({ item }) => (
@@ -176,6 +216,13 @@ export default function KnowledgeScreen() {
               onLongPress={openActions}
             />
           )}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void onRefresh()}
+              tintColor={colorScheme === "dark" ? "#e5e7eb" : "#1f2937"}
+            />
+          }
         />
       )}
 

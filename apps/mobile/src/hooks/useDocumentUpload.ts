@@ -84,7 +84,7 @@ export function useDocumentUpload() {
         prep = await prepareUpload({ name: asset.name, size, mime, hash });
       } catch (err) {
         const status = (err as { status?: number }).status;
-        const message = status === 409 ? "文件已存在" : err instanceof Error ? err.message : String(err);
+        const message = status === 409 ? "File already exists" : err instanceof Error ? err.message : String(err);
         setState({ ...IDLE, phase: "error", fileName: asset.name, error: message });
         return;
       }

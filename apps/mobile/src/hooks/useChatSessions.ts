@@ -1,24 +1,23 @@
 import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import useSWR from "swr";
-import { randomUUID } from "expo-crypto";
-import { listSessions, createSession, deleteSession, type ChatSession } from "../lib/api/session";
+import { listSessions, deleteSession, updateSession, type ChatSession } from "../lib/api/session";
 
 const SWR_KEY = "/api/sessions";
 
 // Mirrors apps/web/src/components/chat/ChatSidebar/useChatSessions.ts's
-// optimistic-mutate pattern (create/delete update the SWR cache immediately,
-// then roll back via revalidation if the request fails).
+// optimistic-mutate pattern (delete updates the SWR cache immediately, then
+// rolls back via revalidation if the request fails).
 export function useChatSessions() {
   const router = useRouter();
   const { data: sessions = [], isLoading, mutate } = useSWR<ChatSession[]>(SWR_KEY, listSessions);
 
-  const handleNew = useCallback(async () => {
-    const id = randomUUID();
-    const session = await createSession({ id });
-    void mutate((current) => [session, ...(current ?? [])], false);
-    router.push(`/chat/${id}`);
-  }, [mutate, router]);
+  // Navigates to the ephemeral "new chat" screen without creating a session —
+  // it's only persisted (and shows up in this list) once the first message is
+  // sent, mirroring apps/web's router.push("/chat/new").
+  const handleNew = useCallback(() => {
+    router.push("/chat/new");
+  }, [router]);
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -32,6 +31,29 @@ export function useChatSessions() {
     [mutate],
   );
 
+  const handleRename = useCallback(
+    async (id: string, title: string) => {
+      void mutate((current) => current?.map((s) => (s.id === id ? { ...s, title } : s)), false);
+      try {
+        await updateSession(id, { title });
+      } catch {
+        void mutate();
+      }
+    },
+    [mutate],
+  );
+
+  const handleDeleteAll = useCallback(async () => {
+    const ids = sessions.map((s) => s.id);
+    void mutate([], false);
+    try {
+      await Promise.all(ids.map((id) => deleteSession(id)));
+    } catch {
+      void mutate();
+    }
+    router.replace("/chat/new");
+  }, [sessions, mutate, router]);
+
   const navigateToSession = useCallback(
     (id: string) => {
       router.push(`/chat/${id}`);
@@ -39,5 +61,18 @@ export function useChatSessions() {
     [router],
   );
 
-  return { sessions, isLoading, handleNew, handleDelete, navigateToSession };
+  // No-arg mutate() re-fetches from listSessions rather than replaying a
+  // cached update, so this is a genuine server round-trip for pull-to-refresh.
+  const refresh = useCallback(() => mutate(), [mutate]);
+
+  return {
+    sessions,
+    isLoading,
+    handleNew,
+    handleDelete,
+    handleRename,
+    handleDeleteAll,
+    navigateToSession,
+    refresh,
+  };
 }

@@ -18,14 +18,51 @@ interface Props {
 // light/dark variants are precomputed and picked via useColorScheme.
 const markdownStyleLight = StyleSheet.create({
   body: { fontSize: 14, lineHeight: 21, color: "#111827" },
-  code_inline: { backgroundColor: "#e5e7eb", borderRadius: 4, fontSize: 13 },
+  // Headings default to fontSize 32/24/18/16/13/11 (styles.js) — pinned to
+  // match body so heading text doesn't change size, only weight.
+  heading1: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading2: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading3: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading4: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading5: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading6: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  // react-native-markdown-display's default code_inline style adds
+  // padding: 10 and a 1px border (styles.js) that a custom style prop merges
+  // with rather than replaces — left alone, that inflates each inline-code
+  // span to ~37px tall (vs. the 21px line-height) and makes it visually
+  // overlap the line above/below when text wraps around it. Both must be
+  // explicitly zeroed here to get a compact, single-line badge.
+  code_inline: {
+    backgroundColor: "#e5e7eb",
+    borderRadius: 4,
+    borderWidth: 0,
+    padding: 0,
+    paddingHorizontal: 4,
+    fontSize: 13,
+    lineHeight: 21,
+  },
   code_block: { backgroundColor: "#1f2937", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
   fence: { backgroundColor: "#1f2937", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
 });
 
 const markdownStyleDark = StyleSheet.create({
   body: { fontSize: 14, lineHeight: 21, color: "#f3f4f6" },
-  code_inline: { backgroundColor: "#374151", color: "#f3f4f6", borderRadius: 4, fontSize: 13 },
+  heading1: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading2: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading3: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading4: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading5: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading6: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  code_inline: {
+    backgroundColor: "#374151",
+    color: "#f3f4f6",
+    borderRadius: 4,
+    borderWidth: 0,
+    padding: 0,
+    paddingHorizontal: 4,
+    fontSize: 13,
+    lineHeight: 21,
+  },
   code_block: { backgroundColor: "#111827", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
   fence: { backgroundColor: "#111827", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
 });
@@ -89,7 +126,7 @@ function CitationList({
     <View className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
       <Pressable onPress={() => setOpen((v) => !v)} className="py-1">
         <Text className="text-xs text-gray-500 dark:text-gray-400">
-          {open ? "▾" : "▸"} 引用来源 ({citations.length})
+          {open ? "▾" : "▸"} Sources ({citations.length})
         </Text>
       </Pressable>
       {open && (
@@ -102,7 +139,7 @@ function CitationList({
             >
               <Text className="text-xs font-medium text-gray-500 dark:text-gray-400" numberOfLines={1}>
                 [{c.id}] {c.documentName}{" "}
-                <Text className="text-gray-400 dark:text-gray-500">{(c.score * 100).toFixed(0)}% 相似</Text>
+                <Text className="text-gray-400 dark:text-gray-500">{(c.score * 100).toFixed(0)}% match</Text>
               </Text>
               <Text className="mt-0.5 text-xs text-gray-700 dark:text-gray-300" numberOfLines={3}>
                 {c.preview}

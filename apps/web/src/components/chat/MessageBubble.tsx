@@ -71,7 +71,7 @@ function CitationList({
         className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-xs"
       >
         {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-        引用来源 ({citations.length})
+        Sources ({citations.length})
       </button>
       {open && (
         <div className="mt-2 space-y-2">
@@ -84,7 +84,7 @@ function CitationList({
             >
               <p className="text-muted-foreground mb-1 font-medium">
                 [{c.id}] {c.documentName}
-                <span className="ml-2 opacity-60">{(c.score * 100).toFixed(0)}% 相似</span>
+                <span className="ml-2 opacity-60">{(c.score * 100).toFixed(0)}% match</span>
               </p>
               <p className="text-foreground/80 line-clamp-3">{c.preview}</p>
             </button>

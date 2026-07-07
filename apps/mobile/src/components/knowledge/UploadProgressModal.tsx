@@ -4,15 +4,17 @@ import type { UploadState } from "../../hooks/useDocumentUpload";
 function phaseLabel(state: UploadState): string {
   switch (state.phase) {
     case "hashing":
-      return "正在计算文件哈希…";
+      return "Calculating file hash...";
     case "preparing":
-      return "正在创建上传任务…";
+      return "Creating upload job...";
     case "uploading":
-      return `正在上传… ${Math.round(state.progress * 100)}%`;
+      return `Uploading... ${Math.round(state.progress * 100)}%`;
     case "confirming":
-      return "正在解析文档…";
+      return "Parsing document...";
     case "embedding":
-      return state.totalChunks > 0 ? `正在嵌入 ${state.embedded}/${state.totalChunks} chunks…` : "正在嵌入 chunks…";
+      return state.totalChunks > 0
+        ? `Embedding ${state.embedded}/${state.totalChunks} chunks...`
+        : "Embedding chunks...";
     default:
       return "";
   }
@@ -47,7 +49,7 @@ export function UploadProgressModal({ state, onDismiss }: { state: UploadState; 
                 className="mt-4 self-end rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-800"
                 testID="upload-dismiss"
               >
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">关闭</Text>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Close</Text>
               </Pressable>
             </>
           ) : (
