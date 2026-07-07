@@ -62,20 +62,20 @@ pnpm vercel:env:push / vercel:env:pull    # 与 Vercel 同步环境变量
 
 ## 技术栈
 
-| 层次         | 选型                                                                                                                                         |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 框架         | Next.js 16(App Router)+ React 19 + TypeScript                                                                                                |
-| UI           | Tailwind CSS + shadcn/ui(组件位于 `src/components/ui/`)                                                                                      |
-| 数据库       | PostgreSQL 16 + pgvector,本地经 Docker,远程用 Supabase Cloud                                                                                 |
-| ORM          | Prisma(`prisma/schema.prisma`)                                                                                                               |
-| Embedding    | `Xenova/bge-m3`(本地,1024 维)**或** `text-embedding-3-small`(OpenAI)— 通过 `EMBEDDING_PROVIDER` 环境变量切换,经 `embeddings/router.ts` 分发  |
-| LLM provider | Claude `claude-sonnet-4-6`(默认)· DeepSeek `deepseek-chat` · OpenAI `gpt-4o-mini` — UI 中均可选,默认值由 `NEXT_PUBLIC_DEFAULT_PROVIDER` 决定 |
-| 存储         | Supabase Storage — 上传文件存于 `documents` bucket,经 `src/lib/server/storage/index.ts`                                                      |
-| 文本切分     | 语义分块(embedding 余弦边界检测)+ `@langchain/textsplitters` 兜底                                                                            |
-| 重排         | `Xenova/bge-reranker-base` cross-encoder — 实现于 `cross-encoder.ts`,**目前在 `query.ts` 中被注释禁用**(延迟成本过高)                        |
-| 语言检测     | `franc-min`                                                                                                                                  |
-| 文件解析     | pdf-parse v2(`PDFParse` 类)、mammoth(docx)、原生 fs(md/txt)                                                                                  |
-| 测试         | Jest + ts-jest + Playwright                                                                                                                  |
+| 层次         | 选型                                                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 框架         | Next.js 16(App Router)+ React 19 + TypeScript                                                                                                    |
+| UI           | Tailwind CSS + shadcn/ui(组件位于 `src/components/ui/`)                                                                                          |
+| 数据库       | PostgreSQL 16 + pgvector,本地经 Docker,远程用 Supabase Cloud                                                                                     |
+| ORM          | Prisma(`prisma/schema.prisma`)                                                                                                                   |
+| Embedding    | `Xenova/bge-m3`(本地,1024 维)**或** `text-embedding-3-small`(OpenAI)— 通过 `EMBEDDING_PROVIDER` 环境变量切换,经 `embeddings/router.ts` 分发      |
+| LLM provider | Claude `claude-sonnet-4-6`(默认)· DeepSeek `deepseek-chat` · OpenAI `gpt-4o-mini` — UI 中均可选,默认值由 `NEXT_PUBLIC_DEFAULT_PROVIDER` 决定     |
+| 存储         | Supabase Storage — 上传文件存于 `documents` bucket,经 `src/lib/server/storage/index.ts`                                                          |
+| 文本切分     | 固定长度切分(`RecursiveCharacterTextSplitter`,md 用 `MarkdownTextSplitter`)—— `@langchain/textsplitters`,chunk size/overlap 见 `config.chunking` |
+| 重排         | `Xenova/bge-reranker-base` cross-encoder — 实现于 `cross-encoder.ts`,由 `ENABLE_RERANKER` 环境变量开关(`.env.example` 默认 `false`)              |
+| 语言检测     | `franc-min`                                                                                                                                      |
+| 文件解析     | pdf-parse v2(`PDFParse` 类)、mammoth(docx)、原生 fs(md/txt)                                                                                      |
+| 测试         | Jest + ts-jest + Playwright                                                                                                                      |
 
 ---
 
@@ -93,12 +93,13 @@ Browser
 
 Next.js Route Handlers(src/app/api/)— web 与 mobile 客户端共用
   ├── POST /api/chat                          ← 检索 → LLM → SSE 流式返回
-  ├── GET/POST /api/documents                 ← 列表 / 上传 + 异步索引
+  ├── GET /api/documents                      ← 分页列表
   ├── GET/PATCH/DELETE /api/documents/[id]
-  ├── POST /api/documents/[id]/index          ← 确认上传完成,加入索引队列
-  ├── POST /api/documents/[id]/reindex
-  ├── POST /api/documents/prepare             ← 创建 pending 文档 + Supabase 签名上传 URL
-  ├── POST /api/ingest-hook                   ← Supabase Storage webhook(pg_net 触发 → 索引文档)
+  ├── POST /api/documents/prepare             ← 创建 pending 文档 + Supabase 签名上传 URL(唯一上传入口)
+  ├── POST /api/documents/[id]/index          ← 确认上传完成,解析 + 切分,写入无 embedding 的 chunks(status → indexing)
+  ├── POST /api/documents/[id]/embed          ← 客户端循环调用,按批补齐 chunk embedding,remaining=0 时 status → indexed
+  ├── POST /api/documents/[id]/reindex        ← 与 index 相同的解析 + 切分,用于重新索引
+  ├── POST /api/ingest-hook                   ← Supabase Storage webhook(pg_net 触发,与 /index 幂等竞争同一次解析+切分,兜底客户端未确认的情况)
   ├── GET/POST /api/sessions                  ← 会话列表 CRUD
   ├── GET/PATCH/DELETE /api/sessions/[id]     ← 单个会话 CRUD
   └── GET /api/health
@@ -108,7 +109,7 @@ Service Layer(src/lib/)
   ├── data/            documents.ts, sessions.ts — 数据库查询辅助函数
   ├── services/        delete-document.ts
   ├── db/              client.ts — Prisma 单例
-  ├── ingest/          解析 → 语义切分 → embedding → pgvector($executeRaw);索引在独立 worker 线程中执行
+  ├── ingest/          解析 → 固定长度切分 → 写入无 embedding 的 chunks;embedding 由客户端循环调用 /api/documents/[id]/embed 批量补齐
   ├── retrieval/       检测语言 → 翻译 + HyDE → embedding → 向量检索 → 重排
   ├── llm/             provider 抽象(claude.ts, deepseek.ts, openai.ts, router.ts, truncate.ts, prompts.ts)
   ├── embeddings/      bge.ts — 本地 bge-m3 单例 + getEmbeddingsBatch()
@@ -200,20 +201,20 @@ interface Message {
 3. 通过 DeepSeek 生成假设性答案(HyDE,失败则优雅降级 → null)
 4. 用 bge-m3 并行 embedding 三个变体 → 最多三个 1024 维向量
 5. 对每个向量并行执行 `vectorSearch` → 合并、去重、按余弦分数排序
-6. Cross-encoder 重排(`bge-reranker-base`)→ 取 top-N chunks
+6. `ENABLE_RERANKER` 开启时,Cross-encoder 重排(`bge-reranker-base`)→ 取 top-N chunks;否则直接按余弦分数截断 top-N
 7. 将 chunks 作为 `<context>` 注入 LLM prompt
 
 ---
 
 ## 摄取(Ingestion)流水线
 
-`ingestBuffer`(API 上传路径)— 先写文件到磁盘并立即返回,再异步经 `processDocument` 索引。
+上传统一走 `POST /api/documents/prepare` → Supabase 签名 URL 上传 → `POST /api/documents/[id]/index`(或 `/reindex`)两段式,详见下方"上传流程"约定。
 
-`ingestFile`(CLI 路径)— 同步端到端执行。
+`parseAndSplitDocument`(`ingest/pipeline.ts`)— `/index`、`/reindex`、`ingest-hook` 三个入口共用:解析 → 检测语言 → 固定长度切分(`splitText`/`splitTextMarkdown`)→ 写入 `chunks` 表(不含 embedding)→ `status: "indexing"`。
 
-两者都遵循:SHA-256 去重 → 解析 → 检测语言 → 语义切分(余弦边界;失败时降级到 `RecursiveCharacterTextSplitter`)→ 逐 chunk embedding → `$executeRaw` INSERT(带 `::vector`)→ 更新 `status`。
+embedding 由**客户端**驱动补齐:`EmbedServiceProvider`(`src/context/embed-service-context.tsx`)对处于 `indexing` 状态的文档循环调用 `POST /api/documents/[id]/embed`(每次一批,默认 20 条),直到 `remaining === 0` 才把 `status` 置为 `indexed`。该 context 挂载时还会扫描 `GET /api/documents`,对任何仍卡在 `indexing` 的文档自动续跑 —— 这是当前的"断点续传"机制,取代了旧版依赖服务端 worker 线程 + `instrumentation.ts` 的启动时恢复。
 
-索引在服务启动时创建的持久化 **worker 线程**(`src/lib/server/ingest/indexing-worker.ts`)中执行。主线程通过 `indexing-queue.ts` 里的 `enqueueIndexing()` 派发任务。服务启动钩子(`instrumentation.ts`)会恢复上次重启前遗留的 `pending` 文档。云端模式(`IS_CLOUD`)下改为在请求处理函数内联执行索引 —— 详见"关键约定"。
+`ingestFile`(`scripts/ingest.ts` 的 CLI 路径,唯一使用方)— 同步端到端执行:SHA-256 去重 → 解析 → 检测语言 → 固定长度切分 → 逐 chunk embedding(`embedBatchForIndexing`)→ `$executeRaw` INSERT(带 `::vector`)→ 更新 `status`。
 
 ---
 
@@ -243,15 +244,15 @@ LLM 调用前会通过 `truncate.ts` 截断历史 —— 在 token 预算内(估
 - **pdf-parse v2 API**:`new PDFParse({ data: buffer })` 然后 `.getText()` —— 不是 v1 那种默认导出函数。
 - **mammoth import**:`const { default: mammoth } = await import("mammoth")` —— Jest mock 需要带 `__esModule: true`。
 - **测试中的动态 import**:mock factory 必须包含 `__esModule: true`,以配合 `esModuleInterop` 正确 interop。
-- **摄取是异步的**:`POST /api/documents` 立即返回文档 ID;索引在后台 worker 线程执行,需轮询 `status` 字段。
+- **摄取是异步的**:`/index`(或 `/reindex`)只做解析+切分就返回,`status` 先到 `indexing`;真正补齐 embedding 由客户端循环调用 `/embed` 完成,`status` 才变 `indexed`。知识库列表需要轮询/SWR 刷新 `status` 才能反映进度。
 - **System prompt**:用英文书写,避免让 LLM 偏向某种特定的回复语言。
 - **localStorage 仅限客户端**:`chat-storage.ts` 只用 localStorage 存 `chat:last`,完整会话数据在 PostgreSQL(mobile 端用 `AsyncStorage` 存等价 key,见 `../mobile/AGENTS.md`)。
 - **会话同步**:任何会话写操作之后,调用 `swrMutate("/api/sessions")`(列表)**并且** `swrMutate(\`/api/sessions/${id}\`, updated, { revalidate: false })`(单会话缓存)—— 不要派发自定义事件。漏更新单会话 key 会导致返回某个会话时读到旧数据。
 - **校验错误**:`ZodError` 使用 `validationErrorResponse(error)` —— 返回 `{ error: "Validation failed", fieldErrors: ... }`,状态码 400。
-- **批量 embedding**:多文本场景用 `getEmbeddingsBatch(texts[])`(语义切分器中使用);单文本场景用 `getEmbedding(text)`。
+- **批量 embedding**:多文本场景用 `getEmbeddingsBatch(texts[])`(`/api/documents/[id]/embed` 补齐 chunk embedding 时使用);CLI 摄取(`ingestFile`)走 `embedBatchForIndexing`(本地 ONNX 分批 + event-loop yield);单文本场景(检索时的查询 embedding)用 `getEmbedding(text)`。
 - **限流**:`src/lib/rate-limit.ts` 中的 `checkRateLimit(key, limit, windowMs)` —— 仅内存实现,非分布式。
-- **Embedding 路由**:`embeddings/router.ts` 中的 `getEmbedding()` / `getEmbeddingsBatch()` 根据 `IS_CLOUD`(即 `EMBEDDING_PROVIDER === "openai"`)分发到 bge-m3 或 OpenAI。始终从 `router.ts` 导入,不要直接导入 `bge.ts`。
-- **云端模式(`IS_CLOUD`)**:为 true 时,`instrumentation.ts` 跳过 worker 线程(索引改为在请求处理函数内联执行),并限制上传文件不超过 50 KB。
-- **Cross-encoder 已禁用**:`retrieval/query.ts` 中的 `rerankChunks` 被注释掉,改用 `deduplicateAndSort` 的余弦排序。如需启用需取消注释,并注意 ONNX 模型的冷启动延迟。
-- **`fileRef` 字段的双重语义**:Prisma 字段 `fileRef` 映射到数据库列 `file_path`。本地模式下存本地文件系统路径;云端模式(Supabase Storage)下存 storage 对象路径(`embed/{docId}/{sanitizedFilename}`)。`storage/index.ts` 中的 `readUploadedFile` / `saveUploadedFile` 封装了这层差异。
-- **云端上传流程**:客户端(web 或 mobile)调用 `POST /api/documents/prepare` → 得到 `{ docId, signedUrl, token }` → PUT 到 Supabase Storage → `POST /api/documents/{docId}/index` 确认并加入索引队列。
+- **Embedding 路由**:`embeddings/router.ts` 中的 `getEmbedding()` / `getEmbeddingsBatch()` 根据 `config.embedding.useOpenAI`(即 `EMBEDDING_PROVIDER === "openai"`)分发到 bge-m3 或 OpenAI。始终从 `router.ts` 导入,不要直接导入 `bge.ts`。
+- **上传大小上限**:同样由 `config.embedding.useOpenAI` 决定 —— true 时用 `MAX_UPLOAD_BYTES_CLOUD`(50 KB),否则 `MAX_UPLOAD_BYTES_LOCAL`(1 MB),常量来自 `@faq-rag/shared`,在 `/api/documents/prepare` 中校验。
+- **Cross-encoder 由环境变量开关**:`retrieval/query.ts` 中 `config.retrieval.enableReranker`(即 `ENABLE_RERANKER`,`.env.example` 默认 `false`)为 true 时才动态 `import("./cross-encoder")` 调用 `rerankChunks`;否则直接用 `deduplicateAndSort` 的余弦排序截断。启用需注意 ONNX 模型的冷启动延迟。
+- **`fileRef` 字段**:Prisma 字段 `fileRef` 映射到数据库列 `file_path`,存 Supabase Storage 对象路径(`embed/{docId}/{sanitizedFilename}`)。`storage/index.ts` 中的 `readUploadedFile` / `saveUploadedFile` 均直接操作 Supabase Storage(无本地文件系统分支)。CLI 摄取(`ingestFile`)例外 —— 它把本地磁盘路径写入 `fileRef`,该路径不会被 `readUploadedFile` 读取,仅用于一次性建库。
+- **上传流程**:客户端(web 或 mobile)调用 `POST /api/documents/prepare` → 得到 `{ docId, signedUrl, token }` → PUT 到 Supabase Storage → `POST /api/documents/{docId}/index` 触发解析+切分(`status → indexing`)→ 客户端循环调用 `POST /api/documents/{docId}/embed` 直到补齐全部 embedding(`status → indexed`)。这是当前唯一的上传路径,不再区分本地/云端。
