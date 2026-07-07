@@ -34,7 +34,12 @@ export default function RootLayout() {
           <GluestackUIProvider mode={isDark ? "dark" : "light"}>
             <ProviderContextProvider>
               <BottomSheetModalProvider>
-                <Stack screenOptions={{ headerShown: false }} />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: isDark ? "#030712" : "#ffffff" },
+                  }}
+                />
               </BottomSheetModalProvider>
             </ProviderContextProvider>
           </GluestackUIProvider>

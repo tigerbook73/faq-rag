@@ -11,7 +11,7 @@ export default function AboutScreen() {
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
-      <Stack.Screen options={{ title: "About" }} />
+      <Stack.Screen options={{ title: "About", animation: "none" }} />
 
       <ScreenHeader>
         <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
