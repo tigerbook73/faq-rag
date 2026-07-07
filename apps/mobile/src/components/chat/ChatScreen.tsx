@@ -67,20 +67,26 @@ export function LoadedChatScreen({
   // must wait for the restore to settle: the initial empty input would
   // otherwise schedule a setDraft("") (a key delete) that races the async read
   // and can wipe the stored draft.
-  const [draftRestored, setDraftRestored] = useState(false);
+  const [restoredDraftKey, setRestoredDraftKey] = useState<string | null>(null);
   useEffect(() => {
+    let cancelled = false;
     void getDraft(draftKey)
       .then((draft) => {
-        if (draft) setInput((current) => current || draft);
+        if (!cancelled) setInput(draft);
       })
-      .finally(() => setDraftRestored(true));
+      .finally(() => {
+        if (!cancelled) setRestoredDraftKey(draftKey);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [draftKey]);
 
   useEffect(() => {
-    if (!draftRestored) return;
+    if (restoredDraftKey !== draftKey) return;
     const timer = setTimeout(() => void setDraft(draftKey, input), 300);
     return () => clearTimeout(timer);
-  }, [draftKey, input, draftRestored]);
+  }, [draftKey, input, restoredDraftKey]);
 
   const handleSend = useCallback(() => {
     const question = input.trim();
