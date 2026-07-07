@@ -15,7 +15,7 @@ type DocumentsData = { items: DocumentItem[]; total: number };
 // with polling while any document is mid-pipeline, optimistic delete, and a
 // reindex → embedBatch loop until the document leaves "indexing".
 export function useDocuments() {
-  const { data, isLoading, mutate } = useSWR<DocumentsData>(SWR_KEY, () => listDocuments(), {
+  const { data, error, isLoading, mutate } = useSWR<DocumentsData>(SWR_KEY, () => listDocuments(), {
     refreshInterval: (latest) => (latest?.items.some((d) => ACTIVE_STATUSES.has(d.status)) ? POLL_INTERVAL_MS : 0),
   });
 
@@ -79,6 +79,7 @@ export function useDocuments() {
 
   return {
     documents: data?.items ?? [],
+    error: error instanceof Error ? error.message : undefined,
     isLoading,
     mutate,
     handleDelete,

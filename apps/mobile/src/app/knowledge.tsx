@@ -126,7 +126,7 @@ function DocumentActionSheet({
 }
 
 export default function KnowledgeScreen() {
-  const { documents, isLoading, handleDelete, handleReindex } = useDocuments();
+  const { documents, error, isLoading, mutate, handleDelete, handleReindex } = useDocuments();
   const { state: uploadState, pickAndUpload, reset: resetUpload } = useDocumentUpload();
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -172,6 +172,16 @@ export default function KnowledgeScreen() {
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
+        </View>
+      ) : error ? (
+        <View className="flex-1 items-center justify-center gap-3 px-8">
+          <Text className="text-center text-sm text-red-600 dark:text-red-400">{error}</Text>
+          <Pressable
+            className="rounded-full border border-gray-200 px-4 py-1.5 active:bg-gray-50 dark:border-gray-700 dark:active:bg-gray-800"
+            onPress={() => void mutate()}
+          >
+            <Text className="text-sm text-gray-700 dark:text-gray-300">Retry</Text>
+          </Pressable>
         </View>
       ) : documents.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
