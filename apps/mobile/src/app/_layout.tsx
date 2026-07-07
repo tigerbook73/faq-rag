@@ -4,11 +4,14 @@ import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useColorScheme } from "nativewind";
+import { LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GluestackUIProvider } from "../components/ui/gluestack-ui-provider";
 import { ProviderContextProvider } from "../context/provider-context";
+
+LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 
 export default function RootLayout() {
   // NativeWind defaults to the system color scheme; dark: variants and the
