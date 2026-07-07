@@ -1,6 +1,7 @@
 import { useState, useCallback, memo } from "react";
 import { View, Text, FlatList, Pressable, Modal, ActivityIndicator } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import type { DocumentItem } from "@faq-rag/shared";
@@ -130,6 +131,8 @@ export default function KnowledgeScreen() {
   const { state: uploadState, pickAndUpload, reset: resetUpload } = useDocumentUpload();
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const toggleExpanded = useCallback((doc: DocumentItem) => {
     setExpandedId((cur) => (cur === doc.id ? null : doc.id));
@@ -152,22 +155,28 @@ export default function KnowledgeScreen() {
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: "Knowledge",
-          headerBackTitle: "Back",
-          headerRight: () => (
-            <IconButton
-              icon="cloud-upload-outline"
-              onPress={() => void pickAndUpload()}
-              disabled={uploadState.phase !== "idle" && uploadState.phase !== "error"}
-              accessibilityLabel="Upload document"
-              testID="upload-button"
-            />
-          ),
-        }}
-      />
+      <Stack.Screen options={{ title: "Knowledge" }} />
+
+      <View
+        className="flex-row items-center border-b border-gray-100 px-1 dark:border-gray-800"
+        style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
+      >
+        <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
+        <Text
+          numberOfLines={1}
+          className="flex-1 px-1 text-center text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
+          Knowledge
+        </Text>
+        <IconButton
+          icon="cloud-upload-outline"
+          onPress={() => void pickAndUpload()}
+          disabled={uploadState.phase !== "idle" && uploadState.phase !== "error"}
+          accessibilityLabel="Upload document"
+          testID="upload-button"
+          size={26}
+        />
+      </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
