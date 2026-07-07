@@ -1,14 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator } from "react-native";
+import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
 import { useNavigation } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 import { useColorScheme } from "nativewind";
@@ -52,6 +44,10 @@ export function LoadedChatScreen({
   const [input, setInput] = useState("");
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [providerSheetVisible, setProviderSheetVisible] = useState(false);
+  // When the keyboard is open it already sits flush with the screen bottom,
+  // so adding the safe-area inset on top of it doubles up as dead space
+  // between the input row and the keyboard.
+  const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
 
   const listRef = useRef<FlatList<Message>>(null);
   const citationSheetRef = useRef<BottomSheetModal>(null);
@@ -108,9 +104,9 @@ export function LoadedChatScreen({
     <View className="flex-1 bg-white dark:bg-gray-950">
       <View
         className="flex-row items-center border-b border-gray-100 px-1 dark:border-gray-800"
-        style={{ paddingTop: insets.top }}
+        style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <IconButton icon="menu" onPress={() => navigation.openDrawer()} accessibilityLabel="Open menu" />
+        <IconButton icon="menu" onPress={() => navigation.openDrawer()} accessibilityLabel="Open menu" size={26} />
         <Text
           numberOfLines={1}
           className="flex-1 px-1 text-center text-base font-semibold text-gray-900 dark:text-gray-100"
@@ -119,19 +115,15 @@ export function LoadedChatScreen({
         </Text>
         <Pressable
           onPress={() => setProviderSheetVisible(true)}
-          className="mr-1 rounded-lg border border-gray-200 px-2.5 py-1 dark:border-gray-700"
+          className="mr-1 rounded-lg border border-gray-200 px-2.5 py-2 dark:border-gray-700"
           testID="provider-button"
         >
           <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">{PROVIDER_LABEL[provider]}</Text>
         </Pressable>
-        <IconButton icon="create-outline" onPress={() => void handleNew()} accessibilityLabel="New chat" />
+        <IconButton icon="create-outline" onPress={() => void handleNew()} accessibilityLabel="New chat" size={26} />
       </View>
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-      >
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
         {messages.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
             <Ionicons
@@ -165,7 +157,7 @@ export function LoadedChatScreen({
 
         <View
           className="flex-row items-end gap-2 border-t border-gray-100 px-4 pt-2 dark:border-gray-800"
-          style={{ paddingBottom: Math.max(insets.bottom, 8) }}
+          style={{ paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 8) }}
         >
           <TextInput
             value={input}
@@ -173,14 +165,14 @@ export function LoadedChatScreen({
             placeholder="Ask a question…"
             placeholderTextColor={colorScheme === "dark" ? "#6b7280" : "#9ca3af"}
             multiline
-            className="max-h-32 min-h-10 flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:text-gray-100"
+            className="max-h-32 min-h-14 flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:text-gray-100"
             editable={!loading}
             testID="chat-input"
           />
           <Pressable
             onPress={handleSend}
             disabled={loading || !input.trim()}
-            className={`h-10 w-10 items-center justify-center rounded-full ${
+            className={`h-14 w-14 items-center justify-center rounded-full ${
               loading || !input.trim() ? "bg-gray-300 dark:bg-gray-700" : "bg-blue-600"
             }`}
             testID="chat-send"

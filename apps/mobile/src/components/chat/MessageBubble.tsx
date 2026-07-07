@@ -18,6 +18,14 @@ interface Props {
 // light/dark variants are precomputed and picked via useColorScheme.
 const markdownStyleLight = StyleSheet.create({
   body: { fontSize: 14, lineHeight: 21, color: "#111827" },
+  // Headings default to fontSize 32/24/18/16/13/11 (styles.js) — pinned to
+  // match body so heading text doesn't change size, only weight.
+  heading1: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading2: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading3: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading4: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading5: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading6: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
   // react-native-markdown-display's default code_inline style adds
   // padding: 10 and a 1px border (styles.js) that a custom style prop merges
   // with rather than replaces — left alone, that inflates each inline-code
@@ -39,6 +47,12 @@ const markdownStyleLight = StyleSheet.create({
 
 const markdownStyleDark = StyleSheet.create({
   body: { fontSize: 14, lineHeight: 21, color: "#f3f4f6" },
+  heading1: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading2: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading3: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading4: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading5: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
+  heading6: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
   code_inline: {
     backgroundColor: "#374151",
     color: "#f3f4f6",

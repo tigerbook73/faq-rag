@@ -3,6 +3,7 @@ import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GluestackUIProvider } from "../components/ui/gluestack-ui-provider";
 import { ProviderContextProvider } from "../context/provider-context";
@@ -15,16 +16,18 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-        <GluestackUIProvider mode={isDark ? "dark" : "light"}>
-          <ProviderContextProvider>
-            <BottomSheetModalProvider>
-              <Stack screenOptions={{ headerShown: false }} />
-            </BottomSheetModalProvider>
-          </ProviderContextProvider>
-        </GluestackUIProvider>
-      </ThemeProvider>
-      <StatusBar style="auto" />
+      <KeyboardProvider>
+        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+          <GluestackUIProvider mode={isDark ? "dark" : "light"}>
+            <ProviderContextProvider>
+              <BottomSheetModalProvider>
+                <Stack screenOptions={{ headerShown: false }} />
+              </BottomSheetModalProvider>
+            </ProviderContextProvider>
+          </GluestackUIProvider>
+        </ThemeProvider>
+        <StatusBar style="auto" />
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
