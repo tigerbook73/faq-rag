@@ -121,7 +121,11 @@ export function LoadedChatScreen({
         <IconButton icon="create-outline" onPress={() => void handleNew()} accessibilityLabel="New chat" size={26} />
       </ScreenHeader>
 
-      <KeyboardAvoidingView className="flex-1" behavior="padding">
+      {/* react-native-keyboard-controller's KeyboardAvoidingView only accepts
+          `style`, not NativeWind's `className` — it isn't registered for
+          cssInterop, so className="flex-1" would silently no-op and let this
+          collapse to content height instead of filling the screen. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         {messages.length === 0 ? (
           <View className="flex-1 items-center justify-center px-8">
             <Ionicons

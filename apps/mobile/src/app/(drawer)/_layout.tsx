@@ -25,7 +25,10 @@ export default function DrawerLayout() {
         overlayColor: "rgba(0,0,0,0.4)",
         drawerStyle: {
           width: drawerWidth,
-          backgroundColor: isDark ? "#030712" : "#ffffff",
+          // One shade lighter than the chat screen's gray-950 background
+          // (matches the gray-900 "elevated surface" used by sheets/modals
+          // elsewhere) so the drawer has a visible boundary against it.
+          backgroundColor: isDark ? "#111827" : "#ffffff",
         },
       }}
     >
