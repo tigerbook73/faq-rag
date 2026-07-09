@@ -4,7 +4,6 @@ import { FlashList } from "@shopify/flash-list";
 import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
 import { useNavigation } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
-import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +18,7 @@ import { ScreenHeader } from "../ui/screen-header";
 import { useProvider, PROVIDER_LABEL } from "../../context/provider-context";
 import { useStreamingChat } from "../../hooks/useStreamingChat";
 import { useChatSessions } from "../../hooks/useChatSessions";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 // This screen is a direct child of the (drawer) group's Drawer navigator;
 // useNavigation()'s generic type doesn't know that, so this only narrows to
@@ -36,7 +36,7 @@ export function LoadedChatScreen({
   initialSession: ChatSession | null;
 }) {
   const insets = useSafeAreaInsets();
-  const { colorScheme } = useColorScheme();
+  const colors = useThemeColors();
   const { provider, setProvider } = useProvider();
   const navigation = useNavigation<ChatDrawerNavigation>();
   const { handleNew } = useChatSessions();
@@ -102,21 +102,18 @@ export function LoadedChatScreen({
   }, []);
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-950">
+    <View className="flex-1 bg-background">
       <ScreenHeader>
         <IconButton icon="menu" onPress={() => navigation.openDrawer()} accessibilityLabel="Open menu" size={26} />
-        <Text
-          numberOfLines={1}
-          className="flex-1 px-1 text-center text-base font-semibold text-gray-900 dark:text-gray-100"
-        >
+        <Text numberOfLines={1} className="flex-1 px-1 text-center text-base font-semibold text-foreground">
           {session?.title ?? "Chat"}
         </Text>
         <Pressable
           onPress={() => setProviderSheetVisible(true)}
-          className="mr-1 rounded-lg border border-gray-200 px-2.5 py-2 dark:border-gray-700"
+          className="mr-1 rounded-lg border border-border px-2.5 py-2"
           testID="provider-button"
         >
-          <Text className="text-xs font-medium text-gray-700 dark:text-gray-300">{PROVIDER_LABEL[provider]}</Text>
+          <Text className="text-xs font-medium text-muted-foreground">{PROVIDER_LABEL[provider]}</Text>
         </Pressable>
         <IconButton icon="create-outline" onPress={() => void handleNew()} accessibilityLabel="New chat" size={26} />
       </ScreenHeader>
@@ -131,12 +128,10 @@ export function LoadedChatScreen({
             <Ionicons
               name="chatbubbles-outline"
               size={40}
-              color={colorScheme === "dark" ? "#4b5563" : "#9ca3af"}
+              color={colors.subtleForeground}
               style={{ marginBottom: 12 }}
             />
-            <Text className="text-center text-sm text-gray-500 dark:text-gray-400">
-              Ask a question about your documents
-            </Text>
+            <Text className="text-center text-sm text-muted-foreground">Ask a question about your documents</Text>
           </View>
         ) : (
           <FlashList
@@ -157,16 +152,16 @@ export function LoadedChatScreen({
         )}
 
         <View
-          className="flex-row items-end gap-2 border-t border-gray-100 px-4 pt-2 dark:border-gray-800"
+          className="flex-row items-end gap-2 border-t border-border-muted px-4 pt-2"
           style={{ paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 8) }}
         >
           <TextInput
             value={input}
             onChangeText={setInput}
             placeholder="Ask a question…"
-            placeholderTextColor={colorScheme === "dark" ? "#6b7280" : "#9ca3af"}
+            placeholderTextColor={colors.mutedForeground}
             multiline
-            className="max-h-32 min-h-14 flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:text-gray-100"
+            className="max-h-32 min-h-14 flex-1 rounded-xl border border-border px-3 py-2 text-sm text-foreground"
             editable={!loading}
             testID="chat-input"
           />
@@ -174,14 +169,14 @@ export function LoadedChatScreen({
             onPress={handleSend}
             disabled={loading || !input.trim()}
             className={`h-14 w-14 items-center justify-center rounded-full ${
-              loading || !input.trim() ? "bg-gray-300 dark:bg-gray-700" : "bg-blue-600"
+              loading || !input.trim() ? "bg-border" : "bg-primary"
             }`}
             testID="chat-send"
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={colors.onPrimary} />
             ) : (
-              <Ionicons name="arrow-up" size={20} color="#fff" />
+              <Ionicons name="arrow-up" size={20} color={colors.onPrimary} />
             )}
           </Pressable>
         </View>

@@ -1,11 +1,10 @@
 import { useWindowDimensions } from "react-native";
 import { Drawer } from "expo-router/drawer";
-import { useColorScheme } from "nativewind";
 import { ChatDrawerContent } from "../../components/chat/ChatDrawerContent";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 export default function DrawerLayout() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const colors = useThemeColors();
   const { width: windowWidth } = useWindowDimensions();
 
   // A percentage width combined with maxWidth resolves inconsistently on
@@ -22,13 +21,12 @@ export default function DrawerLayout() {
         headerShown: false,
         drawerType: "front",
         swipeEnabled: true,
-        overlayColor: "rgba(0,0,0,0.4)",
+        overlayColor: colors.overlay,
         drawerStyle: {
           width: drawerWidth,
-          // One shade lighter than the chat screen's gray-950 background
-          // (matches the gray-900 "elevated surface" used by sheets/modals
-          // elsewhere) so the drawer has a visible boundary against it.
-          backgroundColor: isDark ? "#111827" : "#ffffff",
+          // `card` — one shade lighter than the chat screen's `background`
+          // so the drawer has a visible boundary against it.
+          backgroundColor: colors.card,
         },
       }}
     >

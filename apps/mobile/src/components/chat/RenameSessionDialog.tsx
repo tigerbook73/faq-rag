@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal, Pressable, Text, TextInput, View, KeyboardAvoidingView, Platform } from "react-native";
-import { useColorScheme } from "nativewind";
+import { useThemeColors } from "../../hooks/useThemeColors";
+import { useThemeVars } from "../../hooks/useThemeVars";
 
 interface Props {
   visible: boolean;
@@ -17,7 +18,8 @@ interface Props {
 // whenever a different session's rename is opened — `initialTitle` only
 // seeds state on mount, it isn't resynced on prop changes.
 export function RenameSessionDialog({ visible, initialTitle, onSave, onClose }: Props) {
-  const { colorScheme } = useColorScheme();
+  const colors = useThemeColors();
+  const vars = useThemeVars();
   const [title, setTitle] = useState(initialTitle);
 
   const handleSave = () => {
@@ -28,28 +30,27 @@ export function RenameSessionDialog({ visible, initialTitle, onSave, onClose }: 
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      {/* Modal content is portaled outside the DOM subtree that carries our
+          CSS-variable tokens on react-native-web, so re-apply them here. */}
+      <KeyboardAvoidingView style={vars} className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-          <Pressable
-            className="rounded-t-2xl bg-white px-5 pb-8 pt-4 dark:bg-gray-900"
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Rename chat</Text>
+          <Pressable className="rounded-t-2xl bg-card px-5 pb-8 pt-4" onPress={(e) => e.stopPropagation()}>
+            <Text className="mb-3 text-sm font-semibold text-foreground">Rename chat</Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               autoFocus
-              placeholderTextColor={colorScheme === "dark" ? "#6b7280" : "#9ca3af"}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:text-gray-100"
+              placeholderTextColor={colors.mutedForeground}
+              className="rounded-lg border border-border px-3 py-2 text-sm text-foreground"
               onSubmitEditing={handleSave}
               returnKeyType="done"
             />
             <View className="mt-4 flex-row justify-end gap-5">
               <Pressable onPress={onClose}>
-                <Text className="text-sm font-medium text-gray-500 dark:text-gray-400">Cancel</Text>
+                <Text className="text-sm font-medium text-muted-foreground">Cancel</Text>
               </Pressable>
               <Pressable onPress={handleSave}>
-                <Text className="text-sm font-semibold text-blue-600 dark:text-blue-400">Save</Text>
+                <Text className="text-sm font-semibold text-primary-text">Save</Text>
               </Pressable>
             </View>
           </Pressable>

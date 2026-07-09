@@ -31,7 +31,7 @@ export default function ChatScreen() {
 
   if (isSessionLoading || !sessionData) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-gray-950">
+      <View className="flex-1 items-center justify-center bg-background">
         <IconButton
           icon="menu"
           onPress={() => navigation.openDrawer()}
