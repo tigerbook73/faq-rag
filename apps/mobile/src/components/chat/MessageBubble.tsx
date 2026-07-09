@@ -5,6 +5,7 @@ import { useColorScheme } from "nativewind";
 import type { Citation } from "@faq-rag/shared";
 import { stripCitationMarks } from "../../lib/utils/citations";
 import { TypingDots } from "./TypingDots";
+import { light, dark } from "../../lib/theme/colors";
 
 interface Props {
   role: "user" | "assistant";
@@ -17,7 +18,7 @@ interface Props {
 // react-native-markdown-display takes StyleSheet objects, not classNames, so
 // light/dark variants are precomputed and picked via useColorScheme.
 const markdownStyleLight = StyleSheet.create({
-  body: { fontSize: 14, lineHeight: 21, color: "#111827" },
+  body: { fontSize: 14, lineHeight: 21, color: light.foreground },
   // Headings default to fontSize 32/24/18/16/13/11 (styles.js) — pinned to
   // match body so heading text doesn't change size, only weight.
   heading1: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
@@ -33,7 +34,7 @@ const markdownStyleLight = StyleSheet.create({
   // overlap the line above/below when text wraps around it. Both must be
   // explicitly zeroed here to get a compact, single-line badge.
   code_inline: {
-    backgroundColor: "#e5e7eb",
+    backgroundColor: light.border,
     borderRadius: 4,
     borderWidth: 0,
     padding: 0,
@@ -41,12 +42,18 @@ const markdownStyleLight = StyleSheet.create({
     fontSize: 13,
     lineHeight: 21,
   },
-  code_block: { backgroundColor: "#1f2937", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
-  fence: { backgroundColor: "#1f2937", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
+  code_block: {
+    backgroundColor: light.codeBlockBg,
+    color: light.codeBlockText,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 12,
+  },
+  fence: { backgroundColor: light.codeBlockBg, color: light.codeBlockText, borderRadius: 8, padding: 10, fontSize: 12 },
 });
 
 const markdownStyleDark = StyleSheet.create({
-  body: { fontSize: 14, lineHeight: 21, color: "#f3f4f6" },
+  body: { fontSize: 14, lineHeight: 21, color: dark.foreground },
   heading1: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
   heading2: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
   heading3: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
@@ -54,8 +61,8 @@ const markdownStyleDark = StyleSheet.create({
   heading5: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
   heading6: { fontSize: 14, lineHeight: 21, fontWeight: "700" },
   code_inline: {
-    backgroundColor: "#374151",
-    color: "#f3f4f6",
+    backgroundColor: dark.border,
+    color: dark.foreground,
     borderRadius: 4,
     borderWidth: 0,
     padding: 0,
@@ -63,8 +70,14 @@ const markdownStyleDark = StyleSheet.create({
     fontSize: 13,
     lineHeight: 21,
   },
-  code_block: { backgroundColor: "#111827", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
-  fence: { backgroundColor: "#111827", color: "#f9fafb", borderRadius: 8, padding: 10, fontSize: 12 },
+  code_block: {
+    backgroundColor: dark.codeBlockBg,
+    color: dark.codeBlockText,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 12,
+  },
+  fence: { backgroundColor: dark.codeBlockBg, color: dark.codeBlockText, borderRadius: 8, padding: 10, fontSize: 12 },
 });
 
 export const MessageBubble = memo(function MessageBubble({
@@ -88,8 +101,8 @@ export const MessageBubble = memo(function MessageBubble({
   if (isUser) {
     return (
       <View className="mb-3 flex-row justify-end">
-        <View className="max-w-[85%] rounded-2xl bg-blue-600 px-4 py-2.5">
-          <Text className="text-sm leading-5 text-white">{content}</Text>
+        <View className="max-w-[85%] rounded-2xl bg-primary px-4 py-2.5">
+          <Text className="text-sm leading-5 text-on-primary">{content}</Text>
         </View>
       </View>
     );
@@ -97,7 +110,7 @@ export const MessageBubble = memo(function MessageBubble({
 
   return (
     <View className="mb-3 flex-row justify-start">
-      <View className="max-w-[90%] rounded-2xl bg-gray-100 px-4 py-2.5 dark:bg-gray-800">
+      <View className="max-w-[90%] rounded-2xl bg-muted px-4 py-2.5">
         {isLoading && !content ? (
           <TypingDots />
         ) : (
@@ -123,9 +136,9 @@ function CitationList({
   const [open, setOpen] = useState(false);
 
   return (
-    <View className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
+    <View className="mt-2 border-t border-border pt-2">
       <Pressable onPress={() => setOpen((v) => !v)} className="py-1">
-        <Text className="text-xs text-gray-500 dark:text-gray-400">
+        <Text className="text-xs text-muted-foreground">
           {open ? "▾" : "▸"} Sources ({citations.length})
         </Text>
       </Pressable>
@@ -135,13 +148,13 @@ function CitationList({
             <Pressable
               key={c.id}
               onPress={() => onCitationClick?.(c)}
-              className="rounded-lg border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900"
+              className="rounded-lg border border-border bg-card p-2"
             >
-              <Text className="text-xs font-medium text-gray-500 dark:text-gray-400" numberOfLines={1}>
+              <Text className="text-xs font-medium text-muted-foreground" numberOfLines={1}>
                 [{c.id}] {c.documentName}{" "}
-                <Text className="text-gray-400 dark:text-gray-500">{(c.score * 100).toFixed(0)}% match</Text>
+                <Text className="text-subtle-foreground">{(c.score * 100).toFixed(0)}% match</Text>
               </Text>
-              <Text className="mt-0.5 text-xs text-gray-700 dark:text-gray-300" numberOfLines={3}>
+              <Text className="mt-0.5 text-xs text-muted-foreground" numberOfLines={3}>
                 {c.preview}
               </Text>
             </Pressable>

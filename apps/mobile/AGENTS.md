@@ -46,6 +46,7 @@ pnpm --filter @faq-rag/mobile exec expo export --platform web --output-dir /tmp/
 - `babel.config.js` 中 `nativewind/babel` 是 preset 位置;`metro.config.js` 用 `withNativeWind(config, { input: "./global.css" })`。
 - 抽屉宽度用固定计算值 `min(windowWidth * 0.84, 320)`,不要改回百分比 + maxWidth;react-native-web 会出现测量和动画宽度不一致。
 - 改间距、字号、头部、抽屉或点击区域前先读 `../../docs/ui-system.md` 的 Mobile Rules。
+- 颜色一律走 `src/lib/theme/colors.js` 的 token(`tailwind.config.js` 与 `useThemeColors()` 都从它派生),不要新增硬编码 hex 或裸 `gray-*`/`blue-*`/`red-*` class;完整 token 表见 `../../docs/ui-system-mobile.md`。
 
 ## 本地状态
 

@@ -1,5 +1,6 @@
 import { Modal, View, Text, Pressable, ActivityIndicator } from "react-native";
 import type { UploadState } from "../../hooks/useDocumentUpload";
+import { useThemeVars } from "../../hooks/useThemeVars";
 
 function phaseLabel(state: UploadState): string {
   switch (state.phase) {
@@ -30,39 +31,42 @@ export function UploadProgressModal({ state, onDismiss }: { state: UploadState; 
       : state.phase === "embedding" && state.totalChunks > 0
         ? state.embedded / state.totalChunks
         : null;
+  const vars = useThemeVars();
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={isError ? onDismiss : undefined}>
-      <View className="flex-1 items-center justify-center bg-black/40 px-8">
-        <View className="w-full max-w-sm rounded-2xl bg-white p-5 dark:bg-gray-900">
-          <Text className="text-sm font-semibold text-gray-900 dark:text-gray-100" numberOfLines={1}>
+      {/* Modal content is portaled outside the DOM subtree that carries our
+          CSS-variable tokens on react-native-web, so re-apply them here. */}
+      <View style={vars} className="flex-1 items-center justify-center bg-black/40 px-8">
+        <View className="w-full max-w-sm rounded-2xl bg-card p-5">
+          <Text className="text-sm font-semibold text-foreground" numberOfLines={1}>
             {state.fileName ?? "Upload"}
           </Text>
 
           {isError ? (
             <>
-              <Text className="mt-3 text-sm text-red-600 dark:text-red-400" testID="upload-error">
+              <Text className="mt-3 text-sm text-destructive" testID="upload-error">
                 {state.error}
               </Text>
               <Pressable
                 onPress={onDismiss}
-                className="mt-4 self-end rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-800"
+                className="mt-4 self-end rounded-lg bg-muted px-4 py-2"
                 testID="upload-dismiss"
               >
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">Close</Text>
+                <Text className="text-sm font-medium text-muted-foreground">Close</Text>
               </Pressable>
             </>
           ) : (
             <>
               <View className="mt-3 flex-row items-center gap-2">
                 <ActivityIndicator size="small" />
-                <Text className="text-sm text-gray-600 dark:text-gray-300" testID="upload-phase">
+                <Text className="text-sm text-muted-foreground" testID="upload-phase">
                   {phaseLabel(state)}
                 </Text>
               </View>
               {fraction !== null && (
-                <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                  <View className="h-full rounded-full bg-blue-600" style={{ width: `${fraction * 100}%` }} />
+                <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <View className="h-full rounded-full bg-primary" style={{ width: `${fraction * 100}%` }} />
                 </View>
               )}
             </>

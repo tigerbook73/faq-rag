@@ -6,8 +6,8 @@ const buttonStyle = tva({
   base: "rounded-lg px-4 py-2 items-center justify-center flex-row",
   variants: {
     variant: {
-      solid: "bg-blue-600",
-      outline: "bg-transparent border border-blue-600 dark:border-blue-400",
+      solid: "bg-primary",
+      outline: "bg-transparent border border-primary-text",
       ghost: "bg-transparent",
     },
     size: {
@@ -23,9 +23,9 @@ const textStyle = tva({
   base: "font-medium text-sm",
   variants: {
     variant: {
-      solid: "text-white",
-      outline: "text-blue-600 dark:text-blue-400",
-      ghost: "text-blue-600 dark:text-blue-400",
+      solid: "text-on-primary",
+      outline: "text-primary-text",
+      ghost: "text-primary-text",
     },
   },
   defaultVariants: { variant: "solid" },

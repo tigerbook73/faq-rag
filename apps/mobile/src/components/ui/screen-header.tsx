@@ -16,7 +16,7 @@ export function ScreenHeader({ children, className = "px-1" }: ScreenHeaderProps
 
   return (
     <View
-      className={`flex-row items-center border-b border-gray-100 dark:border-gray-800 ${className}`}
+      className={`flex-row items-center border-b border-border-muted ${className}`}
       style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
     >
       {children}

@@ -3,7 +3,6 @@ import { View, Text, Pressable, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { DrawerContentScrollView, type DrawerContentComponentProps } from "expo-router/drawer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useChatSessions } from "../../hooks/useChatSessions";
 import type { ChatSession } from "../../lib/api/session";
@@ -13,11 +12,12 @@ import { ScreenHeader } from "../ui/screen-header";
 import { ActionSheet } from "../ui/action-sheet";
 import { SessionRow } from "./SessionRow";
 import { RenameSessionDialog } from "./RenameSessionDialog";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 export function ChatDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colorScheme } = useColorScheme();
+  const colors = useThemeColors();
   const { sessions, isLoading, handleNew, handleDelete, handleRename, handleDeleteAll, navigateToSession, refresh } =
     useChatSessions();
 
@@ -43,7 +43,7 @@ export function ChatDrawerContent(props: DrawerContentComponentProps) {
   return (
     <View style={{ flex: 1 }}>
       <ScreenHeader className="justify-between px-4">
-        <Text className="text-base font-semibold text-gray-900 dark:text-gray-100">FAQ RAG</Text>
+        <Text className="text-base font-semibold text-foreground">FAQ RAG</Text>
         <IconButton icon="close" onPress={() => props.navigation.closeDrawer()} accessibilityLabel="Close menu" />
       </ScreenHeader>
 
@@ -51,19 +51,15 @@ export function ChatDrawerContent(props: DrawerContentComponentProps) {
         {...props}
         contentContainerStyle={{ flexGrow: 1 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void onRefresh()}
-            tintColor={colorScheme === "dark" ? "#e5e7eb" : "#1f2937"}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.icon} />
         }
       >
         <ListItem icon="library-outline" label="Knowledge" onPress={closeAndRun(() => router.push("/knowledge"))} />
         <ListItem icon="information-circle-outline" label="About" onPress={closeAndRun(() => router.push("/about"))} />
-        <View className="my-2 border-t border-gray-100 dark:border-gray-800" />
+        <View className="my-2 border-t border-border-muted" />
 
         <View className="flex-row items-center justify-between px-4 pb-1 pt-2">
-          <Text className="text-xs font-medium uppercase text-gray-400 dark:text-gray-500">Recent</Text>
+          <Text className="text-xs font-medium uppercase text-subtle-foreground">Recent</Text>
           {sessions.length > 0 && (
             <IconButton
               icon="trash-outline"
@@ -83,20 +79,20 @@ export function ChatDrawerContent(props: DrawerContentComponentProps) {
           />
         ))}
         {!isLoading && sessions.length === 0 && (
-          <Text className="px-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">No chats yet</Text>
+          <Text className="px-4 py-6 text-center text-sm text-subtle-foreground">No chats yet</Text>
         )}
       </DrawerContentScrollView>
 
       <View
-        className="items-start border-t border-gray-100 px-4 pt-3 dark:border-gray-800"
+        className="items-start border-t border-border-muted px-4 pt-3"
         style={{ paddingBottom: Math.max(insets.bottom, 12) }}
       >
         <Pressable
           onPress={closeAndRun(() => void handleNew())}
-          className="flex-row items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 active:bg-blue-700"
+          className="flex-row items-center gap-2 rounded-full bg-primary px-5 py-2.5 active:bg-primary-pressed"
         >
-          <Ionicons name="add" size={18} color="#fff" />
-          <Text className="text-sm font-semibold text-white">New Chat</Text>
+          <Ionicons name="add" size={18} color={colors.onPrimary} />
+          <Text className="text-sm font-semibold text-on-primary">New Chat</Text>
         </Pressable>
       </View>
 

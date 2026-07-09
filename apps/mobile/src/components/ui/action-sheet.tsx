@@ -1,6 +1,7 @@
 import { Modal, Pressable, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useColorScheme } from "nativewind";
+import { useThemeColors } from "../../hooks/useThemeColors";
+import { useThemeVars } from "../../hooks/useThemeVars";
 
 export interface ActionSheetAction {
   key: string;
@@ -24,36 +25,35 @@ interface ActionSheetProps {
 // action.onPress() themselves; this component doesn't auto-close so callers
 // can sequence follow-up UI (e.g. opening another modal) explicitly.
 export function ActionSheet({ visible, onClose, title, description, actions }: ActionSheetProps) {
-  const { colorScheme } = useColorScheme();
-  const normalColor = colorScheme === "dark" ? "#e5e7eb" : "#1f2937";
-  const destructiveColor = colorScheme === "dark" ? "#f87171" : "#dc2626";
+  const colors = useThemeColors();
+  const vars = useThemeVars();
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-        <Pressable className="rounded-t-2xl bg-white pb-8 pt-2 dark:bg-gray-900" onPress={(e) => e.stopPropagation()}>
+      {/* Modal content is portaled outside the DOM subtree that carries our
+          CSS-variable tokens on react-native-web, so re-apply them here. */}
+      <Pressable style={vars} className="flex-1 justify-end bg-black/40" onPress={onClose}>
+        <Pressable className="rounded-t-2xl bg-card pb-8 pt-2" onPress={(e) => e.stopPropagation()}>
           {(title ?? description) && (
             <Pressable className="px-5 py-3" onPress={(e) => e.stopPropagation()}>
               {title && (
-                <Text className="text-sm font-semibold text-gray-900 dark:text-gray-100" numberOfLines={1}>
+                <Text className="text-sm font-semibold text-foreground" numberOfLines={1}>
                   {title}
                 </Text>
               )}
-              {description && <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">{description}</Text>}
+              {description && <Text className="mt-1 text-xs text-muted-foreground">{description}</Text>}
             </Pressable>
           )}
           {actions.map((action) => (
             <Pressable
               key={action.key}
-              className="flex-row items-center gap-3 px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800"
+              className="flex-row items-center gap-3 px-5 py-3.5 active:bg-pressed"
               onPress={action.onPress}
             >
               {action.icon && (
-                <Ionicons name={action.icon} size={18} color={action.destructive ? destructiveColor : normalColor} />
+                <Ionicons name={action.icon} size={18} color={action.destructive ? colors.destructive : colors.icon} />
               )}
-              <Text
-                className={`text-base ${action.destructive ? "text-red-600 dark:text-red-400" : "text-gray-800 dark:text-gray-200"}`}
-              >
+              <Text className={`text-base ${action.destructive ? "text-destructive" : "text-foreground"}`}>
                 {action.label}
               </Text>
             </Pressable>

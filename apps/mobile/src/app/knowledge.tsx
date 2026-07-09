@@ -3,7 +3,6 @@ import { View, Text, Pressable, Modal, ActivityIndicator, RefreshControl } from 
 import { FlashList } from "@shopify/flash-list";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useColorScheme } from "nativewind";
 import type { DocumentItem } from "@faq-rag/shared";
 import { useDocuments } from "../hooks/useDocuments";
 import { useDocumentUpload } from "../hooks/useDocumentUpload";
@@ -13,6 +12,8 @@ import { ScreenHeader } from "../components/ui/screen-header";
 import { Badge } from "../components/ui/badge";
 import { formatBytes } from "../lib/utils/format";
 import { relativeDate } from "../lib/utils/relative-date";
+import { useThemeColors } from "../hooks/useThemeColors";
+import { useThemeVars } from "../hooks/useThemeVars";
 
 const STATUS_TONE: Record<DocumentItem["status"], { tone: "success" | "info" | "danger" | "neutral"; label: string }> =
   {
@@ -51,27 +52,27 @@ const DocumentRow = memo(function DocumentRow({
       onPress={() => onPress(doc)}
       onLongPress={() => onLongPress(doc)}
       delayLongPress={400}
-      className="border-b border-gray-100 bg-white px-4 py-3 active:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:active:bg-gray-900"
+      className="border-b border-border-muted bg-background px-4 py-3 active:bg-pressed"
       testID={`doc-row-${doc.id}`}
     >
       <View className="flex-row items-center justify-between gap-2">
         <View className="flex-1 flex-row items-center gap-2">
-          <Text className="shrink text-sm font-medium text-gray-900 dark:text-gray-100" numberOfLines={1}>
+          <Text className="shrink text-sm font-medium text-foreground" numberOfLines={1}>
             {doc.name}
           </Text>
           {doc.isBuiltIn && (
-            <View className="rounded-full border border-gray-200 px-1.5 py-0.5 dark:border-gray-700">
-              <Text className="text-[10px] text-gray-500 dark:text-gray-400">built-in</Text>
+            <View className="rounded-full border border-border px-1.5 py-0.5">
+              <Text className="text-[10px] text-muted-foreground">built-in</Text>
             </View>
           )}
         </View>
         <StatusBadge status={doc.status} />
       </View>
-      <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <Text className="mt-1 text-xs text-muted-foreground">
         {formatBytes(doc.sizeBytes)} · {chunkLabel(doc)} · {relativeDate(new Date(doc.createdAt).getTime())}
       </Text>
       {doc.status === "failed" && expanded && doc.errorMsg && (
-        <Text className="mt-1.5 text-xs text-red-600 dark:text-red-400">{doc.errorMsg}</Text>
+        <Text className="mt-1.5 text-xs text-destructive">{doc.errorMsg}</Text>
       )}
     </Pressable>
   );
@@ -89,37 +90,38 @@ function DocumentActionSheet({
   onClose: () => void;
 }) {
   const canReindex = doc?.status === "indexed" || doc?.status === "failed";
-  const { colorScheme } = useColorScheme();
-  const reindexColor = colorScheme === "dark" ? "#e5e7eb" : "#1f2937";
-  const deleteColor = colorScheme === "dark" ? "#f87171" : "#dc2626";
+  const colors = useThemeColors();
+  const vars = useThemeVars();
 
   return (
     <Modal visible={doc !== null} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-        <Pressable className="rounded-t-2xl bg-white pb-8 pt-2 dark:bg-gray-900" onPress={(e) => e.stopPropagation()}>
-          <Text className="px-5 py-3 text-xs font-medium uppercase text-gray-400 dark:text-gray-500" numberOfLines={1}>
+      {/* Modal content is portaled outside the DOM subtree that carries our
+          CSS-variable tokens on react-native-web, so re-apply them here. */}
+      <Pressable style={vars} className="flex-1 justify-end bg-black/40" onPress={onClose}>
+        <Pressable className="rounded-t-2xl bg-card pb-8 pt-2" onPress={(e) => e.stopPropagation()}>
+          <Text className="px-5 py-3 text-xs font-medium uppercase text-subtle-foreground" numberOfLines={1}>
             {doc?.name}
           </Text>
           <Pressable
-            className={`flex-row items-center gap-3 px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800 ${canReindex ? "" : "opacity-40"}`}
+            className={`flex-row items-center gap-3 px-5 py-3.5 active:bg-pressed ${canReindex ? "" : "opacity-40"}`}
             disabled={!canReindex}
             onPress={() => {
               onClose();
               onReindex();
             }}
           >
-            <Ionicons name="refresh-outline" size={18} color={reindexColor} />
-            <Text className="text-base text-gray-800 dark:text-gray-200">Reindex</Text>
+            <Ionicons name="refresh-outline" size={18} color={colors.icon} />
+            <Text className="text-base text-foreground">Reindex</Text>
           </Pressable>
           <Pressable
-            className="flex-row items-center gap-3 px-5 py-3.5 active:bg-gray-50 dark:active:bg-gray-800"
+            className="flex-row items-center gap-3 px-5 py-3.5 active:bg-pressed"
             onPress={() => {
               onClose();
               onDelete();
             }}
           >
-            <Ionicons name="trash-outline" size={18} color={deleteColor} />
-            <Text className="text-base text-red-600 dark:text-red-400">Delete</Text>
+            <Ionicons name="trash-outline" size={18} color={colors.destructive} />
+            <Text className="text-base text-destructive">Delete</Text>
           </Pressable>
         </Pressable>
       </Pressable>
@@ -134,7 +136,7 @@ export default function KnowledgeScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
+  const colors = useThemeColors();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -165,15 +167,12 @@ export default function KnowledgeScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-950">
+    <View className="flex-1 bg-background">
       <Stack.Screen options={{ title: "Knowledge", animation: "none" }} />
 
       <ScreenHeader>
         <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
-        <Text
-          numberOfLines={1}
-          className="flex-1 px-1 text-center text-base font-semibold text-gray-900 dark:text-gray-100"
-        >
+        <Text numberOfLines={1} className="flex-1 px-1 text-center text-base font-semibold text-foreground">
           Knowledge
         </Text>
         <IconButton
@@ -192,17 +191,17 @@ export default function KnowledgeScreen() {
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center gap-3 px-8">
-          <Text className="text-center text-sm text-red-600 dark:text-red-400">{error}</Text>
+          <Text className="text-center text-sm text-destructive">{error}</Text>
           <Pressable
-            className="rounded-full border border-gray-200 px-4 py-1.5 active:bg-gray-50 dark:border-gray-700 dark:active:bg-gray-800"
+            className="rounded-full border border-border px-4 py-1.5 active:bg-pressed"
             onPress={() => void mutate()}
           >
-            <Text className="text-sm text-gray-700 dark:text-gray-300">Retry</Text>
+            <Text className="text-sm text-muted-foreground">Retry</Text>
           </Pressable>
         </View>
       ) : documents.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-sm text-gray-500 dark:text-gray-400">No documents yet</Text>
+          <Text className="text-center text-sm text-muted-foreground">No documents yet</Text>
         </View>
       ) : (
         <FlashList
@@ -217,11 +216,7 @@ export default function KnowledgeScreen() {
             />
           )}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => void onRefresh()}
-              tintColor={colorScheme === "dark" ? "#e5e7eb" : "#1f2937"}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.icon} />
           }
         />
       )}
