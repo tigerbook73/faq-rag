@@ -1,16 +1,12 @@
 import "../../global.css";
 import { useEffect } from "react";
-import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useColorScheme } from "nativewind";
 import { LogBox } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { GluestackUIProvider } from "../components/ui/gluestack-ui-provider";
-import { ProviderContextProvider } from "../context/provider-context";
 import { useThemeColors } from "../hooks/useThemeColors";
+import { AppProviders } from "../providers/app-providers";
 
 LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 
@@ -30,24 +26,14 @@ export default function RootLayout() {
   }, [colors.background]);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-          <GluestackUIProvider mode={isDark ? "dark" : "light"}>
-            <ProviderContextProvider>
-              <BottomSheetModalProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: colors.background },
-                  }}
-                />
-              </BottomSheetModalProvider>
-            </ProviderContextProvider>
-          </GluestackUIProvider>
-        </ThemeProvider>
-        <StatusBar style="auto" />
-      </KeyboardProvider>
-    </GestureHandlerRootView>
+    <AppProviders isDark={isDark}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      />
+      <StatusBar style="auto" />
+    </AppProviders>
   );
 }

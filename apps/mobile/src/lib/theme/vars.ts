@@ -10,7 +10,7 @@ function hexToRgbTriplet(hex: string): string {
 }
 
 // Tokens whose value differs between light/dark are exposed as CSS custom
-// properties (applied once at the root via GluestackUIProvider) so a single
+// properties (applied once at the root via ThemeVarsProvider) so a single
 // Tailwind class (`bg-background`) resolves automatically, instead of every
 // call site needing a paired `dark:bg-background-dark` class. Tokens with an
 // identical value in both modes (primary, primaryPressed, onPrimary) stay
