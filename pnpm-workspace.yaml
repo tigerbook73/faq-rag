@@ -2,6 +2,20 @@ packages:
   - "apps/*"
   - "packages/*"
 
+catalog:
+  jest: ^30.3.0
+
+# apps/mobile is pinned to Jest 29 because jest-expo/@react-native/jest-preset
+# (as of their latest releases) still depend on jest-environment-node/@jest/*
+# packages at ^29.x — there is no jest 30-compatible RN/Expo test toolchain yet.
+# This is a deliberate, upstream-forced exception, not drift; see the
+# jest-environment-node/jest-mock entries in root package.json's pnpm.overrides
+# for why the two majors coexisting in one pnpm store needed forcing to a
+# single resolved version regardless of this catalog split.
+catalogs:
+  jest29:
+    jest: ^29.7.0
+
 ignoredBuiltDependencies:
   - sharp
   - supabase
