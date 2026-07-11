@@ -19,10 +19,15 @@ export default function Index() {
     async function resolve() {
       const lastId = await getLastChat();
       if (lastId) {
-        const session = await getSession(lastId);
-        if (session) {
-          if (!cancelled) setHref(`/chat/${lastId}`);
-          return;
+        try {
+          const session = await getSession(lastId);
+          if (session) {
+            if (!cancelled) setHref(`/chat/${lastId}`);
+            return;
+          }
+        } catch {
+          // Network/server error — fall through to /chat/new rather than
+          // stranding the user on a blank screen at launch.
         }
       }
       if (!cancelled) setHref("/chat/new");

@@ -1,12 +1,12 @@
 import { View, Text } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import Constants from "expo-constants";
-import { useProvider, PROVIDER_LABEL, PROVIDERS } from "../context/provider-context";
+import { useProviderStore, PROVIDER_LABEL, PROVIDERS } from "../stores/provider-store";
 import { IconButton } from "../components/ui/icon-button";
 import { ScreenHeader } from "../components/ui/screen-header";
 
 export default function AboutScreen() {
-  const { provider } = useProvider();
+  const provider = useProviderStore((state) => state.provider);
   const router = useRouter();
 
   return (

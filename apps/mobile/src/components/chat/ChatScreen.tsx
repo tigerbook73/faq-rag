@@ -15,7 +15,7 @@ import { CitationSheet } from "./CitationSheet";
 import { ProviderSheet } from "./ProviderSheet";
 import { IconButton } from "../ui/icon-button";
 import { ScreenHeader } from "../ui/screen-header";
-import { useProvider, PROVIDER_LABEL } from "../../context/provider-context";
+import { useProviderStore, PROVIDER_LABEL } from "../../stores/provider-store";
 import { useStreamingChat } from "../../hooks/useStreamingChat";
 import { useChatSessions } from "../../hooks/useChatSessions";
 import { useThemeColors } from "../../hooks/useThemeColors";
@@ -37,7 +37,8 @@ export function LoadedChatScreen({
 }) {
   const insets = useSafeAreaInsets();
   const colors = useThemeColors();
-  const { provider, setProvider } = useProvider();
+  const provider = useProviderStore((state) => state.provider);
+  const setProvider = useProviderStore((state) => state.setProvider);
   const navigation = useNavigation<ChatDrawerNavigation>();
   const { handleNew } = useChatSessions();
 
