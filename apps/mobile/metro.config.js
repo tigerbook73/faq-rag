@@ -7,6 +7,9 @@ const monorepoRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
+config.resolver.sourceExts = [...config.resolver.sourceExts, "md"];
+config.transformer.babelTransformerPath = require.resolve("./metro.transformer.js");
+
 config.watchFolders = [monorepoRoot];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
