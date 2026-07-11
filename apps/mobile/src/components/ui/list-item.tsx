@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, Text, View, type PressableProps } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useThemeColors } from "../../hooks/useThemeColors";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 interface ListItemProps extends Omit<PressableProps, "children"> {
   icon: keyof typeof Ionicons.glyphMap;

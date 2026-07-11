@@ -1,9 +1,9 @@
 import { Modal, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import type { Provider } from "../../lib/api/chat";
-import { PROVIDERS, PROVIDER_LABEL } from "../../stores/provider-store";
-import { useThemeColors } from "../../hooks/useThemeColors";
-import { useThemeVars } from "../../hooks/useThemeVars";
+import type { Provider } from "@/lib/api/chat";
+import { PROVIDERS, PROVIDER_LABEL } from "@/stores/provider-store";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useThemeVars } from "@/hooks/useThemeVars";
 
 interface Props {
   visible: boolean;

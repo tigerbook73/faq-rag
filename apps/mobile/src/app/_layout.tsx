@@ -5,11 +5,11 @@ import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useColorScheme } from "nativewind";
 import { Appearance, LogBox, Text, View } from "react-native";
-import { Button } from "../components/ui/button";
-import { useThemeColors } from "../hooks/useThemeColors";
-import { logger } from "../lib/logger";
-import { dark, light } from "../lib/theme/colors";
-import { AppProviders } from "../providers/app-providers";
+import { Button } from "@/components/ui/button";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { logger } from "@/lib/logger";
+import { dark, light } from "@/lib/theme/colors";
+import { AppProviders } from "@/providers/app-providers";
 
 LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 

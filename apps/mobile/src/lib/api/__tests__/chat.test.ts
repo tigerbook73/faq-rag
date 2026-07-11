@@ -4,7 +4,7 @@
  * @ai-generated
  * @reviewed-by (!HUMAN EDIT ONLY):
  */
-import { streamChat, type StreamChatCallbacks } from "../chat";
+import { streamChat, type StreamChatCallbacks } from "@/lib/api/chat";
 
 function sseBody(frames: string[]) {
   let i = 0;

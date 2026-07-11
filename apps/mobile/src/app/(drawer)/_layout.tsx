@@ -1,7 +1,7 @@
 import { useWindowDimensions } from "react-native";
 import { Drawer } from "expo-router/drawer";
-import { ChatDrawerContent } from "../../components/chat/ChatDrawerContent";
-import { useThemeColors } from "../../hooks/useThemeColors";
+import { ChatDrawerContent } from "@/components/chat/ChatDrawerContent";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 export default function DrawerLayout() {
   const colors = useThemeColors();

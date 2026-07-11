@@ -4,7 +4,7 @@
  * @ai-generated
  * @reviewed-by (!HUMAN EDIT ONLY):
  */
-import { logger } from "../logger";
+import { logger } from "@/lib/logger";
 
 // react-native declares __DEV__ via `declare const`, which TS doesn't merge
 // into globalThis's type — this cast is the narrowest way to reassign it for

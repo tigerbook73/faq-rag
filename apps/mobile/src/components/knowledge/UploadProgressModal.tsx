@@ -1,6 +1,6 @@
 import { Modal, View, Text, Pressable, ActivityIndicator } from "react-native";
-import type { UploadState } from "../../hooks/useDocumentUpload";
-import { useThemeVars } from "../../hooks/useThemeVars";
+import type { UploadState } from "@/hooks/useDocumentUpload";
+import { useThemeVars } from "@/hooks/useThemeVars";
 
 function phaseLabel(state: UploadState): string {
   switch (state.phase) {

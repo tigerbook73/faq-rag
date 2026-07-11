@@ -3,9 +3,9 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { useColorScheme } from "nativewind";
 import type { Citation } from "@faq-rag/shared";
-import { stripCitationMarks } from "../../lib/utils/citations";
+import { stripCitationMarks } from "@/lib/utils/citations";
 import { TypingDots } from "./TypingDots";
-import { light, dark } from "../../lib/theme/colors";
+import { light, dark } from "@/lib/theme/colors";
 
 interface Props {
   role: "user" | "assistant";

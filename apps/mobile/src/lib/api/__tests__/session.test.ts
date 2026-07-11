@@ -4,7 +4,7 @@
  * @ai-generated
  * @reviewed-by (!HUMAN EDIT ONLY):
  */
-import { listSessions, createSession, getSession, updateSession, deleteSession } from "../session";
+import { listSessions, createSession, getSession, updateSession, deleteSession } from "@/lib/api/session";
 
 function mockFetchOnce(body: unknown, init: Partial<Response> = {}) {
   (globalThis.fetch as jest.Mock).mockResolvedValueOnce({

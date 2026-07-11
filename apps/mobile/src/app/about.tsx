@@ -3,11 +3,11 @@ import { Stack, useRouter } from "expo-router";
 import Constants from "expo-constants";
 import Markdown from "react-native-markdown-display";
 import { useColorScheme } from "nativewind";
-import { useProviderStore, PROVIDER_LABEL, PROVIDERS } from "../stores/provider-store";
-import { IconButton } from "../components/ui/icon-button";
-import { ScreenHeader } from "../components/ui/screen-header";
-import aboutContent from "../content/about.md";
-import { light, dark } from "../lib/theme/colors";
+import { useProviderStore, PROVIDER_LABEL, PROVIDERS } from "@/stores/provider-store";
+import { IconButton } from "@/components/ui/icon-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
+import aboutContent from "@/content/about.md";
+import { light, dark } from "@/lib/theme/colors";
 
 const markdownStyleLight = StyleSheet.create({
   body: { color: light.mutedForeground, fontSize: 14, lineHeight: 21 },

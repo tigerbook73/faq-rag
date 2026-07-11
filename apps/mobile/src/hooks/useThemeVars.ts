@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { themeVars } from "../lib/theme/vars";
+import { themeVars } from "@/lib/theme/vars";
 
 /**
  * Resolves the current color scheme's CSS-variable style object (see

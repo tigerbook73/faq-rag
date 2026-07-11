@@ -7,7 +7,7 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 
-import { getApiUrl } from "../config";
+import { getApiUrl } from "@/lib/api/config";
 
 jest.mock("expo-constants", () => ({
   __esModule: true,

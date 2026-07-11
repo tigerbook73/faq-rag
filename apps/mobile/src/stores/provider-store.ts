@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { ChatRequestInputSchema, PROVIDER_LABEL, DEFAULT_PROVIDER as SHARED_DEFAULT_PROVIDER } from "@faq-rag/shared";
-import type { Provider } from "../lib/api/chat";
-import { getStoredProvider, setStoredProvider } from "../lib/api/storage";
+import type { Provider } from "@/lib/api/chat";
+import { getStoredProvider, setStoredProvider } from "@/lib/api/storage";
 
 // Derived from the shared schema enum so the runtime list cannot drift from
 // the API contract.

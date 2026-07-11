@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { themeVars } from "../../lib/theme/vars";
+import { themeVars } from "@/lib/theme/vars";
 
 interface ThemeVarsProviderProps {
   mode?: "light" | "dark";

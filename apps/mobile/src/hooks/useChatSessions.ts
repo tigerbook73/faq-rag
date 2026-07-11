@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import useSWR from "swr";
-import { listSessions, deleteSession, updateSession, type ChatSession } from "../lib/api/session";
-import { logger } from "../lib/logger";
+import { listSessions, deleteSession, updateSession, type ChatSession } from "@/lib/api/session";
+import { logger } from "@/lib/logger";
 
 const SWR_KEY = "/api/sessions";
 
