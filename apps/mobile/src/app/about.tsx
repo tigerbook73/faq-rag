@@ -32,7 +32,12 @@ export default function AboutScreen() {
       <Stack.Screen options={{ title: "About", animation: "none" }} />
 
       <ScreenHeader>
-        <IconButton icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Go back" size={26} />
+        <IconButton
+          icon="chevron-back"
+          onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+          accessibilityLabel="Go back"
+          size={26}
+        />
         <Text numberOfLines={1} className="flex-1 px-1 text-center text-base font-semibold text-foreground">
           About
         </Text>
