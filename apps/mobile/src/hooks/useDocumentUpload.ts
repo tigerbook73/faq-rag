@@ -6,6 +6,7 @@ import { MAX_UPLOAD_BYTES_CLOUD, MAX_UPLOAD_BYTES_LOCAL } from "@faq-rag/shared"
 import { prepareUpload, uploadToSupabase, confirmIndex, embedBatch } from "../lib/api/document";
 import { computeSHA256, computeFileSHA256 } from "../lib/api/utils/crypto";
 import { formatBytes } from "../lib/utils/format";
+import { logger } from "../lib/logger";
 
 const MAX_BYTES = process.env.EXPO_PUBLIC_IS_CLOUD === "true" ? MAX_UPLOAD_BYTES_CLOUD : MAX_UPLOAD_BYTES_LOCAL;
 
@@ -113,6 +114,7 @@ export function useDocumentUpload() {
       await swrMutate("/api/documents");
       setState(IDLE);
     } catch (err) {
+      logger.error("Document upload failed:", err instanceof Error ? err.message : String(err));
       void swrMutate("/api/documents");
       setState({
         ...IDLE,

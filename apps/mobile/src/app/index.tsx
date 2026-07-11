@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import { getLastChat } from "../lib/api/storage";
 import { getSession } from "../lib/api/session";
+import { logger } from "../lib/logger";
 
 // There's no standalone chat-list route to land on anymore (the session list
 // lives inside the drawer), so "/" must resolve to either the last-used chat
@@ -25,9 +26,10 @@ export default function Index() {
             if (!cancelled) setHref(`/chat/${lastId}`);
             return;
           }
-        } catch {
+        } catch (err) {
           // Network/server error — fall through to /chat/new rather than
           // stranding the user on a blank screen at launch.
+          logger.warn("Failed to resolve last chat session:", err instanceof Error ? err.message : String(err));
         }
       }
       if (!cancelled) setHref("/chat/new");

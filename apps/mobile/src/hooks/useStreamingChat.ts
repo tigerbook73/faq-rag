@@ -6,6 +6,7 @@ import type { Message, Citation } from "@faq-rag/shared";
 import { streamChat, type Provider } from "../lib/api/chat";
 import { updateSession, type ChatSession } from "../lib/api/session";
 import { setLastChat } from "../lib/api/storage";
+import { logger } from "../lib/logger";
 
 const INTERRUPTED_MARK = "\n\n⚠️ _Response interrupted_";
 
@@ -54,9 +55,10 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
         void setLastChat(idToUse);
         void swrMutate("/api/sessions");
         void swrMutate(`/api/sessions/${idToUse}`, merged, { revalidate: false });
-      } catch {
+      } catch (err) {
         // Persistence failure must not clobber the visible conversation; the
         // next successful turn will re-send the full message list anyway.
+        logger.error("Failed to persist chat session:", err instanceof Error ? err.message : String(err));
       }
     },
     [setSession],

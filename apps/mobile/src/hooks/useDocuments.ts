@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import useSWR, { mutate as swrMutate } from "swr";
 import { POLL_INTERVAL_MS, type DocumentItem } from "@faq-rag/shared";
 import { listDocuments, deleteDocument, reindexDocument, embedBatch } from "../lib/api/document";
+import { logger } from "../lib/logger";
 
 const SWR_KEY = "/api/documents";
 
@@ -28,8 +29,9 @@ export function useDocuments() {
         const result = await embedBatch(docId);
         if (result.remaining === 0 || result.status !== "indexing") break;
       }
-    } catch {
+    } catch (err) {
       // The revalidate below surfaces the failed status; nothing else to do.
+      logger.warn("Embed loop failed:", err instanceof Error ? err.message : String(err));
     } finally {
       embeddingRef.current.delete(docId);
       // Single refresh when the loop exits; intermediate progress is already
@@ -47,7 +49,8 @@ export function useDocuments() {
       try {
         await deleteDocument(id);
         await mutate();
-      } catch {
+      } catch (err) {
+        logger.warn("Failed to delete document:", err instanceof Error ? err.message : String(err));
         await mutate();
       }
     },
