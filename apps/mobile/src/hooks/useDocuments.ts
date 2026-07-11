@@ -1,8 +1,8 @@
 import { useCallback, useRef } from "react";
 import useSWR, { mutate as swrMutate } from "swr";
 import { POLL_INTERVAL_MS, type DocumentItem } from "@faq-rag/shared";
-import { listDocuments, deleteDocument, reindexDocument, embedBatch } from "../lib/api/document";
-import { logger } from "../lib/logger";
+import { listDocuments, deleteDocument, reindexDocument, embedBatch } from "@/lib/api/document";
+import { logger } from "@/lib/logger";
 
 const SWR_KEY = "/api/documents";
 

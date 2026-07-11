@@ -4,9 +4,9 @@ import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useSWR from "swr";
-import { getSession, type ChatSession } from "../../../lib/api/session";
-import { IconButton } from "../../../components/ui/icon-button";
-import { LoadedChatScreen } from "../../../components/chat/ChatScreen";
+import { getSession, type ChatSession } from "@/lib/api/session";
+import { IconButton } from "@/components/ui/icon-button";
+import { LoadedChatScreen } from "@/components/chat/ChatScreen";
 
 type ChatDrawerNavigation = DrawerNavigationProp<Record<string, object | undefined>>;
 

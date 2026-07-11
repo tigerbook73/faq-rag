@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { light, dark } from "../lib/theme/colors";
+import { light, dark } from "@/lib/theme/colors";
 
 /**
  * Resolves the current color scheme's flat token object (see

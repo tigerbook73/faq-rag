@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Pressable, Text } from "react-native";
-import type { ChatSession } from "../../lib/api/session";
+import type { ChatSession } from "@/lib/api/session";
 
 export const SessionRow = memo(function SessionRow({
   session,

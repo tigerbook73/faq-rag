@@ -8,17 +8,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import type { Citation, Message } from "@faq-rag/shared";
-import type { ChatSession } from "../../lib/api/session";
-import { setLastChat, getDraft, setDraft } from "../../lib/api/storage";
+import type { ChatSession } from "@/lib/api/session";
+import { setLastChat, getDraft, setDraft } from "@/lib/api/storage";
 import { MessageBubble } from "./MessageBubble";
 import { CitationSheet } from "./CitationSheet";
 import { ProviderSheet } from "./ProviderSheet";
-import { IconButton } from "../ui/icon-button";
-import { ScreenHeader } from "../ui/screen-header";
-import { useProviderStore, PROVIDER_LABEL } from "../../stores/provider-store";
-import { useStreamingChat } from "../../hooks/useStreamingChat";
-import { useChatSessions } from "../../hooks/useChatSessions";
-import { useThemeColors } from "../../hooks/useThemeColors";
+import { IconButton } from "@/components/ui/icon-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
+import { useProviderStore, PROVIDER_LABEL } from "@/stores/provider-store";
+import { useStreamingChat } from "@/hooks/useStreamingChat";
+import { useChatSessions } from "@/hooks/useChatSessions";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 // This screen is a direct child of the (drawer) group's Drawer navigator;
 // useNavigation()'s generic type doesn't know that, so this only narrows to

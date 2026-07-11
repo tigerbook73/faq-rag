@@ -1,7 +1,7 @@
 import { Modal, Pressable, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useThemeColors } from "../../hooks/useThemeColors";
-import { useThemeVars } from "../../hooks/useThemeVars";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useThemeVars } from "@/hooks/useThemeVars";
 
 export interface ActionSheetAction {
   key: string;

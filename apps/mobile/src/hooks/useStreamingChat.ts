@@ -3,10 +3,10 @@ import { useRouter } from "expo-router";
 import { mutate as swrMutate } from "swr";
 import { randomUUID } from "expo-crypto";
 import type { Message, Citation } from "@faq-rag/shared";
-import { streamChat, type Provider } from "../lib/api/chat";
-import { updateSession, type ChatSession } from "../lib/api/session";
-import { setLastChat } from "../lib/api/storage";
-import { logger } from "../lib/logger";
+import { streamChat, type Provider } from "@/lib/api/chat";
+import { updateSession, type ChatSession } from "@/lib/api/session";
+import { setLastChat } from "@/lib/api/storage";
+import { logger } from "@/lib/logger";
 
 const INTERRUPTED_MARK = "\n\n⚠️ _Response interrupted_";
 

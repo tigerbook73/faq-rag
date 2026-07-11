@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
-import { getLastChat } from "../lib/api/storage";
-import { getSession } from "../lib/api/session";
-import { logger } from "../lib/logger";
+import { getLastChat } from "@/lib/api/storage";
+import { getSession } from "@/lib/api/session";
+import { logger } from "@/lib/logger";
 
 // There's no standalone chat-list route to land on anymore (the session list
 // lives inside the drawer), so "/" must resolve to either the last-used chat

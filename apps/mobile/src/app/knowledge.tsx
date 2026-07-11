@@ -4,17 +4,17 @@ import { FlashList } from "@shopify/flash-list";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import type { DocumentItem } from "@faq-rag/shared";
-import { useDocuments } from "../hooks/useDocuments";
-import { useDocumentUpload } from "../hooks/useDocumentUpload";
-import { UploadProgressModal } from "../components/knowledge/UploadProgressModal";
-import { IconButton } from "../components/ui/icon-button";
-import { ScreenHeader } from "../components/ui/screen-header";
-import { Badge } from "../components/ui/badge";
-import { logger } from "../lib/logger";
-import { formatBytes } from "../lib/utils/format";
-import { relativeDate } from "../lib/utils/relative-date";
-import { useThemeColors } from "../hooks/useThemeColors";
-import { useThemeVars } from "../hooks/useThemeVars";
+import { useDocuments } from "@/hooks/useDocuments";
+import { useDocumentUpload } from "@/hooks/useDocumentUpload";
+import { UploadProgressModal } from "@/components/knowledge/UploadProgressModal";
+import { IconButton } from "@/components/ui/icon-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
+import { Badge } from "@/components/ui/badge";
+import { logger } from "@/lib/logger";
+import { formatBytes } from "@/lib/utils/format";
+import { relativeDate } from "@/lib/utils/relative-date";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useThemeVars } from "@/hooks/useThemeVars";
 
 const STATUS_TONE: Record<DocumentItem["status"], { tone: "success" | "info" | "danger" | "neutral"; label: string }> =
   {

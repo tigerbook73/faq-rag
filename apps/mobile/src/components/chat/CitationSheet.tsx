@@ -3,7 +3,7 @@ import { View, Text } from "react-native";
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import type { BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import type { Citation } from "@faq-rag/shared";
-import { useThemeColors } from "../../hooks/useThemeColors";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 interface Props {
   citation: Citation | null;

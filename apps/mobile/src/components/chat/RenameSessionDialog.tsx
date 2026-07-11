@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Modal, Pressable, Text, TextInput, View, KeyboardAvoidingView, Platform } from "react-native";
-import { useThemeColors } from "../../hooks/useThemeColors";
-import { useThemeVars } from "../../hooks/useThemeVars";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useThemeVars } from "@/hooks/useThemeVars";
 
 interface Props {
   visible: boolean;

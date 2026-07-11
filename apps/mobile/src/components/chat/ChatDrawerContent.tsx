@@ -4,15 +4,15 @@ import { useRouter } from "expo-router";
 import { DrawerContentScrollView, type DrawerContentComponentProps } from "expo-router/drawer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useChatSessions } from "../../hooks/useChatSessions";
-import type { ChatSession } from "../../lib/api/session";
-import { ListItem } from "../ui/list-item";
-import { IconButton } from "../ui/icon-button";
-import { ScreenHeader } from "../ui/screen-header";
-import { ActionSheet } from "../ui/action-sheet";
+import { useChatSessions } from "@/hooks/useChatSessions";
+import type { ChatSession } from "@/lib/api/session";
+import { ListItem } from "@/components/ui/list-item";
+import { IconButton } from "@/components/ui/icon-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
+import { ActionSheet } from "@/components/ui/action-sheet";
 import { SessionRow } from "./SessionRow";
 import { RenameSessionDialog } from "./RenameSessionDialog";
-import { useThemeColors } from "../../hooks/useThemeColors";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 export function ChatDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();

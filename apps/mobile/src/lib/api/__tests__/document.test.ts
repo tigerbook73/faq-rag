@@ -4,7 +4,7 @@
  * @ai-generated
  * @reviewed-by (!HUMAN EDIT ONLY):
  */
-import { listDocuments, prepareUpload, embedBatch, deleteDocument } from "../document";
+import { listDocuments, prepareUpload, embedBatch, deleteDocument } from "@/lib/api/document";
 
 function mockFetchOnce(body: unknown, init: Partial<Response> = {}) {
   (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
