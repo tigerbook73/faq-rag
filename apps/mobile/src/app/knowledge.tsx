@@ -10,6 +10,7 @@ import { UploadProgressModal } from "../components/knowledge/UploadProgressModal
 import { IconButton } from "../components/ui/icon-button";
 import { ScreenHeader } from "../components/ui/screen-header";
 import { Badge } from "../components/ui/badge";
+import { logger } from "../lib/logger";
 import { formatBytes } from "../lib/utils/format";
 import { relativeDate } from "../lib/utils/relative-date";
 import { useThemeColors } from "../hooks/useThemeColors";
@@ -160,7 +161,7 @@ export default function KnowledgeScreen() {
       // Failure rolls the optimistic status back via revalidation inside the
       // hook; Alert is a no-op on react-native-web, so just log here.
       handleReindex(doc.id).catch((err) => {
-        console.warn("Reindex failed:", err instanceof Error ? err.message : String(err));
+        logger.warn("Reindex failed:", err instanceof Error ? err.message : String(err));
       });
     },
     [handleReindex],

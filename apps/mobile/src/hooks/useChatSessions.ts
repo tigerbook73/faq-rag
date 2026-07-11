@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import useSWR from "swr";
 import { listSessions, deleteSession, updateSession, type ChatSession } from "../lib/api/session";
+import { logger } from "../lib/logger";
 
 const SWR_KEY = "/api/sessions";
 
@@ -24,7 +25,8 @@ export function useChatSessions() {
       void mutate((current) => current?.filter((s) => s.id !== id), false);
       try {
         await deleteSession(id);
-      } catch {
+      } catch (err) {
+        logger.warn("Failed to delete chat session:", err instanceof Error ? err.message : String(err));
         void mutate();
       }
     },
@@ -36,7 +38,8 @@ export function useChatSessions() {
       void mutate((current) => current?.map((s) => (s.id === id ? { ...s, title } : s)), false);
       try {
         await updateSession(id, { title });
-      } catch {
+      } catch (err) {
+        logger.warn("Failed to rename chat session:", err instanceof Error ? err.message : String(err));
         void mutate();
       }
     },
@@ -48,7 +51,8 @@ export function useChatSessions() {
     void mutate([], false);
     try {
       await Promise.all(ids.map((id) => deleteSession(id)));
-    } catch {
+    } catch (err) {
+      logger.warn("Failed to delete all chat sessions:", err instanceof Error ? err.message : String(err));
       void mutate();
     }
     router.replace("/chat/new");
