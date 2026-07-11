@@ -3,6 +3,7 @@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,8 @@ export function DocumentTable() {
     rebuildDialogOpen,
     setRebuildDialogOpen,
     isManualRefreshing,
+    showAllModels,
+    setShowAllModels,
     handleDelete,
     handleReindex,
     handleRebuildAll,
@@ -82,6 +85,10 @@ export function DocumentTable() {
               Rebuilding {rebuildProgress.done}/{rebuildProgress.total}
             </span>
           )}
+          <label className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Switch checked={showAllModels} onCheckedChange={setShowAllModels} aria-label="Show all embedding models" />
+            <span className="hidden sm:inline">Show all models</span>
+          </label>
           <Button
             variant="outline"
             size="icon"

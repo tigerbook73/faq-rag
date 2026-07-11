@@ -8,11 +8,17 @@ import { type DocumentItem as Document } from "@faq-rag/shared";
 import { deleteDocument, reindexDocument } from "@/lib/client/documents-api";
 import { fetcher } from "@/lib/client/swr";
 import { useEmbedService } from "@/context/embed-service-context";
+import { canReindexDoc } from "@/components/knowledge/DocumentRow";
 
 const ACTIVE_STATUSES = new Set(["pending", "uploaded", "indexing"]);
 
+function listKey(allModels: boolean) {
+  return `/api/documents?allModels=${allModels}`;
+}
+
 export function useDocumentManagement() {
-  const { data, isLoading, mutate: mutateDocuments } = useSWR<{ items: Document[] }>("/api/documents", fetcher);
+  const [showAllModels, setShowAllModels] = useState(false);
+  const { data, isLoading, mutate: mutateDocuments } = useSWR<{ items: Document[] }>(listKey(showAllModels), fetcher);
   const { triggerEmbed } = useEmbedService();
   const baseDocuments = useMemo(() => data?.items ?? [], [data]);
 
@@ -51,12 +57,15 @@ export function useDocumentManagement() {
 
   const hasActiveDocs = baseDocuments.some((d) => ACTIVE_STATUSES.has(d.status));
 
-  useSWR<{ items: Document[] }>(hasActiveDocs ? "/api/documents" : null, fetcher, {
+  useSWR<{ items: Document[] }>(hasActiveDocs ? listKey(showAllModels) : null, fetcher, {
     refreshInterval: config.ui.pollIntervalMs,
   });
 
   async function handleDelete(id: string) {
-    mutateDocuments((current) => (current ? { items: current.items.filter((d) => d.id !== id) } : current), false);
+    mutateDocuments(
+      (current) => (current ? { ...current, items: current.items.filter((d) => d.id !== id) } : current),
+      false,
+    );
     setDeletingId(id);
     try {
       await deleteDocument(id);
@@ -73,7 +82,10 @@ export function useDocumentManagement() {
     mutateDocuments(
       (current) =>
         current
-          ? { items: current.items.map((d) => (d.id === id ? { ...d, status: "pending" as Document["status"] } : d)) }
+          ? {
+              ...current,
+              items: current.items.map((d) => (d.id === id ? { ...d, status: "pending" as Document["status"] } : d)),
+            }
           : current,
       false,
     );
@@ -91,18 +103,19 @@ export function useDocumentManagement() {
   }
 
   async function handleRebuildAll() {
+    const targets = documents.filter((d) => canReindexDoc(d));
     setRebuilding(true);
-    setRebuildProgress({ done: 0, total: documents.length });
+    setRebuildProgress({ done: 0, total: targets.length });
     let failed = 0;
     try {
-      for (let i = 0; i < documents.length; i++) {
+      for (let i = 0; i < targets.length; i++) {
         try {
-          await reindexDocument(documents[i].id);
-          triggerEmbed(documents[i].id);
+          await reindexDocument(targets[i].id);
+          triggerEmbed(targets[i].id);
         } catch {
           failed++;
         }
-        setRebuildProgress({ done: i + 1, total: documents.length });
+        setRebuildProgress({ done: i + 1, total: targets.length });
       }
       await mutateDocuments();
       if (failed > 0) toast.error(`${failed} document${failed > 1 ? "s" : ""} failed to reindex`);
@@ -130,6 +143,8 @@ export function useDocumentManagement() {
     rebuildDialogOpen,
     setRebuildDialogOpen,
     isManualRefreshing,
+    showAllModels,
+    setShowAllModels,
     handleDelete,
     handleReindex,
     handleRebuildAll,

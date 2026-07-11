@@ -37,7 +37,12 @@ describe("/api/documents/[id]/reindex", () => {
   });
 
   it("returns queued and calls parseAndSplitDocument when document exists and has fileRef", async () => {
-    mockGetDocumentForWrite.mockResolvedValue({ id: "doc-1", fileRef: "embed/doc-1/faq.md", isBuiltIn: false });
+    mockGetDocumentForWrite.mockResolvedValue({
+      id: "doc-1",
+      fileRef: "embed/doc-1/faq.md",
+      isBuiltIn: false,
+      embeddingModel: "bge-m3",
+    });
 
     const res = await POST(new Request("http://localhost/api/documents/doc-1/reindex") as never, params);
 
@@ -57,7 +62,12 @@ describe("/api/documents/[id]/reindex", () => {
   });
 
   it("returns 403 when document is built-in", async () => {
-    mockGetDocumentForWrite.mockResolvedValue({ id: "doc-1", fileRef: "embed/doc-1/faq.md", isBuiltIn: true });
+    mockGetDocumentForWrite.mockResolvedValue({
+      id: "doc-1",
+      fileRef: "embed/doc-1/faq.md",
+      isBuiltIn: true,
+      embeddingModel: "bge-m3",
+    });
 
     const res = await POST(new Request("http://localhost/api/documents/doc-1/reindex") as never, params);
 
@@ -66,7 +76,12 @@ describe("/api/documents/[id]/reindex", () => {
   });
 
   it("returns 422 when fileRef is missing", async () => {
-    mockGetDocumentForWrite.mockResolvedValue({ id: "doc-1", fileRef: null, isBuiltIn: false });
+    mockGetDocumentForWrite.mockResolvedValue({
+      id: "doc-1",
+      fileRef: null,
+      isBuiltIn: false,
+      embeddingModel: "bge-m3",
+    });
 
     const res = await POST(new Request("http://localhost/api/documents/doc-1/reindex") as never, params);
 
