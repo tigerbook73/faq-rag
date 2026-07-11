@@ -7,15 +7,17 @@ export async function listDocuments() {
   });
 }
 
-export async function listDocumentsPage(input: { skip: number; take: number }) {
+export async function listDocumentsPage(input: { skip: number; take: number; embeddingModel?: string }) {
+  const where = input.embeddingModel ? { embeddingModel: input.embeddingModel } : {};
   const [items, total] = await Promise.all([
     prisma.document.findMany({
+      where,
       skip: input.skip,
       take: input.take,
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { chunks: true } } },
     }),
-    prisma.document.count(),
+    prisma.document.count({ where }),
   ]);
 
   return { items, total };

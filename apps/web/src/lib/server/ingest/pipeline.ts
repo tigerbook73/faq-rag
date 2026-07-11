@@ -98,7 +98,10 @@ async function storeChunksWithoutEmbeddings(docId: string, chunks: string[]): Pr
 
 /** Parse + split file into chunks stored without embeddings; sets status=indexing. */
 export async function parseAndSplitDocument(docId: string, filePath: string): Promise<void> {
-  await prisma.document.update({ where: { id: docId }, data: { status: "indexing", errorMsg: null } });
+  await prisma.document.update({
+    where: { id: docId },
+    data: { status: "indexing", errorMsg: null, embeddingModel: getEmbeddingModelId() },
+  });
   try {
     const buffer = await readUploadedFile(filePath);
     const ext = path.extname(filePath).toLowerCase();

@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  jest-environment-node: 30.4.1
+  jest-mock: 30.4.1
+
 patchedDependencies:
   react-native-css-interop@0.2.6:
     hash: e6d59f18b1f84eab35606ed0b1cd89ceae57e7fc258a6d2cde41cfd7967b7433
@@ -5192,10 +5196,6 @@ packages:
       canvas:
         optional: true
 
-  jest-environment-node@29.7.0:
-    resolution: {integrity: sha512-DOSwCRqXirTOyheM+4d5YZOrWcdu0LNZ87ewUoywbcb2XR4wKgqiG8vNeYwhjFMbEkfju7wx2GYH0P2gevGvFw==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
   jest-environment-node@30.4.1:
     resolution: {integrity: sha512-4FZYVOk85hz2AyT6BbarKy9u37g6DbrDyCdFhsnDdXqyrueYQvB+0zO4f/kqLCRD0BsPRXPMNJeQwihKZV8naw==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
@@ -5256,14 +5256,6 @@ packages:
 
   jest-message-util@30.4.1:
     resolution: {integrity: sha512-kwCKIvq0MCW1HzLoGola9Te6JUdzgV0loyKJ3Qghrkz9i5/RRIHsL95BMQc2HBBhlBKC4j22K9p11TGHH8RBpQ==}
-    engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
-
-  jest-mock@29.7.0:
-    resolution: {integrity: sha512-ITOMZn+UkYS4ZFh83xYAOzWStloNzJFO2s8DWrE4lhtGD+AorgnbkiKERe4wQVBydIGPx059g6riW5Btp6Llnw==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
-  jest-mock@30.3.0:
-    resolution: {integrity: sha512-OTzICK8CpE+t4ndhKrwlIdbM6Pn8j00lvmSmq5ejiO+KxukbLjgOflKWMn3KE34EZdQm5RqTuKj+5RIEniYhog==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   jest-mock@30.4.1:
@@ -9827,7 +9819,7 @@ snapshots:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
       '@types/node': 26.1.0
-      jest-mock: 29.7.0
+      jest-mock: 30.4.1
 
   '@jest/environment@30.4.1':
     dependencies:
@@ -9868,7 +9860,7 @@ snapshots:
       '@sinonjs/fake-timers': 10.3.0
       '@types/node': 26.1.0
       jest-message-util: 29.7.0
-      jest-mock: 29.7.0
+      jest-mock: 30.4.1
       jest-util: 29.7.0
 
   '@jest/fake-timers@30.4.1':
@@ -9887,7 +9879,7 @@ snapshots:
       '@jest/environment': 29.7.0
       '@jest/expect': 29.7.0
       '@jest/types': 29.6.3
-      jest-mock: 29.7.0
+      jest-mock: 30.4.1
     transitivePeerDependencies:
       - supports-color
 
@@ -10866,7 +10858,7 @@ snapshots:
       '@jest/create-cache-key-function': 29.7.0
       '@react-native/js-polyfills': 0.86.0
       babel-jest: 29.7.0(@babel/core@7.29.7)
-      jest-environment-node: 29.7.0
+      jest-environment-node: 30.4.1
       react: 19.2.3
       regenerator-runtime: 0.13.11
     transitivePeerDependencies:
@@ -10892,9 +10884,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89': {}
 
@@ -13169,7 +13159,7 @@ snapshots:
       '@jest/get-type': 30.1.0
       jest-matcher-utils: 30.3.0
       jest-message-util: 30.3.0
-      jest-mock: 30.3.0
+      jest-mock: 30.4.1
       jest-util: 30.3.0
 
   expect@30.4.1:
@@ -14302,7 +14292,7 @@ snapshots:
       glob: 7.2.3
       graceful-fs: 4.2.11
       jest-circus: 29.7.0
-      jest-environment-node: 29.7.0
+      jest-environment-node: 30.4.1
       jest-get-type: 29.6.3
       jest-regex-util: 29.6.3
       jest-resolve: 29.7.0
@@ -14405,22 +14395,13 @@ snapshots:
       '@jest/types': 29.6.3
       '@types/jsdom': 20.0.1
       '@types/node': 26.1.0
-      jest-mock: 29.7.0
+      jest-mock: 30.4.1
       jest-util: 29.7.0
       jsdom: 20.0.3
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
-
-  jest-environment-node@29.7.0:
-    dependencies:
-      '@jest/environment': 29.7.0
-      '@jest/fake-timers': 29.7.0
-      '@jest/types': 29.6.3
-      '@types/node': 26.1.0
-      jest-mock: 29.7.0
-      jest-util: 29.7.0
 
   jest-environment-node@30.4.1:
     dependencies:
@@ -14560,18 +14541,6 @@ snapshots:
       slash: 3.0.0
       stack-utils: 2.0.6
 
-  jest-mock@29.7.0:
-    dependencies:
-      '@jest/types': 29.6.3
-      '@types/node': 26.1.0
-      jest-util: 29.7.0
-
-  jest-mock@30.3.0:
-    dependencies:
-      '@jest/types': 30.3.0
-      '@types/node': 20.19.43
-      jest-util: 30.3.0
-
   jest-mock@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
@@ -14641,7 +14610,7 @@ snapshots:
       emittery: 0.13.1
       graceful-fs: 4.2.11
       jest-docblock: 29.7.0
-      jest-environment-node: 29.7.0
+      jest-environment-node: 30.4.1
       jest-haste-map: 29.7.0
       jest-leak-detector: 29.7.0
       jest-message-util: 29.7.0
@@ -14699,7 +14668,7 @@ snapshots:
       graceful-fs: 4.2.11
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
-      jest-mock: 29.7.0
+      jest-mock: 30.4.1
       jest-regex-util: 29.6.3
       jest-resolve: 29.7.0
       jest-snapshot: 29.7.0

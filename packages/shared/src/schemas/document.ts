@@ -1,8 +1,16 @@
 import { z } from "zod";
 
+// z.coerce.boolean() treats any non-empty string (including "false") as truthy,
+// so "allModels=false" in a query string would coerce to true. Match explicitly instead.
+const booleanFlag = z
+  .union([z.literal("true"), z.literal("1"), z.literal("false"), z.literal("0"), z.boolean()])
+  .optional()
+  .transform((v) => v === "true" || v === "1" || v === true);
+
 export const DocumentListQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   pageSize: z.coerce.number().min(1).max(100).default(20),
+  allModels: booleanFlag,
 });
 export type DocumentListQuery = z.infer<typeof DocumentListQuerySchema>;
 

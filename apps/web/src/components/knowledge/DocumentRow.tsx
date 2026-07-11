@@ -32,6 +32,10 @@ function chunkLabel(doc: Document) {
   return doc.status === "indexing" && doc.totalChunks ? `${doc._count.chunks} / ${doc.totalChunks}` : doc._count.chunks;
 }
 
+export function canReindexDoc(doc: Document): boolean {
+  return !doc.isBuiltIn && (doc.status === "indexed" || doc.status === "failed");
+}
+
 interface DocumentRowProps {
   doc: Document;
   isDeleting: boolean;
@@ -41,7 +45,7 @@ interface DocumentRowProps {
 }
 
 export function DocumentRow({ doc, isDeleting, isReindexing, onReindex, onDelete }: DocumentRowProps) {
-  const canReindex = !doc.isBuiltIn && (doc.status === "indexed" || doc.status === "failed");
+  const canReindex = canReindexDoc(doc);
   const hasActions = !doc.isBuiltIn;
   const actionsMenu = (
     <DropdownMenu>
