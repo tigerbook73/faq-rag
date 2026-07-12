@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { SampleQuestionItem } from "@faq-rag/shared";
 import { useThemeColors } from "@/hooks/useThemeColors";
 import { useSampleQuestions } from "@/hooks/useSampleQuestions";
 
-function sampleQuestions(pool: string[], count: number): string[] {
+function sampleQuestions(pool: SampleQuestionItem[], count: number): SampleQuestionItem[] {
   const shuffled = [...pool];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -18,14 +19,7 @@ export function ChatEmptyState({ onSend }: { onSend: (question: string) => void 
   const { questions: pool } = useSampleQuestions();
 
   // Stable per mount — re-randomizes each time the new-chat screen is opened
-  const questions = useMemo(
-    () =>
-      sampleQuestions(
-        pool.map((q) => q.question),
-        4,
-      ),
-    [pool],
-  );
+  const questions = useMemo(() => sampleQuestions(pool, 4), [pool]);
 
   return (
     <View className="flex-1 items-center justify-center px-8">
@@ -35,8 +29,12 @@ export function ChatEmptyState({ onSend }: { onSend: (question: string) => void 
       {questions.length > 0 && (
         <View className="mt-4 w-full gap-2">
           {questions.map((q) => (
-            <Pressable key={q} onPress={() => onSend(q)} className="w-full rounded-lg border border-border px-3 py-2.5">
-              <Text className="text-sm text-foreground">{q}</Text>
+            <Pressable
+              key={q.id}
+              onPress={() => onSend(q.question)}
+              className="w-full rounded-lg border border-border px-3 py-2.5"
+            >
+              <Text className="text-sm text-foreground">{q.question}</Text>
             </Pressable>
           ))}
         </View>

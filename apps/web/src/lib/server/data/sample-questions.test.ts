@@ -25,4 +25,19 @@ describe("listSampleQuestions", () => {
       orderBy: { createdAt: "asc" },
     });
   });
+
+  it("dedupes questions with the same text across different documents", async () => {
+    mockFindMany.mockResolvedValue([
+      { id: "1", documentId: "doc-a", question: "What are NestJS pipes?" },
+      { id: "2", documentId: "doc-b", question: "What are NestJS pipes?" },
+      { id: "3", documentId: "doc-a", question: "What is dependency injection?" },
+    ]);
+
+    const result = await listSampleQuestions();
+
+    expect(result).toEqual([
+      { id: "1", documentId: "doc-a", question: "What are NestJS pipes?" },
+      { id: "3", documentId: "doc-a", question: "What is dependency injection?" },
+    ]);
+  });
 });
