@@ -3339,7 +3339,7 @@ export function Auth(...roles: Role[]) {
     SetMetadata('roles', roles),
     UseGuards(AuthGuard, RolesGuard),
     ApiBearerAuth(),
-    ApiUnauthorizedResponse({ descriptisudo rm -rf ./data/pgon: 'Unauthorized' }),
+    ApiUnauthorizedResponse({ description: 'Unauthorized' }),
   );
 }
 @@switch
