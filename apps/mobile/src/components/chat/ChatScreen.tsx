@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
-import { useNavigation } from "expo-router";
+import { useNavigation, useFocusEffect } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -60,6 +60,20 @@ export function LoadedChatScreen({
   useEffect(() => {
     if (chatId) void setLastChat(chatId);
   }, [chatId]);
+
+  // The (drawer) navigator keeps "chat/new" mounted in the background instead
+  // of unmounting it when navigating away (unlike Next's web equivalent,
+  // where each page is a distinct component and genuinely unmounts). Without
+  // this, re-focusing "chat/new" after sending a first message and being
+  // replace()'d to "chat/<id>" would redisplay that prior conversation
+  // instead of a blank new chat.
+  useFocusEffect(
+    useCallback(() => {
+      if (chatId !== null) return;
+      setSession(null);
+      setMessages([]);
+    }, [chatId, setSession, setMessages]),
+  );
 
   // Draft is keyed by chatId, falling back to "new" for the not-yet-created
   // chat (mirrors apps/web's STORAGE_KEYS.DRAFT(chatId ?? "new")).
