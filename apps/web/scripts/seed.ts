@@ -33,7 +33,8 @@ import { createInterface } from "readline";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { cac } from "cac";
-import type { PrismaClient } from "../src/generated/prisma";
+import { PrismaPg } from "@prisma/adapter-pg";
+import type { PrismaClient } from "../src/generated/prisma/client";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -403,8 +404,10 @@ async function runLoad(explicitSeed: string | undefined) {
   if (dbUrl) console.log(`  DB: ${dbUrl.replace(/:[^:@]+@/, ":***@")}`);
 
   // Dynamic import AFTER env override
-  const { PrismaClient } = await import("../src/generated/prisma");
-  const prisma = new PrismaClient();
+  const { PrismaClient } = await import("../src/generated/prisma/client");
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  });
 
   let hadError = false;
   try {
@@ -425,8 +428,10 @@ async function runLoad(explicitSeed: string | undefined) {
 // ── Clear mode ────────────────────────────────────────────────────────────────
 
 async function runClear(sourceName: string | undefined) {
-  const { PrismaClient } = await import("../src/generated/prisma");
-  const prisma = new PrismaClient();
+  const { PrismaClient } = await import("../src/generated/prisma/client");
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  });
 
   const where = sourceName ? { isBuiltIn: true, name: sourceName } : { isBuiltIn: true };
   const docs = await prisma.document.findMany({ where, select: { id: true, name: true, embeddingModel: true } });

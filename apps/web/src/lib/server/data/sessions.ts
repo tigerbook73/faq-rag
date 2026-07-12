@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/server/db/client";
-import { Prisma } from "@/generated/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 export async function getSession(sessionId: string) {
   return prisma.session.findFirst({
