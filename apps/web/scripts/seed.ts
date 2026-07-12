@@ -1,9 +1,17 @@
 /**
  * Seed script for pre-computing embeddings and importing them into the DB.
+ * Run `bun scripts/seed.ts --help` for full usage.
  *
- * Usage:
- *   pnpm seed:export <input-file> [--model <openai|local>] [--out-dir <dir>]
- *   pnpm seed:import <seed-file>  [--db-url <url>]
+ *   generate [input-file]  Compute embeddings for a source doc → write a seed .jsonl.
+ *                          When [input-file] is omitted, runs once for every file in
+ *                          sample-docs/ that is not a previously-generated `.jsonl`
+ *                          output and not a `.questions.json` sidecar.
+ *   load [seed-file]       Load a seed .jsonl into the DB.
+ *                          When [seed-file] is omitted, loads every `.jsonl` file in
+ *                          sample-docs/. In production (NODE_ENV=production, "remote")
+ *                          only `*-openai.jsonl` files are loaded; otherwise
+ *                          ("local"/dev) all `.jsonl` files are loaded.
+ *   clear [source-name]    Delete built-in documents (all if name omitted).
  *
  * Output filename: <basename>-(openai|local).jsonl
  *
@@ -23,30 +31,19 @@ import fs from "fs/promises";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
+import { cac } from "cac";
 import type { PrismaClient } from "../src/generated/prisma";
-
-// ── CLI argument parsing ──────────────────────────────────────────────────────
-
-const args = process.argv.slice(2);
-const mode = args[0];
-const positional = args.filter((a) => !a.startsWith("--"));
-const getFlag = (name: string) => {
-  const idx = args.indexOf(`--${name}`);
-  return idx !== -1 ? args[idx + 1] : undefined;
-};
-
-if (mode !== "export" && mode !== "import" && mode !== "clear") {
-  console.error("Usage:");
-  console.error("  pnpm seed:export <input-file> [--model <openai|local>] [--out-dir <dir>]");
-  console.error("  pnpm seed:import <seed-file>");
-  console.error("  pnpm seed:clear [source-name]  # omit name to clear all built-in");
-  process.exit(1);
-}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const OPENAI_MODEL_NAME = "text-embedding-3-small";
 const LOCAL_MODEL_NAME = "bge-m3";
+
+/** Directory holding built-in source docs + their generated seed files. Resolved
+ *  relative to this script file (not process.cwd()) so it works regardless of
+ *  the invoking working directory. */
+const SAMPLE_DOCS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "sample-docs");
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -78,6 +75,38 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   const result: T[][] = [];
   for (let i = 0; i < arr.length; i += size) result.push(arr.slice(i, i + size));
   return result;
+}
+
+async function listSampleDocsDir() {
+  try {
+    return await fs.readdir(SAMPLE_DOCS_DIR, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+}
+
+/** Built-in source docs for `generate`: every file under sample-docs/ that is not
+ *  a previously-generated `.jsonl` seed file and not a `.questions.json` sidecar. */
+async function discoverGenerateInputs(): Promise<string[]> {
+  const entries = await listSampleDocsDir();
+  return entries
+    .filter((e) => e.isFile() && !e.name.endsWith(".jsonl") && !e.name.endsWith(".questions.json"))
+    .map((e) => e.name)
+    .sort()
+    .map((name) => path.join(SAMPLE_DOCS_DIR, name));
+}
+
+/** Built-in seed files for `load`: every `*.jsonl` under sample-docs/. In production
+ *  (NODE_ENV=production, "remote") only `*-openai.jsonl` is included; otherwise
+ *  ("local"/dev) all `*.jsonl` variants are included. */
+async function discoverLoadInputs(): Promise<string[]> {
+  const entries = await listSampleDocsDir();
+  const isProd = process.env.NODE_ENV === "production";
+  return entries
+    .filter((e) => e.isFile() && e.name.endsWith(".jsonl") && (!isProd || e.name.endsWith("-openai.jsonl")))
+    .map((e) => e.name)
+    .sort()
+    .map((name) => path.join(SAMPLE_DOCS_DIR, name));
 }
 
 /** Encodes float64[] → Float32 little-endian → base64 string. */
@@ -135,24 +164,18 @@ async function syncSampleQuestions(
   console.log(`  Inserted ${questions.length} sample questions`);
 }
 
-// ── Export mode ───────────────────────────────────────────────────────────────
+// ── Generate mode ─────────────────────────────────────────────────────────────
 
-async function runExport() {
-  const inputPath = positional[1];
-  if (!inputPath) {
-    console.error("Usage: pnpm seed:export <input-file> [--model <openai|local>] [--out-dir <dir>]");
-    process.exit(1);
-  }
-
+async function generateOne(
+  inputPath: string,
+  modelType: SeedModelType,
+  modelName: string,
+  embedFn: (texts: string[]) => Promise<number[][]>,
+  outDirFlag: string | undefined,
+): Promise<void> {
   const resolvedInput = path.resolve(inputPath);
 
-  // Determine model type
-  const modelFlag = getFlag("model") as SeedModelType | undefined;
-  const useOpenAI = process.env.EMBEDDING_PROVIDER === "openai";
-  const modelType: SeedModelType = modelFlag ?? (useOpenAI ? "openai" : "local");
-  const modelName = modelType === "openai" ? OPENAI_MODEL_NAME : LOCAL_MODEL_NAME;
-
-  const outDir = getFlag("out-dir") ? path.resolve(getFlag("out-dir")!) : path.dirname(resolvedInput);
+  const outDir = outDirFlag ? path.resolve(outDirFlag) : path.dirname(resolvedInput);
   const baseName = path.basename(resolvedInput, path.extname(resolvedInput));
   const outPath = path.join(outDir, `${baseName}-${modelType}.jsonl`);
 
@@ -166,15 +189,6 @@ async function runExport() {
   console.log("Splitting into chunks…");
   const chunks = await splitTextMarkdown(text);
   console.log(`  ${chunks.length} chunks`);
-
-  let embedFn: (texts: string[]) => Promise<number[][]>;
-  if (modelType === "openai") {
-    const { getEmbeddingsBatchOpenAI } = await import("../src/lib/server/embeddings/openai-embed");
-    embedFn = getEmbeddingsBatchOpenAI;
-  } else {
-    const { getEmbeddingsBatch } = await import("../src/lib/server/embeddings/bge");
-    embedFn = getEmbeddingsBatch;
-  }
 
   console.log(`Embedding chunks with ${modelName} (batches of 100)…`);
   const batches = chunkArray(chunks, 100);
@@ -219,35 +233,66 @@ async function runExport() {
   console.log(`  ${chunks.length} chunks, ${stat.size} bytes, model: ${modelName}`);
 }
 
-// ── Import mode ───────────────────────────────────────────────────────────────
+async function runGenerate(
+  explicitInput: string | undefined,
+  modelFlag: SeedModelType | undefined,
+  outDirFlag: string | undefined,
+) {
+  // Determine model type (shared across the whole batch)
+  const useOpenAI = process.env.EMBEDDING_PROVIDER === "openai";
+  const modelType: SeedModelType = modelFlag ?? (useOpenAI ? "openai" : "local");
+  const modelName = modelType === "openai" ? OPENAI_MODEL_NAME : LOCAL_MODEL_NAME;
 
-async function runImport() {
-  const seedPath = positional[1];
-  if (!seedPath) {
-    console.error("Usage: pnpm seed:import <seed-file> [--db-url <url>]");
-    process.exit(1);
+  let embedFn: (texts: string[]) => Promise<number[][]>;
+  if (modelType === "openai") {
+    const { getEmbeddingsBatchOpenAI } = await import("../src/lib/server/embeddings/openai-embed");
+    embedFn = getEmbeddingsBatchOpenAI;
+  } else {
+    const { getEmbeddingsBatch } = await import("../src/lib/server/embeddings/bge");
+    embedFn = getEmbeddingsBatch;
   }
 
+  const inputFiles = explicitInput ? [explicitInput] : await discoverGenerateInputs();
+  if (inputFiles.length === 0) {
+    console.error(`No built-in source documents found in ${SAMPLE_DOCS_DIR}.`);
+    process.exit(1);
+  }
+  if (!explicitInput) {
+    console.log(`No input file given — generating for ${inputFiles.length} built-in doc(s) in sample-docs/:`);
+    for (const f of inputFiles) console.log(`  - ${path.basename(f)}`);
+  }
+
+  let hadError = false;
+  for (const inputPath of inputFiles) {
+    try {
+      await generateOne(inputPath, modelType, modelName, embedFn, outDirFlag);
+    } catch (err) {
+      hadError = true;
+      console.error(`  Failed: ${path.basename(inputPath)}:`, err);
+    }
+  }
+  if (hadError) process.exit(1);
+}
+
+// ── Load mode ─────────────────────────────────────────────────────────────────
+
+async function loadOne(prisma: PrismaClient, seedPath: string): Promise<void> {
   const resolvedSeed = path.resolve(seedPath);
 
   // Read first line as meta
-  let meta: SeedMeta | null = null;
   const lines = readJsonlLines(resolvedSeed);
   const firstLine = await lines.next();
   if (firstLine.done) {
-    console.error("Empty seed file.");
-    process.exit(1);
+    throw new Error("Empty seed file.");
   }
   const firstObj = firstLine.value as Record<string, unknown>;
   if (firstObj.type !== "meta" || firstObj.version !== 1 || firstObj.encoding !== "float32-base64") {
-    console.error("Unsupported seed file format.");
-    process.exit(1);
+    throw new Error("Unsupported seed file format.");
   }
   if (firstObj.model !== "openai" && firstObj.model !== "local") {
-    console.error(`Unknown model type: ${firstObj.model}. Expected "openai" or "local".`);
-    process.exit(1);
+    throw new Error(`Unknown model type: ${firstObj.model}. Expected "openai" or "local".`);
   }
-  meta = firstObj as unknown as SeedMeta;
+  const meta = firstObj as unknown as SeedMeta;
 
   const embeddingModel = meta.model === "openai" ? "text-embedding-3-small" : "bge-m3";
   // contentHash is deterministic by source + modelName (excludes generatedAt so re-exports are idempotent)
@@ -257,25 +302,18 @@ async function runImport() {
     .digest("hex");
 
   console.log(`Importing: ${meta.source} (model: ${meta.modelName})`);
-  const dbUrl = process.env.DATABASE_URL;
-  if (dbUrl) console.log(`  DB: ${dbUrl.replace(/:[^:@]+@/, ":***@")}`);
-
-  // Dynamic import AFTER env override
-  const { PrismaClient } = await import("../src/generated/prisma");
-  const prisma = new PrismaClient();
 
   const seedDir = path.dirname(resolvedSeed);
   const sourceBaseName = path.basename(meta.source, path.extname(meta.source));
 
-  // Dedup check using compound key
+  // Dedup check using compound key — re-import replaces the existing document
+  // (chunks + sample questions cascade-delete with it) rather than skipping it.
   const existing = await prisma.document.findUnique({
     where: { contentHash_embeddingModel: { contentHash, embeddingModel } },
   });
   if (existing) {
-    console.log(`  Already imported (id=${existing.id}). Skipping.`);
-    await syncSampleQuestions(prisma, existing.id, seedDir, sourceBaseName);
-    await prisma.$disconnect();
-    process.exit(0);
+    console.log(`  Already imported (id=${existing.id}). Deleting and re-importing…`);
+    await prisma.document.delete({ where: { id: existing.id } });
   }
 
   // Count chunks by scanning through file (second pass needed for totalChunks)
@@ -346,14 +384,47 @@ async function runImport() {
   });
 
   console.log(`\nImport complete. Document id=${doc.id}`);
-  await prisma.$disconnect();
+}
+
+async function runLoad(explicitSeed: string | undefined) {
+  const seedFiles = explicitSeed ? [explicitSeed] : await discoverLoadInputs();
+  if (seedFiles.length === 0) {
+    const suffix = process.env.NODE_ENV === "production" ? " matching *-openai.jsonl" : "";
+    console.error(`No built-in seed files found in ${SAMPLE_DOCS_DIR}${suffix}.`);
+    process.exit(1);
+  }
+  if (!explicitSeed) {
+    const envLabel = process.env.NODE_ENV === "production" ? "remote: *-openai.jsonl only" : "local: all *.jsonl";
+    console.log(`No seed file given — loading ${seedFiles.length} built-in seed(s) from sample-docs/ (${envLabel}):`);
+    for (const f of seedFiles) console.log(`  - ${path.basename(f)}`);
+  }
+
+  const dbUrl = process.env.DATABASE_URL;
+  if (dbUrl) console.log(`  DB: ${dbUrl.replace(/:[^:@]+@/, ":***@")}`);
+
+  // Dynamic import AFTER env override
+  const { PrismaClient } = await import("../src/generated/prisma");
+  const prisma = new PrismaClient();
+
+  let hadError = false;
+  try {
+    for (const seedPath of seedFiles) {
+      try {
+        await loadOne(prisma, seedPath);
+      } catch (err) {
+        hadError = true;
+        console.error(`  Failed: ${path.basename(seedPath)}:`, err);
+      }
+    }
+  } finally {
+    await prisma.$disconnect();
+  }
+  if (hadError) process.exit(1);
 }
 
 // ── Clear mode ────────────────────────────────────────────────────────────────
 
-async function runClear() {
-  const sourceName = positional[1]; // optional: filter by document name
-
+async function runClear(sourceName: string | undefined) {
   const { PrismaClient } = await import("../src/generated/prisma");
   const prisma = new PrismaClient();
 
@@ -375,10 +446,47 @@ async function runClear() {
   await prisma.$disconnect();
 }
 
-// ── Entry point ───────────────────────────────────────────────────────────────
+// ── CLI ───────────────────────────────────────────────────────────────────────
 
-const run = mode === "export" ? runExport : mode === "clear" ? runClear : runImport;
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
+async function withErrorHandling(fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
+}
+
+const cli = cac("bun scripts/seed");
+
+cli.usage("<command> [options]");
+
+cli.command("").action(() => {
+  cli.outputHelp();
 });
+
+cli
+  .command(
+    "generate [input-file]",
+    "Generate seed .jsonl from a source doc (all built-in docs in sample-docs/ if omitted)",
+  )
+  .option("--model <type>", "Embedding model: openai | local")
+  .option("--out-dir <dir>", "Output directory (defaults to next to each source file)")
+  .action(async (inputFile: string | undefined, options: { model?: SeedModelType; outDir?: string }) => {
+    await withErrorHandling(() => runGenerate(inputFile, options.model, options.outDir));
+  });
+
+cli
+  .command("load [seed-file]", "Load a seed .jsonl into the DB (all built-in seeds in sample-docs/ if omitted)")
+  .action(async (seedFile: string | undefined) => {
+    await withErrorHandling(() => runLoad(seedFile));
+  });
+
+cli
+  .command("clear [source-name]", "Delete built-in documents (all built-in docs if name omitted)")
+  .action(async (sourceName: string | undefined) => {
+    await withErrorHandling(() => runClear(sourceName));
+  });
+
+cli.help();
+cli.parse();

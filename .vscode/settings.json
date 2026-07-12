@@ -8,5 +8,6 @@
       "name": "FAQ",
       "connectString": "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
     }
-  ]
+  ],
+  "prisma.pinToPrisma6": true
 }
