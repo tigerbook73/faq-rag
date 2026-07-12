@@ -54,5 +54,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@tigerbook/check-env": "^0.2.5"
+  }
 }
