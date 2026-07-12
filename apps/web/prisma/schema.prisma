@@ -10,20 +10,21 @@ datasource db {
 }
 
 model Document {
-  id          String   @id @default(uuid())
-  name        String
-  mime        String
-  contentHash    String   @map("content_hash")
-  lang           String   @default("unknown")
-  sizeBytes      Int      @map("size_bytes")
-  status         String   @default("pending") // pending | uploaded | indexing | indexed | failed
-  errorMsg       String?  @map("error_msg")
-  totalChunks    Int?     @map("total_chunks")
-  fileRef        String?  @map("file_path")
-  embeddingModel String   @default("bge-m3") @map("embedding_model")
-  isBuiltIn      Boolean  @default(false) @map("is_built_in")
-  createdAt      DateTime @default(now()) @map("created_at")
-  chunks      Chunk[]
+  id              String           @id @default(uuid())
+  name            String
+  mime            String
+  contentHash     String           @map("content_hash")
+  lang            String           @default("unknown")
+  sizeBytes       Int              @map("size_bytes")
+  status          String           @default("pending") // pending | uploaded | indexing | indexed | failed
+  errorMsg        String?          @map("error_msg")
+  totalChunks     Int?             @map("total_chunks")
+  fileRef         String?          @map("file_path")
+  embeddingModel  String           @default("bge-m3") @map("embedding_model")
+  isBuiltIn       Boolean          @default(false) @map("is_built_in")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  chunks          Chunk[]
+  sampleQuestions SampleQuestion[]
 
   @@unique([contentHash, embeddingModel])
   @@index([status])
@@ -42,6 +43,17 @@ model Chunk {
 
   @@index([documentId])
   @@map("chunks")
+}
+
+model SampleQuestion {
+  id         String   @id @default(uuid())
+  documentId String   @map("document_id")
+  question   String
+  createdAt  DateTime @default(now()) @map("created_at")
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("sample_questions")
 }
 
 model Session {

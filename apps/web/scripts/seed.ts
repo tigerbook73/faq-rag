@@ -23,6 +23,7 @@ import fs from "fs/promises";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import crypto from "crypto";
+import type { PrismaClient } from "../src/generated/prisma";
 
 // ── CLI argument parsing ──────────────────────────────────────────────────────
 
@@ -103,6 +104,37 @@ async function* readJsonlLines(filePath: string): AsyncGenerator<unknown> {
   }
 }
 
+/** Reads the optional `<sourceBaseName>.questions.json` sidecar next to a seed file. */
+async function loadSampleQuestions(seedDir: string, sourceBaseName: string): Promise<string[]> {
+  const sidecarPath = path.join(seedDir, `${sourceBaseName}.questions.json`);
+  try {
+    const parsed = JSON.parse(await fs.readFile(sidecarPath, "utf-8"));
+    if (Array.isArray(parsed) && parsed.every((q) => typeof q === "string")) return parsed;
+  } catch {
+    // No sidecar file — sample questions are optional.
+  }
+  return [];
+}
+
+/** Idempotently backfills sample questions for a document from its sidecar file, if any. */
+async function syncSampleQuestions(
+  prisma: PrismaClient,
+  documentId: string,
+  seedDir: string,
+  sourceBaseName: string,
+): Promise<void> {
+  const questions = await loadSampleQuestions(seedDir, sourceBaseName);
+  if (questions.length === 0) return;
+
+  const count = await prisma.sampleQuestion.count({ where: { documentId } });
+  if (count > 0) return;
+
+  await prisma.sampleQuestion.createMany({
+    data: questions.map((question) => ({ documentId, question })),
+  });
+  console.log(`  Inserted ${questions.length} sample questions`);
+}
+
 // ── Export mode ───────────────────────────────────────────────────────────────
 
 async function runExport() {
@@ -167,15 +199,13 @@ async function runExport() {
     process.stdout.write(`  Batch ${i + 1}/${batches.length} (${batch.length} chunks)… `);
     const embeddings = await embedFn(batch);
     const lines = batch
-      .map(
-        (content, j): SeedChunk => ({
-          type: "chunk",
-          ord: ord + j,
-          content,
-          lang: detectLang(content),
-          embedding: encodeEmbedding(embeddings[j]),
-        }),
-      )
+      .map((content, j): SeedChunk => ({
+        type: "chunk",
+        ord: ord + j,
+        content,
+        lang: detectLang(content),
+        embedding: encodeEmbedding(embeddings[j]),
+      }))
       .map((c) => JSON.stringify(c))
       .join("\n");
     await fs.appendFile(outPath, lines + "\n", "utf-8");
@@ -234,12 +264,16 @@ async function runImport() {
   const { PrismaClient } = await import("../src/generated/prisma");
   const prisma = new PrismaClient();
 
+  const seedDir = path.dirname(resolvedSeed);
+  const sourceBaseName = path.basename(meta.source, path.extname(meta.source));
+
   // Dedup check using compound key
   const existing = await prisma.document.findUnique({
     where: { contentHash_embeddingModel: { contentHash, embeddingModel } },
   });
   if (existing) {
     console.log(`  Already imported (id=${existing.id}). Skipping.`);
+    await syncSampleQuestions(prisma, existing.id, seedDir, sourceBaseName);
     await prisma.$disconnect();
     process.exit(0);
   }
@@ -303,6 +337,8 @@ async function runImport() {
     }
   }
   if (batch.length > 0) await flushBatch(batch);
+
+  await syncSampleQuestions(prisma, doc.id, seedDir, sourceBaseName);
 
   await prisma.document.update({
     where: { id: doc.id },

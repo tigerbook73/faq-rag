@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Citation, Message } from "@faq-rag/shared";
 import type { ChatSession } from "@/lib/api/session";
 import { setLastChat, getDraft, setDraft } from "@/lib/api/storage";
+import { ChatEmptyState } from "./ChatEmptyState";
 import { MessageBubble } from "./MessageBubble";
 import { CitationSheet } from "./CitationSheet";
 import { ProviderSheet } from "./ProviderSheet";
@@ -89,13 +90,18 @@ export function LoadedChatScreen({
     return () => clearTimeout(timer);
   }, [draftKey, input, restoredDraftKey]);
 
-  const handleSend = useCallback(() => {
-    const question = input.trim();
-    if (!question || loading) return;
-    setInput("");
-    void setDraft(draftKey, "");
-    void send(question);
-  }, [input, loading, draftKey, send]);
+  const sendQuestion = useCallback(
+    (question: string) => {
+      const trimmed = question.trim();
+      if (!trimmed || loading) return;
+      setInput("");
+      void setDraft(draftKey, "");
+      void send(trimmed);
+    },
+    [loading, draftKey, send],
+  );
+
+  const handleSend = useCallback(() => sendQuestion(input), [input, sendQuestion]);
 
   const handleCitationClick = useCallback((c: Citation) => {
     setSelectedCitation(c);
@@ -125,15 +131,7 @@ export function LoadedChatScreen({
           collapse to content height instead of filling the screen. */}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         {messages.length === 0 ? (
-          <View className="flex-1 items-center justify-center px-8">
-            <Ionicons
-              name="chatbubbles-outline"
-              size={40}
-              color={colors.subtleForeground}
-              style={{ marginBottom: 12 }}
-            />
-            <Text className="text-center text-sm text-muted-foreground">Ask a question about your documents</Text>
-          </View>
+          <ChatEmptyState onSend={sendQuestion} />
         ) : (
           <FlashList
             data={messages}

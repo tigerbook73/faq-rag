@@ -1,0 +1,11 @@
+[
+  "What are the core building blocks of NestJS?",
+  "How does dependency injection work in NestJS?",
+  "What is the difference between Guards, Interceptors, and Middleware?",
+  "How do I create a REST API with NestJS?",
+  "What is the NestJS module system and how do you organize modules?",
+  "How does NestJS handle exception filters and error handling?",
+  "What are NestJS pipes and how do you use them for validation?",
+  "How do you connect NestJS to a database using TypeORM or Prisma?",
+  "What is the lifecycle of a NestJS request from incoming to response?"
+]
