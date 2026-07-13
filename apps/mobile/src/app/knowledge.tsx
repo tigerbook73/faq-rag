@@ -131,7 +131,7 @@ function DocumentActionSheet({
 }
 
 export default function KnowledgeScreen() {
-  const { documents, error, isLoading, mutate, handleDelete, handleReindex } = useDocuments();
+  const { documents, error, isLoading, refetch, handleDelete, handleReindex } = useDocuments();
   const { state: uploadState, pickAndUpload, reset: resetUpload } = useDocumentUpload();
   const [actionDoc, setActionDoc] = useState<DocumentItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -142,11 +142,11 @@ export default function KnowledgeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await mutate();
+      await refetch();
     } finally {
       setRefreshing(false);
     }
-  }, [mutate]);
+  }, [refetch]);
 
   const toggleExpanded = useCallback((doc: DocumentItem) => {
     setExpandedId((cur) => (cur === doc.id ? null : doc.id));
@@ -200,7 +200,7 @@ export default function KnowledgeScreen() {
           <Text className="text-center text-sm text-destructive">{error}</Text>
           <Pressable
             className="rounded-full border border-border px-4 py-1.5 active:bg-pressed"
-            onPress={() => void mutate()}
+            onPress={() => void refetch()}
           >
             <Text className="text-sm text-muted-foreground">Retry</Text>
           </Pressable>
