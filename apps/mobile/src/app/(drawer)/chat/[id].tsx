@@ -3,8 +3,9 @@ import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import { getSession, type ChatSession } from "@/lib/api/session";
+import { queryKeys } from "@/lib/query-keys";
 import { IconButton } from "@/components/ui/icon-button";
 import { LoadedChatScreen } from "@/components/chat/ChatScreen";
 
@@ -16,11 +17,14 @@ export default function ChatScreen() {
   const navigation = useNavigation<ChatDrawerNavigation>();
   const insets = useSafeAreaInsets();
 
-  const { data: sessionData, isLoading: isSessionLoading } = useSWR<ChatSession | null>(
-    id ? `/api/sessions/${id}` : null,
-    () => getSession(id),
-    { revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false },
-  );
+  const { data: sessionData, isLoading: isSessionLoading } = useQuery<ChatSession | null>({
+    queryKey: queryKeys.sessions.detail(id ?? ""),
+    queryFn: () => getSession(id),
+    enabled: !!id,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
 
   useEffect(() => {
     // Session was deleted/pruned server-side (or the id never existed) — bounce

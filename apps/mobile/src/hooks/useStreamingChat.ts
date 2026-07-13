@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "expo-router";
-import { mutate as swrMutate } from "swr";
+import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import type { Message, Citation } from "@faq-rag/shared";
 import { streamChat, type Provider } from "@/lib/api/chat";
 import { updateSession, type ChatSession } from "@/lib/api/session";
 import { setLastChat } from "@/lib/api/storage";
+import { queryKeys } from "@/lib/query-keys";
 import { logger } from "@/lib/logger";
 
 const INTERRUPTED_MARK = "\n\n⚠️ _Response interrupted_";
@@ -27,6 +28,7 @@ interface Params {
 // for a chat the user never used.
 export function useStreamingChat({ chatId, messages, setMessages, session, setSession, provider }: Params) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
 
@@ -53,15 +55,15 @@ export function useStreamingChat({ chatId, messages, setMessages, session, setSe
         const merged: ChatSession = { ...next, messages: updated };
         setSession(merged);
         void setLastChat(idToUse);
-        void swrMutate("/api/sessions");
-        void swrMutate(`/api/sessions/${idToUse}`, merged, { revalidate: false });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.list() });
+        queryClient.setQueryData(queryKeys.sessions.detail(idToUse), merged);
       } catch (err) {
         // Persistence failure must not clobber the visible conversation; the
         // next successful turn will re-send the full message list anyway.
         logger.error("Failed to persist chat session:", err instanceof Error ? err.message : String(err));
       }
     },
-    [setSession],
+    [setSession, queryClient],
   );
 
   const send = useCallback(
