@@ -29,7 +29,7 @@ pnpm --filter @faq-rag/mobile exec expo export --platform web --output-dir /tmp/
 - `src/app/_layout.tsx`: 根 Stack,主题、手势、键盘、bottom-sheet provider。
 - `src/app/(drawer)/_layout.tsx`: drawer navigator,只包 `chat/new` 与 `chat/[id]`。
 - `src/lib/api/*`: 对 web `/api/*` 的 fetch 封装;响应 schema 从 `@faq-rag/shared` 导入。
-- `src/hooks/use{ChatSessions,Documents,DocumentUpload,StreamingChat}.ts`: SWR 与业务流程封装。
+- `src/hooks/use{ChatSessions,Documents,DocumentUpload,StreamingChat}.ts`: React Query（`useQuery`/`useQueryClient`，乐观更新 + `invalidateQueries` 回滚）与业务流程封装。
 
 ## API Host
 
@@ -56,7 +56,7 @@ pnpm --filter @faq-rag/mobile exec expo export --platform web --output-dir /tmp/
 
 ## 上传与聊天
 
-- 上传流程必须与 web 一致:prepare -> signed URL upload -> index -> embedBatch loop -> SWR refresh。
+- 上传流程必须与 web 一致:prepare -> signed URL upload -> index -> embedBatch loop -> React Query invalidate。
 - web fallback 上传要保持 Supabase multipart 形状:空字段名 file + `cacheControl=3600`,不要改成裸 PUT。
 - 聊天 SSE 用 `eventsource-parser`;mobile 解析逻辑应与 web 保持同一事件语义(`citations`/`token`/`done`/`error`)。
 - `expo-file-system` `File.upload()` 是 native 路径;web 由 picker 暴露 DOM `File`,相关类型在 `winter-runtime.d.ts`。
